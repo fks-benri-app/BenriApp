@@ -55,6 +55,12 @@
       const FLUTTERFLOW_URL = 'https://example.com';
 
       const params = new URLSearchParams(window.location.search);
+
+      // テスト用: ?reset=1 を付けて開くと、保存済みの設定を消してやり直せる
+      if (params.get('reset') === '1') {
+        localStorage.clear();
+      }
+
       const studentIdFromUrl = params.get('studentId');
       if (studentIdFromUrl) {
         localStorage.setItem('studentId', studentIdFromUrl);
@@ -64,7 +70,7 @@
       window.OneSignalDeferred = window.OneSignalDeferred || [];
       OneSignalDeferred.push(async function(OneSignal) {
         await OneSignal.init({
-          appId: "726063a2-acd8-4d5d-9ff0-98902924cfe1",
+          appId: "実際のApp ID",
           serviceWorkerPath: "/classroom-notify/OneSignalSDKWorker.js",
           serviceWorkerParam: { scope: "/classroom-notify/" }
         });
@@ -85,17 +91,42 @@
         document.getElementById('status').innerText = '連携情報が見つかりません。もう一度連携をやり直してください。';
       }
 
+      const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
       function enableNotifications() {
-        document.getElementById('status').innerText = '設定中...';
+        const status = document.getElementById('status');
+        status.innerText = '設定中...';
+
         OneSignalDeferred.push(async function(OneSignal) {
           try {
             await OneSignal.Notifications.requestPermission();
+            if (!OneSignal.Notifications.permission) {
+              status.innerText = '通知が許可されませんでした。ブラウザの設定から許可してください。';
+              return;
+            }
+
             await OneSignal.login(studentId);
+
+            // サーバーへの登録が終わるまで待つ(最大10秒)
+            let ok = false;
+            for (let i = 0; i < 20; i++) {
+              if (OneSignal.User.PushSubscription.id && OneSignal.User.externalId === studentId) {
+                ok = true;
+                break;
+              }
+              await sleep(500);
+            }
+            if (!ok) {
+              status.innerText = '登録の確認に時間がかかっています。少し待ってから、もう一度お試しください。';
+              return;
+            }
+
+            await sleep(1000);
             localStorage.setItem('onesignal_setup_done', 'true');
-            document.getElementById('status').innerText = '設定が完了しました';
+            status.innerText = '設定が完了しました';
             redirectToApp();
           } catch (e) {
-            document.getElementById('status').innerText = 'エラー: ' + e.message;
+            status.innerText = 'エラー: ' + e.message;
           }
         });
       }
