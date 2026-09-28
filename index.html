@@ -13,8 +13,7 @@
 
     <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
     <style>
-      
-     body {
+      body {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         display: flex;
         flex-direction: column;
@@ -53,9 +52,8 @@
     <p id="status"></p>
 
     <script>
-      const FLUTTERFLOW_URL = 'https://あなたのFlutterFlowアプリURL';
+      const FLUTTERFLOW_URL = 'https://example.com';
 
-      // URLからstudentIdを受け取り、保存する
       const params = new URLSearchParams(window.location.search);
       const studentIdFromUrl = params.get('studentId');
       if (studentIdFromUrl) {
@@ -65,7 +63,11 @@
 
       window.OneSignalDeferred = window.OneSignalDeferred || [];
       OneSignalDeferred.push(async function(OneSignal) {
-        await OneSignal.init({ appId: "YOUR_ONESIGNAL_APP_ID" });
+        await OneSignal.init({
+          appId: "726063a2-acd8-4d5d-9ff0-98902924cfe1",
+          serviceWorkerPath: "/classroom-notify/OneSignalSDKWorker.js",
+          serviceWorkerParam: { scope: "/classroom-notify/" }
+        });
       });
 
       const alreadySetup = localStorage.getItem('onesignal_setup_done') === 'true';
@@ -86,11 +88,15 @@
       function enableNotifications() {
         document.getElementById('status').innerText = '設定中...';
         OneSignalDeferred.push(async function(OneSignal) {
-          await OneSignal.init({
-            appId: "実際のApp ID",
-            serviceWorkerPath: "/classroom-notify/OneSignalSDKWorker.js",
-            serviceWorkerParam: { scope: "/classroom-notify/" }
-          });
+          try {
+            await OneSignal.Notifications.requestPermission();
+            await OneSignal.login(studentId);
+            localStorage.setItem('onesignal_setup_done', 'true');
+            document.getElementById('status').innerText = '設定が完了しました';
+            redirectToApp();
+          } catch (e) {
+            document.getElementById('status').innerText = 'エラー: ' + e.message;
+          }
         });
       }
 
