@@ -1,7 +1,8 @@
 {
   "name": "Classroom通知",
   "short_name": "Classroom通知",
-  "start_url": "/",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#5B8DEF",
