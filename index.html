@@ -86,10 +86,11 @@
       function enableNotifications() {
         document.getElementById('status').innerText = '設定中...';
         OneSignalDeferred.push(async function(OneSignal) {
-          await OneSignal.Notifications.requestPermission();
-          await OneSignal.login(studentId);
-          localStorage.setItem('onesignal_setup_done', 'true');
-          redirectToApp();
+          await OneSignal.init({
+            appId: "実際のApp ID",
+            serviceWorkerPath: "/classroom-notify/OneSignalSDKWorker.js",
+            serviceWorkerParam: { scope: "/classroom-notify/" }
+          });
         });
       }
 
