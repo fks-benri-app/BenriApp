@@ -6,6 +6,7 @@
     <link rel="manifest" href="manifest.json">
     <title>Classroom通知</title>
 
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Classroom通知">
@@ -44,6 +45,7 @@
         font-size: 13px;
         line-height: 1.6;
         max-width: 320px;
+        white-space: pre-line;
       }
     </style>
   </head>
@@ -52,11 +54,11 @@
     <p id="status"></p>
 
     <script>
+      const ONESIGNAL_APP_ID = '726063a2-acd8-4d5d-9ff0-98902924cfe1';
       const FLUTTERFLOW_URL = 'https://example.com';
 
       const params = new URLSearchParams(window.location.search);
 
-      // テスト用: ?reset=1 を付けて開くと、保存済みの設定を消してやり直せる
       if (params.get('reset') === '1') {
         localStorage.clear();
       }
@@ -70,7 +72,7 @@
       window.OneSignalDeferred = window.OneSignalDeferred || [];
       OneSignalDeferred.push(async function(OneSignal) {
         await OneSignal.init({
-          appId: "726063a2-acd8-4d5d-9ff0-98902924cfe1",
+          appId: ONESIGNAL_APP_ID,
           serviceWorkerPath: "/classroom-notify/OneSignalSDKWorker.js",
           serviceWorkerParam: { scope: "/classroom-notify/" }
         });
@@ -80,7 +82,10 @@
       const isIos = /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase());
       const isStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
 
-      if (alreadySetup) {
+      if (!navigator.onLine) {
+        document.getElementById('status').innerText =
+          'インターネットに接続されていません。接続後、もう一度お試しください。';
+      } else if (alreadySetup) {
         redirectToApp();
       } else if (isIos && !isStandalone) {
         document.getElementById('status').innerText =
@@ -95,25 +100,23 @@
 
       function enableNotifications() {
         const status = document.getElementById('status');
-        status.innerText = '① 準備中...';
-      
+        status.innerText = '設定中...';
+
         const timer = setTimeout(() => {
-          status.innerText += '\n(反応がありません。アドレスバーがgithub.ioか、App IDが正しいか確認してください)';
+          status.innerText += '\n(反応がありません。しばらくして再度お試しください)';
         }, 10000);
-      
+
         OneSignalDeferred.push(async function(OneSignal) {
           try {
-            status.innerText = '② 通知の許可を求めています...';
             await OneSignal.Notifications.requestPermission();
             if (!OneSignal.Notifications.permission) {
               clearTimeout(timer);
               status.innerText = '通知が許可されませんでした。ブラウザの設定から許可してください。';
               return;
             }
-      
-            status.innerText = '③ 登録中...';
+
             await OneSignal.login(studentId);
-      
+
             let ok = false;
             for (let i = 0; i < 20; i++) {
               if (OneSignal.User.PushSubscription.id && OneSignal.User.externalId === studentId) {
@@ -127,7 +130,7 @@
               status.innerText = '登録の確認に時間がかかっています。少し待ってから、もう一度お試しください。';
               return;
             }
-      
+
             await sleep(1000);
             localStorage.setItem('onesignal_setup_done', 'true');
             status.innerText = '設定が完了しました';
