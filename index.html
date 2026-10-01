@@ -99,11 +99,32 @@
 
       const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
-      async function peekStudentId(code) {
-        const res = await fetch(`${VERIFY_URL}?action=peek&code=${encodeURIComponent(code)}`);
-        const data = await res.json();
-        if (!data.valid) throw new Error('連携情報の確認に失敗しました(' + data.reason + ')');
-        return data.studentId;
+      function peekStudentId(code) {
+        return new Promise((resolve, reject) => {
+          const iframe = document.createElement('iframe');
+          iframe.style.display = 'none';
+      
+          const handler = (event) => {
+            if (!event.data || typeof event.data.valid === 'undefined') return;
+            window.removeEventListener('message', handler);
+            iframe.remove();
+            if (!event.data.valid) {
+              reject(new Error('連携情報の確認に失敗しました(' + event.data.reason + ')'));
+            } else {
+              resolve(event.data.studentId);
+            }
+          };
+          window.addEventListener('message', handler);
+      
+          iframe.src = `${VERIFY_URL}?action=peek&code=${encodeURIComponent(code)}`;
+          document.body.appendChild(iframe);
+      
+          setTimeout(() => {
+            window.removeEventListener('message', handler);
+            iframe.remove();
+            reject(new Error('確認がタイムアウトしました'));
+          }, 10000);
+        });
       }
 
       function enableNotifications() {
