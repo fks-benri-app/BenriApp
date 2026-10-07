@@ -1,123 +1,212 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useIdentity } from '../auth/identity';
 
-// ★ ここに FlutterFlow で作っていたページの React コードを移植する。
-//   ログイン中の生徒IDが必要なときは useIdentity() から取る。
+// --- モックデータ ---
+const ANNOUNCEMENTS = [
+  {
+    id: 1,
+    subject: '数学A',
+    teacher: '佐藤先生',
+    time: '今日 08:30',
+    content: '今日の宿題提出について、授業開始前に提出用ロッカーに入れておいてください。忘れた場合は減点対象となります。',
+    isUnread: true,
+  },
+  {
+    id: 2,
+    subject: '英語II',
+    teacher: '鈴木先生',
+    time: '昨日 16:15',
+    content: '暗唱課題の提出締め切りを、明日の17:00まで延長します。まだ録音データを送信していない人は必ず提出してください。',
+    isUnread: false,
+  },
+  {
+    id: 3,
+    subject: '物理',
+    teacher: '田中先生',
+    time: '10月22日',
+    content: '実験レポートの書き方に関する手引き資料をアップロードしました。各自ダウンロードして目を通しておくようにしてください。',
+    isUnread: true,
+  }
+];
+
+const TABS = [
+  { id: 'home', label: 'ホーム', iconUrl: 'https://placehold.co/22x22' },
+  { id: 'calendar', label: 'カレンダー', iconUrl: 'https://placehold.co/22x22' },
+  { id: 'class', label: 'クラス', iconUrl: 'https://placehold.co/22x22' },
+  { id: 'settings', label: '設定', iconUrl: 'https://placehold.co/22x22' },
+];
+
+const FILTERS = [
+  { id: 'all', label: 'すべて' },
+  { id: 'unread', label: '未読' },
+  { id: 'test', label: 'テスト関連' },
+];
+
 export default function HomePage() {
   const { identity, signOut } = useIdentity();
+  
+  const [activeTab, setActiveTab] = useState('home');
+  const [activeFilter, setActiveFilter] = useState('all');
 
   return (
+    // 画面いっぱいに表示（余白ゼロ）
     <div style={{
-      width: '100%',
-      maxWidth: 480,
-      minHeight: '100vh',
-      margin: '0 auto',
+      width: '100vw',
+      height: '100vh',
+      margin: 0,
+      padding: 0,
       background: 'white',
-      overflow: 'hidden',
-      flexDirection: 'column',
-      justifyContent: 'space-between',
-      alignItems: 'flex-start',
       display: 'flex',
-      boxSizing: 'border-box'
+      flexDirection: 'column',
+      boxSizing: 'border-box',
+      overflow: 'hidden'
     }}>
-      <div style={{ alignSelf: 'stretch', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: 12, display: 'flex' }}>
-        <div style={{ alignSelf: 'stretch', height: 44, paddingLeft: 24, paddingRight: 24, justifyContent: 'space-between', alignItems: 'center', display: 'inline-flex' }}>
-          <div style={{ color: '#111827', fontSize: 14, fontFamily: 'Inter', fontWeight: '600', wordWrap: 'break-word' }}>8:15</div>
-          <div style={{ justifyContent: 'flex-start', alignItems: 'center', gap: 6, display: 'flex' }}>
-            <img style={{ width: 18, height: 12, position: 'relative' }} src="https://placehold.co/18x12" alt="status" />
-            <img style={{ width: 16, height: 12, position: 'relative' }} src="https://placehold.co/16x12" alt="wifi" />
-            <img style={{ width: 24, height: 12, position: 'relative' }} src="https://placehold.co/24x12" alt="battery" />
+      
+      {/* ===== ヘッダー部分（固定） ===== */}
+      <header style={{ 
+        flexShrink: 0, 
+        paddingBottom: 12, 
+        borderBottom: '1px #F3F4F6 solid',
+        width: '100%'
+      }}>
+        <div style={{ padding: '20px 24px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ color: '#111827', fontSize: 24, fontFamily: 'Inter', fontWeight: '800' }}>
+            クラスルームからのお知らせ
           </div>
+          <img style={{ width: 24, height: 24, cursor: 'pointer' }} src="https://placehold.co/22x22" alt="bell" />
         </div>
-        <div style={{ alignSelf: 'stretch', paddingLeft: 24, paddingRight: 24, justifyContent: 'space-between', alignItems: 'center', display: 'inline-flex' }}>
-          <div style={{ color: '#111827', fontSize: 22, fontFamily: 'Inter', fontWeight: '800', wordWrap: 'break-word' }}>クラスルームからのお知らせ</div>
-          <img style={{ width: 22, height: 22, position: 'relative' }} src="https://placehold.co/22x22" alt="bell" />
-        </div>
-        <div style={{ alignSelf: 'stretch', paddingLeft: 24, paddingRight: 24, paddingTop: 8, paddingBottom: 8, justifyContent: 'flex-start', alignItems: 'flex-start', gap: 8, display: 'inline-flex', overflowX: 'auto' }}>
-          <div style={{ paddingLeft: 16, paddingRight: 16, paddingTop: 8, paddingBottom: 8, background: 'linear-gradient(135deg, #FF4D4D 0%, #FF8A1B 100%)', borderRadius: 12, justifyContent: 'flex-start', alignItems: 'flex-start', display: 'flex' }}>
-            <div style={{ color: 'white', fontSize: 14, fontFamily: 'Inter', fontWeight: '700', wordWrap: 'break-word' }}>すべて</div>
-          </div>
-          <div style={{ paddingLeft: 16, paddingRight: 16, paddingTop: 8, paddingBottom: 8, background: 'white', borderRadius: 12, outline: '1px #E5E7EB solid', outlineOffset: '-1px', justifyContent: 'flex-start', alignItems: 'flex-start', display: 'flex' }}>
-            <div style={{ color: '#6B7280', fontSize: 14, fontFamily: 'Inter', fontWeight: '400', wordWrap: 'break-word' }}>未読</div>
-          </div>
-          <div style={{ paddingLeft: 16, paddingRight: 16, paddingTop: 8, paddingBottom: 8, background: 'white', borderRadius: 12, outline: '1px #E5E7EB solid', outlineOffset: '-1px', justifyContent: 'flex-start', alignItems: 'flex-start', display: 'flex' }}>
-            <div style={{ color: '#6B7280', fontSize: 14, fontFamily: 'Inter', fontWeight: '400', wordWrap: 'break-word' }}>テスト関連</div>
-          </div>
-        </div>
-      </div>
 
-      <div style={{ alignSelf: 'stretch', paddingLeft: 24, paddingRight: 24, paddingTop: 12, paddingBottom: 12, flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: 12, display: 'flex', flex: 1 }}>
-        <div style={{ alignSelf: 'stretch', padding: 16, background: 'white', borderRadius: 24, outline: '1.50px #FF4D4D solid', outlineOffset: '-1.50px', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: 12, display: 'flex' }}>
-          <div style={{ alignSelf: 'stretch', justifyContent: 'space-between', alignItems: 'center', display: 'inline-flex' }}>
-            <div style={{ justifyContent: 'flex-start', alignItems: 'center', gap: 8, display: 'flex' }}>
-              <div style={{ paddingLeft: 8, paddingRight: 8, paddingTop: 4, paddingBottom: 4, background: '#F3F4F6', borderRadius: 6, justifyContent: 'flex-start', alignItems: 'flex-start', display: 'flex' }}>
-                <div style={{ color: '#111827', fontSize: 11, fontFamily: 'Inter', fontWeight: '700', wordWrap: 'break-word' }}>数学A</div>
+        {/* フィルターボタン（カプセル形状） */}
+        <div style={{ padding: '0 24px', display: 'flex', gap: 10, overflowX: 'auto' }}>
+          {FILTERS.map(filter => {
+            const isActive = activeFilter === filter.id;
+            return (
+              <div
+                key={filter.id}
+                onClick={() => setActiveFilter(filter.id)}
+                style={{
+                  padding: '8px 20px',
+                  borderRadius: 9999, // 完全に丸みのあるカプセル形状に指定
+                  cursor: 'pointer',
+                  background: isActive ? 'linear-gradient(135deg, #FF4D4D 0%, #FF8A1B 100%)' : 'white',
+                  // 未選択時も完全に1pxの実線で囲む設定
+                  border: isActive ? '1.5px solid transparent' : '1.5px solid #D1D5DB',
+                  color: isActive ? 'white' : '#4B5563',
+                  fontSize: 14,
+                  fontWeight: isActive ? '700' : '500',
+                  whiteSpace: 'nowrap',
+                  transition: 'all 0.2s',
+                  boxSizing: 'border-box'
+                }}
+              >
+                {filter.label}
               </div>
-              <div style={{ color: '#6B7280', fontSize: 12, fontFamily: 'Inter', fontWeight: '600', wordWrap: 'break-word' }}>佐藤先生</div>
-            </div>
-            <div style={{ justifyContent: 'flex-start', alignItems: 'center', gap: 6, display: 'flex' }}>
-              <div style={{ color: '#6B7280', fontSize: 12, fontFamily: 'Inter', fontWeight: '400', wordWrap: 'break-word' }}>今日 08:30</div>
-              <div style={{ width: 8, height: 8, background: 'linear-gradient(135deg, #FF4D4D 0%, #FF8A1B 100%)', borderRadius: 9999 }} />
-            </div>
-          </div>
-          <div style={{ alignSelf: 'stretch', color: '#111827', fontSize: 14, fontFamily: 'Inter', fontWeight: '400', lineHeight: '20px', wordWrap: 'break-word' }}>今日の宿題提出について、授業開始前に提出用ロッカーに入れておいてください。忘れた場合は減点対象となります。</div>
+            );
+          })}
         </div>
+      </header>
 
-        <div style={{ alignSelf: 'stretch', padding: 16, background: 'white', borderRadius: 24, outline: '1px #E5E7EB solid', outlineOffset: '-1px', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: 12, display: 'flex' }}>
-          <div style={{ alignSelf: 'stretch', justifyContent: 'space-between', alignItems: 'center', display: 'inline-flex' }}>
-            <div style={{ justifyContent: 'flex-start', alignItems: 'center', gap: 8, display: 'flex' }}>
-              <div style={{ paddingLeft: 8, paddingRight: 8, paddingTop: 4, paddingBottom: 4, background: '#F3F4F6', borderRadius: 6, justifyContent: 'flex-start', alignItems: 'flex-start', display: 'flex' }}>
-                <div style={{ color: '#111827', fontSize: 11, fontFamily: 'Inter', fontWeight: '700', wordWrap: 'break-word' }}>英語II</div>
+      {/* ===== メインコンテンツ部分 ===== */}
+      <main style={{ 
+        flex: 1,
+        overflowY: 'auto',
+        padding: '20px 24px',
+        width: '100%',
+        boxSizing: 'border-box',
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+        gap: 16,
+        alignContent: 'start'
+      }}>
+        {ANNOUNCEMENTS.map(ann => (
+          <article 
+            key={ann.id} 
+            style={{ 
+              padding: 20, 
+              background: 'white', 
+              borderRadius: 20, 
+              outline: ann.isUnread ? '1.50px #FF4D4D solid' : '1px #E5E7EB solid', 
+              outlineOffset: ann.isUnread ? '-1.50px' : '-1px', 
+              display: 'flex', 
+              flexDirection: 'column', 
+              justifyContent: 'space-between',
+              gap: 14,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
+            }}
+          >
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ padding: '4px 10px', background: '#F3F4F6', borderRadius: 6 }}>
+                    <div style={{ color: '#111827', fontSize: 12, fontWeight: '700' }}>{ann.subject}</div>
+                  </div>
+                  <div style={{ color: '#6B7280', fontSize: 13, fontWeight: '600' }}>{ann.teacher}</div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div style={{ color: '#9CA3AF', fontSize: 12, fontWeight: '400' }}>{ann.time}</div>
+                  {ann.isUnread && (
+                    <div style={{ width: 8, height: 8, background: 'linear-gradient(135deg, #FF4D4D 0%, #FF8A1B 100%)', borderRadius: '50%' }} />
+                  )}
+                </div>
               </div>
-              <div style={{ color: '#6B7280', fontSize: 12, fontFamily: 'Inter', fontWeight: '600', wordWrap: 'break-word' }}>鈴木先生</div>
-            </div>
-            <div style={{ justifyContent: 'flex-start', alignItems: 'center', gap: 6, display: 'flex' }}>
-              <div style={{ color: '#6B7280', fontSize: 12, fontFamily: 'Inter', fontWeight: '400', wordWrap: 'break-word' }}>昨日 16:15</div>
-            </div>
-          </div>
-          <div style={{ alignSelf: 'stretch', color: '#111827', fontSize: 14, fontFamily: 'Inter', fontWeight: '400', lineHeight: '20px', wordWrap: 'break-word' }}>暗唱課題の提出締め切りを、明日の17:00まで延長します。まだ録音データを送信していない人は必ず提出してください。</div>
-        </div>
-
-        <div style={{ alignSelf: 'stretch', padding: 16, background: 'white', borderRadius: 24, outline: '1.50px #FF4D4D solid', outlineOffset: '-1.50px', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: 12, display: 'flex' }}>
-          <div style={{ alignSelf: 'stretch', justifyContent: 'space-between', alignItems: 'center', display: 'inline-flex' }}>
-            <div style={{ justifyContent: 'flex-start', alignItems: 'center', gap: 8, display: 'flex' }}>
-              <div style={{ paddingLeft: 8, paddingRight: 8, paddingTop: 4, paddingBottom: 4, background: '#F3F4F6', borderRadius: 6, justifyContent: 'flex-start', alignItems: 'flex-start', display: 'flex' }}>
-                <div style={{ color: '#111827', fontSize: 11, fontFamily: 'Inter', fontWeight: '700', wordWrap: 'break-word' }}>物理</div>
+              <div style={{ color: '#1F2937', fontSize: 14, lineHeight: '22px' }}>
+                {ann.content}
               </div>
-              <div style={{ color: '#6B7280', fontSize: 12, fontFamily: 'Inter', fontWeight: '600', wordWrap: 'break-word' }}>田中先生</div>
             </div>
-            <div style={{ justifyContent: 'flex-start', alignItems: 'center', gap: 6, display: 'flex' }}>
-              <div style={{ color: '#6B7280', fontSize: 12, fontFamily: 'Inter', fontWeight: '400', wordWrap: 'break-word' }}>10月22日</div>
-              <div style={{ width: 8, height: 8, background: 'linear-gradient(135deg, #FF4D4D 0%, #FF8A1B 100%)', borderRadius: 9999 }} />
-            </div>
-          </div>
-          <div style={{ alignSelf: 'stretch', color: '#111827', fontSize: 14, fontFamily: 'Inter', fontWeight: '400', lineHeight: '20px', wordWrap: 'break-word' }}>実験レポートの書き方に関する手引き資料をアップロードしました。各自ダウンロードして目を通しておくようにしてください。</div>
-        </div>
-      </div>
+          </article>
+        ))}
+      </main>
 
-      <div style={{ alignSelf: 'stretch', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', display: 'flex', position: 'sticky', bottom: 0, background: 'white' }}>
-        <div style={{ alignSelf: 'stretch', height: 84, paddingLeft: 16, paddingRight: 16, background: 'white', borderTop: '1px #E5E7EB solid', justifyContent: 'space-between', alignItems: 'center', display: 'inline-flex' }}>
-          <div style={{ width: 80, flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 4, display: 'inline-flex' }}>
-            <img style={{ width: 22, height: 22, position: 'relative' }} src="https://placehold.co/22x22" alt="home" />
-            <div style={{ color: '#6B7280', fontSize: 11, fontFamily: 'Inter', fontWeight: '600', wordWrap: 'break-word' }}>ホーム</div>
-          </div>
-          <div style={{ width: 80, flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 4, display: 'inline-flex' }}>
-            <img style={{ width: 22, height: 22, position: 'relative' }} src="https://placehold.co/22x22" alt="calendar" />
-            <div style={{ color: '#6B7280', fontSize: 11, fontFamily: 'Inter', fontWeight: '600', wordWrap: 'break-word' }}>カレンダー</div>
-          </div>
-          <div style={{ width: 80, flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 4, display: 'inline-flex' }}>
-            <img style={{ width: 22, height: 22, position: 'relative' }} src="https://placehold.co/22x22" alt="class" />
-            <div style={{ color: '#111827', fontSize: 11, fontFamily: 'Inter', fontWeight: '600', wordWrap: 'break-word' }}>クラス</div>
-          </div>
-          <div style={{ width: 80, flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 4, display: 'inline-flex' }}>
-            <img style={{ width: 22, height: 22, position: 'relative' }} src="https://placehold.co/22x22" alt="settings" />
-            <div style={{ color: '#6B7280', fontSize: 11, fontFamily: 'Inter', fontWeight: '600', wordWrap: 'break-word' }}>設定</div>
-          </div>
-        </div>
-        <div style={{ alignSelf: 'stretch', paddingBottom: 8, flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'center', display: 'flex' }}>
-          <div style={{ width: 134, height: 5, opacity: 0.30, background: '#111827', borderRadius: 100 }} />
-        </div>
-      </div>
+      {/* ===== ボトムナビゲーション部分 ===== */}
+      <nav style={{ 
+        flexShrink: 0, 
+        height: 72, 
+        background: 'white', 
+        borderTop: '1px #E5E7EB solid', 
+        display: 'flex', 
+        justifyContent: 'space-around', 
+        alignItems: 'center',
+        width: '100%',
+        boxSizing: 'border-box'
+      }}>
+        {TABS.map(tab => {
+          const isActive = activeTab === tab.id;
+          return (
+            <div 
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              style={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                alignItems: 'center', 
+                gap: 4,
+                cursor: 'pointer',
+                padding: '8px 16px',
+                borderRadius: 8
+              }}
+            >
+              <img 
+                style={{ 
+                  width: 22, 
+                  height: 22, 
+                  opacity: isActive ? 1 : 0.4,
+                  transition: 'opacity 0.2s'
+                }} 
+                src={tab.iconUrl} 
+                alt={tab.id} 
+              />
+              <div style={{ 
+                color: isActive ? '#111827' : '#6B7280', 
+                fontSize: 12, 
+                fontWeight: isActive ? '700' : '500' 
+              }}>
+                {tab.label}
+              </div>
+            </div>
+          );
+        })}
+      </nav>
+
     </div>
   );
 }
