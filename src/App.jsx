@@ -12,7 +12,7 @@ function RequireIdentity({ children }) {
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<Linkpage />} />
+      <Route path="/" element={<LinkPage />} />
       <Route
         path="/home"
         element={
