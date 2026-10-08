@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useAnnouncements } from '../lib/announcements';
 import { useIdentity } from '../auth/identity';
 import CopyButton from '../components/CopyButton';
 
@@ -18,61 +19,62 @@ import settingsActiveIcon from '../assets/settings-active.svg';
 import searchIcon from '../assets/search.svg';
 
 // --- モックデータ ---
-const ANNOUNCEMENTS = [
-  {
-    id: 1,
-    subject: '数学A',
-    teacher: '召田先生',
-    time: '今日 08:30',
-    content: 'あなたたち121教室で追試します！理由はお分かりですね！あなたたちが部活を理由に勉強をサボっていたからです！追試にぶち込まれる楽しみにしてください！',
-    isUnread: true,
-    tag: 'test',
-  },
-  {
-    id: 2,
-    subject: '英語コミュニケーション',
-    teacher: '伴野先生',
-    time: '昨日 16:15',
-    content: '課題の提出締め切りは、昨日の17:00までにしました。未提出の人は追試になります。',
-    isUnread: false,
-    tag: 'general',
-  },
-  {
-    id: 3,
-    subject: '地理',
-    teacher: '佐々木先生',
-    time: '10月22日',
-    content: '明日のテスト、やっぱり全範囲にするね！いけるよね！',
-    isUnread: true,
-    tag: 'test',
-  },
-  {
-    id: 4,
-    subject: '2学年探求',
-    teacher: '櫻井先生',
-    time: '10月20日',
-    content: 'はい！はい！はい！はい！はい！はい！',
-    isUnread: true,
-    tag: 'festival',
-  }
-];
+// const ANNOUNCEMENTS = [
+//   {
+//     id: 1,
+//     subject: '数学A',
+//     teacher: '召田先生',
+//     time: '今日 08:30',
+//     content: 'あなたたち121教室で追試します！理由はお分かりですね！あなたたちが部活を理由に勉強をサボっていたからです！追試にぶち込まれる楽しみにしてください！',
+//     isUnread: true,
+//     tag: 'test',
+//   },
+//   {
+//     id: 2,
+//     subject: '英語コミュニケーション',
+//     teacher: '伴野先生',
+//     time: '昨日 16:15',
+//     content: '課題の提出締め切りは、昨日の17:00までにしました。未提出の人は追試になります。',
+//     isUnread: false,
+//     tag: 'general',
+//   },
+//   {
+//     id: 3,
+//     subject: '地理',
+//     teacher: '佐々木先生',
+//     time: '10月22日',
+//     content: '明日のテスト、やっぱり全範囲にするね！いけるよね！',
+//     isUnread: true,
+//     tag: 'test',
+//   },
+//   {
+//     id: 4,
+//     subject: '2学年探求',
+//     teacher: '櫻井先生',
+//     time: '10月20日',
+//     content: 'はい！はい！はい！はい！はい！はい！',
+//     isUnread: true,
+//     tag: 'festival',
+//   }
+// ];
 
-const TABS = [
-  { id: 'home', label: 'ホーム', icon: homeIcon, activeIcon: homeActiveIcon },
-  { id: 'calendar', label: 'カレンダー', icon: calendarIcon, activeIcon: calendarActiveIcon },
-  { id: 'class', label: 'クラス', icon: classIcon, activeIcon: classActiveIcon },
-  { id: 'settings', label: '設定', icon: settingsIcon, activeIcon: settingsActiveIcon },
-];
+// const TABS = [
+//   { id: 'home', label: 'ホーム', icon: homeIcon, activeIcon: homeActiveIcon },
+//   { id: 'calendar', label: 'カレンダー', icon: calendarIcon, activeIcon: calendarActiveIcon },
+//   { id: 'class', label: 'クラス', icon: classIcon, activeIcon: classActiveIcon },
+//   { id: 'settings', label: '設定', icon: settingsIcon, activeIcon: settingsActiveIcon },
+// ];
 
-const FILTERS = [
-  { id: 'all', label: 'すべて' },
-  { id: 'unread', label: '未読' },
-  { id: 'test', label: 'テスト関連' },
-  { id: 'festival', label: 'トンボ祭関連' },
-];
+// const FILTERS = [
+//   { id: 'all', label: 'すべて' },
+//   { id: 'unread', label: '未読' },
+//   { id: 'test', label: 'テスト関連' },
+//   { id: 'festival', label: 'トンボ祭関連' },
+// ];
 
 export default function Class() {
   const { identity, signOut } = useIdentity();
+  const { status, items, markRead } = useAnnouncements(identity.id);
   
   const [activeTab, setActiveTab] = useState('class');
   const [activeFilter, setActiveFilter] = useState('all');
@@ -80,7 +82,7 @@ export default function Class() {
   // フォントサイズ基準値（プログラム制御対応）
   const [baseFontSize, setBaseFontSize] = useState(14);
 
-  const filteredAnnouncements = ANNOUNCEMENTS.filter(ann => {
+  const filteredAnnouncements = items.filter(ann => {
     if (activeFilter === 'all') return true;
     if (activeFilter === 'unread') return ann.isUnread;
     return ann.tag === activeFilter;
@@ -184,7 +186,8 @@ export default function Class() {
         {filteredAnnouncements.length > 0 ? (
           filteredAnnouncements.map(ann => (
             <article 
-              key={ann.id} 
+              key={ann.id}
+              onClick={() => markRead(ann.id)} 
               style={{ 
                 position: 'relative', 
                 // ★ 下部余白を他とバランスが良い 1.2em に戻し余計な空白を解消
@@ -221,7 +224,7 @@ export default function Class() {
                     )}
                   </div>
                 </div>
-                <div style={{ color: '#1F2937', fontSize: '1em', lineHeight: '1.5em' }}>
+                <div style={{ color: '#1F2937', fontSize: '1em', lineHeight: '1.5em' , whiteSpace: 'pre-wrap'}}>
                   {ann.content}
                 </div>
               </div>
@@ -243,7 +246,7 @@ export default function Class() {
           ))
         ) : (
           <div style={{ padding: '3em 0', textAlign: 'center', color: '#9CA3AF', gridColumn: '1 / -1', userSelect: 'none' }}>
-            該当するお知らせはありません
+            {status === 'loading' ? '読み込み中…' : status === 'error' ? '読み込みに失敗しました' : '該当するお知らせはありません'}
           </div>
         )}
       </main>
