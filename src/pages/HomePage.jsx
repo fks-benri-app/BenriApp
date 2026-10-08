@@ -1,55 +1,91 @@
 import React, { useState } from 'react';
 import { useIdentity } from '../auth/identity';
 
-// --- モックデータ ---
+// ★ 通常バージョンのアイコン
+import homeIcon from '../assets/home.svg';
+import calendarIcon from '../assets/calendar.svg';
+import classIcon from '../assets/message-square.svg';
+import settingsIcon from '../assets/settings.svg';
+
+// ★ assets 内の発光（アクティブ）バージョンアイコン
+import homeActiveIcon from '../assets/home-active.svg';
+import calendarActiveIcon from '../assets/calendar-active.svg';
+import classActiveIcon from '../assets/message-square-active.svg';
+import settingsActiveIcon from '../assets/settings-active.svg';
+
+// ★ ヘッダー用（検索アイコン）
+import searchIcon from '../assets/search.svg';
+
+// --- モックデータ（tag を追加） ---
 const ANNOUNCEMENTS = [
   {
     id: 1,
     subject: '数学A',
-    teacher: '佐藤先生',
+    teacher: '召田先生',
     time: '今日 08:30',
-    content: '今日の宿題提出について、授業開始前に提出用ロッカーに入れておいてください。忘れた場合は減点対象となります。',
+    content: 'あなたたち121教室で追試します！理由はお分かりですね！あなたたちが部活を理由に勉強をサボっていたからです！追試にぶち込まれる楽しみにしてください！',
     isUnread: true,
+    tag: 'test', // テスト関連
   },
   {
     id: 2,
-    subject: '英語II',
-    teacher: '鈴木先生',
+    subject: '英語コミュニケーション',
+    teacher: '伴野先生',
     time: '昨日 16:15',
-    content: '暗唱課題の提出締め切りを、明日の17:00まで延長します。まだ録音データを送信していない人は必ず提出してください。',
+    content: '課題の提出締め切りは、昨日の17:00までにしました。未提出の人は追試になります。',
     isUnread: false,
+    tag: 'general', // 全般
   },
   {
     id: 3,
-    subject: '物理',
-    teacher: '田中先生',
+    subject: '地理',
+    teacher: '佐々木先生',
     time: '10月22日',
-    content: '実験レポートの書き方に関する手引き資料をアップロードしました。各自ダウンロードして目を通しておくようにしてください。',
+    content: '明日のテスト、やっぱり全範囲にするね！いけるよね！',
     isUnread: true,
+    tag: 'test', // テスト関連
+  },
+  {
+    id: 4,
+    subject: '2学年探求',
+    teacher: '櫻井先生',
+    time: '10月20日',
+    content: 'はい！はい！はい！はい！はい！はい！',
+    isUnread: true,
+    tag: 'festival', // トンボ祭関連
   }
 ];
 
 const TABS = [
-  { id: 'home', label: 'ホーム', iconUrl: 'https://placehold.co/22x22' },
-  { id: 'calendar', label: 'カレンダー', iconUrl: 'https://placehold.co/22x22' },
-  { id: 'class', label: 'クラス', iconUrl: 'https://placehold.co/22x22' },
-  { id: 'settings', label: '設定', iconUrl: 'https://placehold.co/22x22' },
+  { id: 'home', label: 'ホーム', icon: homeIcon, activeIcon: homeActiveIcon },
+  { id: 'calendar', label: 'カレンダー', icon: calendarIcon, activeIcon: calendarActiveIcon },
+  { id: 'class', label: 'クラス', icon: classIcon, activeIcon: classActiveIcon },
+  { id: 'settings', label: '設定', icon: settingsIcon, activeIcon: settingsActiveIcon },
 ];
 
 const FILTERS = [
   { id: 'all', label: 'すべて' },
   { id: 'unread', label: '未読' },
   { id: 'test', label: 'テスト関連' },
+  { id: 'festival', label: 'トンボ祭関連' },
 ];
 
 export default function HomePage() {
   const { identity, signOut } = useIdentity();
   
-  const [activeTab, setActiveTab] = useState('home');
+  const [activeTab, setActiveTab] = useState('class');
   const [activeFilter, setActiveFilter] = useState('all');
 
+  // フォントサイズ基準値（プログラム制御対応）
+  const [baseFontSize, setBaseFontSize] = useState(10);
+
+  const filteredAnnouncements = ANNOUNCEMENTS.filter(ann => {
+    if (activeFilter === 'all') return true;
+    if (activeFilter === 'unread') return ann.isUnread;
+    return ann.tag === activeFilter;
+  });
+
   return (
-    // 画面いっぱいに表示（余白ゼロ）
     <div style={{
       width: '100vw',
       height: '100vh',
@@ -59,25 +95,49 @@ export default function HomePage() {
       display: 'flex',
       flexDirection: 'column',
       boxSizing: 'border-box',
-      overflow: 'hidden'
+      overflow: 'hidden',
+      fontSize: `${baseFontSize}px`
     }}>
       
-      {/* ===== ヘッダー部分（固定） ===== */}
+      {/* ===== ヘッダー部分 ===== */}
       <header style={{ 
         flexShrink: 0, 
-        paddingBottom: 12, 
+        paddingBottom: '0.8em', 
         borderBottom: '1px #F3F4F6 solid',
         width: '100%'
       }}>
-        <div style={{ padding: '20px 24px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ color: '#111827', fontSize: 24, fontFamily: 'Inter', fontWeight: '800' }}>
+        <div style={{ 
+          padding: '1.2em 1.5em 0.8em', 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center' 
+        }}>
+          <div style={{ 
+            color: '#111827', 
+            fontSize: '1.6em', 
+            fontFamily: 'Inter', 
+            fontWeight: '800',
+            userSelect: 'none'
+          }}>
             クラスルームからのお知らせ
           </div>
-          <img style={{ width: 24, height: 24, cursor: 'pointer' }} src="https://placehold.co/22x22" alt="bell" />
+          
+          {/* 右上アイコン（bellアイコンをsearchアイコンへ置き換え） */}
+          <img 
+            style={{ 
+              width: '1.5em', 
+              height: '1.5em', 
+              cursor: 'pointer', 
+              userSelect: 'none',
+              WebkitUserSelect: 'none' 
+            }} 
+            src={searchIcon} 
+            alt="search" 
+          />
         </div>
 
-        {/* フィルターボタン（カプセル形状） */}
-        <div style={{ padding: '0 24px', display: 'flex', gap: 10, overflowX: 'auto' }}>
+        {/* フィルターボタン */}
+        <div style={{ padding: '0 1.5em', display: 'flex', gap: '0.7em', overflowX: 'auto' }}>
           {FILTERS.map(filter => {
             const isActive = activeFilter === filter.id;
             return (
@@ -85,18 +145,20 @@ export default function HomePage() {
                 key={filter.id}
                 onClick={() => setActiveFilter(filter.id)}
                 style={{
-                  padding: '8px 20px',
-                  borderRadius: 9999, // 完全に丸みのあるカプセル形状に指定
+                  padding: '0.5em 1.2em',
+                  borderRadius: '9999px',
                   cursor: 'pointer',
-                  background: isActive ? 'linear-gradient(135deg, #FF4D4D 0%, #FF8A1B 100%)' : 'white',
-                  // 未選択時も完全に1pxの実線で囲む設定
+                  backgroundImage: isActive ? 'linear-gradient(135deg, #FF4D4D 0%, #FF8A1B 100%)' : 'none',
+                  backgroundColor: isActive ? 'transparent' : 'white',
                   border: isActive ? '1.5px solid transparent' : '1.5px solid #D1D5DB',
                   color: isActive ? 'white' : '#4B5563',
-                  fontSize: 14,
+                  fontSize: '1em',
                   fontWeight: isActive ? '700' : '500',
                   whiteSpace: 'nowrap',
                   transition: 'all 0.2s',
-                  boxSizing: 'border-box'
+                  boxSizing: 'border-box',
+                  userSelect: 'none',
+                  WebkitUserSelect: 'none'
                 }}
               >
                 {filter.label}
@@ -110,57 +172,69 @@ export default function HomePage() {
       <main style={{ 
         flex: 1,
         overflowY: 'auto',
-        padding: '20px 24px',
+        padding: '1.2em 1.5em',
         width: '100%',
         boxSizing: 'border-box',
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-        gap: 16,
+        gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+        gap: '1.2em',
         alignContent: 'start'
       }}>
-        {ANNOUNCEMENTS.map(ann => (
-          <article 
-            key={ann.id} 
-            style={{ 
-              padding: 20, 
-              background: 'white', 
-              borderRadius: 20, 
-              outline: ann.isUnread ? '1.50px #FF4D4D solid' : '1px #E5E7EB solid', 
-              outlineOffset: ann.isUnread ? '-1.50px' : '-1px', 
-              display: 'flex', 
-              flexDirection: 'column', 
-              justifyContent: 'space-between',
-              gap: 14,
-              boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
-            }}
-          >
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <div style={{ padding: '4px 10px', background: '#F3F4F6', borderRadius: 6 }}>
-                    <div style={{ color: '#111827', fontSize: 12, fontWeight: '700' }}>{ann.subject}</div>
+        {filteredAnnouncements.length > 0 ? (
+          filteredAnnouncements.map(ann => (
+            <article 
+              key={ann.id} 
+              style={{ 
+                padding: '1.2em', 
+                background: 'white', 
+                borderRadius: '1.2em', 
+                outline: ann.isUnread ? '1.5px #FF4D4D solid' : '1px #E5E7EB solid', 
+                outlineOffset: ann.isUnread ? '-1.5px' : '-1px', 
+                display: 'flex', 
+                flexDirection: 'column', 
+                justifyContent: 'space-between',
+                gap: '1em',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
+              }}
+            >
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8em' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6em' }}>
+                    <div style={{ padding: '0.3em 0.7em', background: '#F3F4F6', borderRadius: '0.4em' }}>
+                      <div style={{ color: '#111827', fontSize: '0.85em', fontWeight: '700', userSelect: 'none' }}>
+                        {ann.subject}
+                      </div>
+                    </div>
+                    <div style={{ color: '#6B7280', fontSize: '0.9em', fontWeight: '600', userSelect: 'none' }}>
+                      {ann.teacher}
+                    </div>
                   </div>
-                  <div style={{ color: '#6B7280', fontSize: 13, fontWeight: '600' }}>{ann.teacher}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4em' }}>
+                    <div style={{ color: '#9CA3AF', fontSize: '0.85em', fontWeight: '400', userSelect: 'none' }}>
+                      {ann.time}
+                    </div>
+                    {ann.isUnread && (
+                      <div style={{ width: '0.6em', height: '0.6em', background: 'linear-gradient(135deg, #FF4D4D 0%, #FF8A1B 100%)', borderRadius: '50%' }} />
+                    )}
+                  </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <div style={{ color: '#9CA3AF', fontSize: 12, fontWeight: '400' }}>{ann.time}</div>
-                  {ann.isUnread && (
-                    <div style={{ width: 8, height: 8, background: 'linear-gradient(135deg, #FF4D4D 0%, #FF8A1B 100%)', borderRadius: '50%' }} />
-                  )}
+                <div style={{ color: '#1F2937', fontSize: '1em', lineHeight: '1.5em' }}>
+                  {ann.content}
                 </div>
               </div>
-              <div style={{ color: '#1F2937', fontSize: 14, lineHeight: '22px' }}>
-                {ann.content}
-              </div>
-            </div>
-          </article>
-        ))}
+            </article>
+          ))
+        ) : (
+          <div style={{ padding: '3em 0', textAlign: 'center', color: '#9CA3AF', gridColumn: '1 / -1', userSelect: 'none' }}>
+            該当するお知らせはありません
+          </div>
+        )}
       </main>
 
       {/* ===== ボトムナビゲーション部分 ===== */}
       <nav style={{ 
         flexShrink: 0, 
-        height: 72, 
+        padding: '0.8em 1.5em', 
         background: 'white', 
         borderTop: '1px #E5E7EB solid', 
         display: 'flex', 
@@ -179,26 +253,30 @@ export default function HomePage() {
                 display: 'flex', 
                 flexDirection: 'column', 
                 alignItems: 'center', 
-                gap: 4,
+                gap: '0.3em',
                 cursor: 'pointer',
-                padding: '8px 16px',
-                borderRadius: 8
+                padding: '0.4em 1em',
+                borderRadius: '0.5em',
+                userSelect: 'none',
+                WebkitUserSelect: 'none'
               }}
             >
+              {/* 選択時と非選択時で画像ファイルを切り替え */}
               <img 
                 style={{ 
-                  width: 22, 
-                  height: 22, 
-                  opacity: isActive ? 1 : 0.4,
-                  transition: 'opacity 0.2s'
+                  width: '1.6em', 
+                  height: '1.6em', 
+                  opacity: isActive ? 1 : 0.45,
+                  transition: 'opacity 0.2s ease-in-out'
                 }} 
-                src={tab.iconUrl} 
+                src={isActive ? tab.activeIcon : tab.icon} 
                 alt={tab.id} 
               />
               <div style={{ 
-                color: isActive ? '#111827' : '#6B7280', 
-                fontSize: 12, 
-                fontWeight: isActive ? '700' : '500' 
+                color: isActive ? '#111827' : '#6B7280', // 選択時は濃い黒色 (#111827)
+                fontSize: '0.85em', 
+                fontWeight: '700',                       // 常に太字
+                transition: 'color 0.2s ease-in-out'
               }}>
                 {tab.label}
               </div>
