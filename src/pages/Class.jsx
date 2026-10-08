@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useIdentity } from '../auth/identity';
+import CopyButton from '../components/CopyButton';
 
-// ★ 通常バージョンのアイコン
+// ★ assets 内の通常アイコン
 import homeIcon from '../assets/home.svg';
 import calendarIcon from '../assets/calendar.svg';
 import classIcon from '../assets/message-square.svg';
@@ -16,7 +17,7 @@ import settingsActiveIcon from '../assets/settings-active.svg';
 // ★ ヘッダー用（検索アイコン）
 import searchIcon from '../assets/search.svg';
 
-// --- モックデータ（tag を追加） ---
+// --- モックデータ ---
 const ANNOUNCEMENTS = [
   {
     id: 1,
@@ -25,7 +26,7 @@ const ANNOUNCEMENTS = [
     time: '今日 08:30',
     content: 'あなたたち121教室で追試します！理由はお分かりですね！あなたたちが部活を理由に勉強をサボっていたからです！追試にぶち込まれる楽しみにしてください！',
     isUnread: true,
-    tag: 'test', // テスト関連
+    tag: 'test',
   },
   {
     id: 2,
@@ -34,7 +35,7 @@ const ANNOUNCEMENTS = [
     time: '昨日 16:15',
     content: '課題の提出締め切りは、昨日の17:00までにしました。未提出の人は追試になります。',
     isUnread: false,
-    tag: 'general', // 全般
+    tag: 'general',
   },
   {
     id: 3,
@@ -43,7 +44,7 @@ const ANNOUNCEMENTS = [
     time: '10月22日',
     content: '明日のテスト、やっぱり全範囲にするね！いけるよね！',
     isUnread: true,
-    tag: 'test', // テスト関連
+    tag: 'test',
   },
   {
     id: 4,
@@ -52,7 +53,7 @@ const ANNOUNCEMENTS = [
     time: '10月20日',
     content: 'はい！はい！はい！はい！はい！はい！',
     isUnread: true,
-    tag: 'festival', // トンボ祭関連
+    tag: 'festival',
   }
 ];
 
@@ -70,14 +71,14 @@ const FILTERS = [
   { id: 'festival', label: 'トンボ祭関連' },
 ];
 
-export default function HomePage() {
+export default function Class() {
   const { identity, signOut } = useIdentity();
   
   const [activeTab, setActiveTab] = useState('class');
   const [activeFilter, setActiveFilter] = useState('all');
 
   // フォントサイズ基準値（プログラム制御対応）
-  const [baseFontSize, setBaseFontSize] = useState(10);
+  const [baseFontSize, setBaseFontSize] = useState(14);
 
   const filteredAnnouncements = ANNOUNCEMENTS.filter(ann => {
     if (activeFilter === 'all') return true;
@@ -122,7 +123,7 @@ export default function HomePage() {
             クラスルームからのお知らせ
           </div>
           
-          {/* 右上アイコン（bellアイコンをsearchアイコンへ置き換え） */}
+          {/* 右上アイコン */}
           <img 
             style={{ 
               width: '1.5em', 
@@ -185,6 +186,8 @@ export default function HomePage() {
             <article 
               key={ann.id} 
               style={{ 
+                position: 'relative', 
+                // ★ 下部余白を他とバランスが良い 1.2em に戻し余計な空白を解消
                 padding: '1.2em', 
                 background: 'white', 
                 borderRadius: '1.2em', 
@@ -221,6 +224,20 @@ export default function HomePage() {
                 <div style={{ color: '#1F2937', fontSize: '1em', lineHeight: '1.5em' }}>
                   {ann.content}
                 </div>
+              </div>
+
+              {/* ★ 位置をカードの右下パディングに美しく揃えて配置 */}
+              <div style={{ 
+                position: 'absolute', 
+                bottom: '1em', 
+                right: '1.2em',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <CopyButton 
+                  textToCopy={`【${ann.subject}】${ann.teacher}\n日時: ${ann.time}\n${ann.content}`} 
+                />
               </div>
             </article>
           ))
@@ -261,7 +278,6 @@ export default function HomePage() {
                 WebkitUserSelect: 'none'
               }}
             >
-              {/* 選択時と非選択時で画像ファイルを切り替え */}
               <img 
                 style={{ 
                   width: '1.6em', 
@@ -273,9 +289,9 @@ export default function HomePage() {
                 alt={tab.id} 
               />
               <div style={{ 
-                color: isActive ? '#111827' : '#6B7280', // 選択時は濃い黒色 (#111827)
+                color: isActive ? '#111827' : '#6B7280',
                 fontSize: '0.85em', 
-                fontWeight: '700',                       // 常に太字
+                fontWeight: '700',
                 transition: 'color 0.2s ease-in-out'
               }}>
                 {tab.label}

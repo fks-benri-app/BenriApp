@@ -5,7 +5,7 @@ import { buildGasLoginUrl, isGasConfigured } from '../config';
 import { initOneSignal, subscribeAs } from '../lib/onesignal';
 import { isNotifyDone, markNotifyDone } from '../lib/storage';
 
-// ボトムナビ用アイコン
+// アイコン類
 import homeIcon from '../assets/home.svg';
 import calendarIcon from '../assets/calendar.svg';
 import classIcon from '../assets/message-square.svg';
@@ -18,42 +18,15 @@ import settingsActiveIcon from '../assets/settings-active.svg';
 
 import searchIcon from '../assets/search.svg';
 
-// カラーパターンの定義
+// テーマの定義
 const THEMES = {
-  orangeRed: {
-    gradient: 'linear-gradient(135deg, #FF4D4D 0%, #FF8A1B 100%)',
-    textColor: 'white',
-  },
-  // 1. ピンク 〜 ローズ
-  pinkRose: {
-    gradient: 'linear-gradient(135deg, #FF4D94 0%, #FF4D8A 100%)',
-    textColor: 'white',
-  },
-  // 2. イエロー 〜 オレンジ
-  yellowOrange: {
-    gradient: 'linear-gradient(135deg, #FFD14D 0%, #FFA21B 100%)',
-    textColor: 'white',
-  },
-  // 3. グリーン 〜 イエロー
-  greenYellow: {
-    gradient: 'linear-gradient(135deg, #A8FF4D 0%, #FFD11B 100%)',
-    textColor: '#111827', // 明るいグラデーションのため文字色をダークカラーに
-  },
-  // 4. シアン 〜 エメラルド
-  cyanEmerald: {
-    gradient: 'linear-gradient(135deg, #4DFFFF 0%, #1BFF8A 100%)',
-    textColor: '#111827', // 明るいグラデーションのため文字色をダークカラーに
-  },
-  // 5. ブルー 〜 シアン
-  blueCyan: {
-    gradient: 'linear-gradient(135deg, #4DA8FF 0%, #1BFFFF 100%)',
-    textColor: 'white',
-  },
-  // 6. パープル 〜 バイオレット
-  purpleViolet: {
-    gradient: 'linear-gradient(135deg, #944DFF 0%, #4D1BFF 100%)',
-    textColor: 'white',
-  },
+  orangeRed: { gradient: 'linear-gradient(135deg, #FF4D4D 0%, #FF8A1B 100%)', textColor: 'white' },
+  pinkRose: { gradient: 'linear-gradient(135deg, #FF4D94 0%, #FF4D8A 100%)', textColor: 'white' },
+  yellowOrange: { gradient: 'linear-gradient(135deg, #FFD14D 0%, #FFA21B 100%)', textColor: 'white' },
+  greenYellow: { gradient: 'linear-gradient(135deg, #A8FF4D 0%, #FFD11B 100%)', textColor: '#111827' },
+  cyanEmerald: { gradient: 'linear-gradient(135deg, #4DFFFF 0%, #1BFF8A 100%)', textColor: '#111827' },
+  blueCyan: { gradient: 'linear-gradient(135deg, #4DA8FF 0%, #1BFFFF 100%)', textColor: 'white' },
+  purpleViolet: { gradient: 'linear-gradient(135deg, #944DFF 0%, #4D1BFF 100%)', textColor: 'white' },
 };
 
 const ua = navigator.userAgent.toLowerCase();
@@ -76,27 +49,20 @@ export default function LinkPage() {
   const [message, setMessage] = useState('');
   const slowTimer = useRef(null);
 
-  // テーマ設定（切り替え可能）
-  const [currentTheme, setCurrentTheme] = useState('orangeRed');
+  const [currentTheme] = useState('orangeRed');
   const activeTheme = THEMES[currentTheme] || THEMES.orangeRed;
+  const [baseFontSize] = useState(14);
 
-  // 文字サイズの基準値
-  const [baseFontSize, setBaseFontSize] = useState(14);
-
-  // 下部ナビゲーションの選択状態（クラス固定）
   const activeTab = 'class';
 
-  // 画面を開いた時点で OneSignal を初期化
   useEffect(() => {
     initOneSignal();
   }, []);
 
-  // 連携も通知設定も終わっていれば /home に遷移
   if (identity && isNotifyDone(identity.id)) {
-    return <Navigate to="/home" replace />;
+    return <Navigate to="/class" replace />;
   }
 
-  // ① GAS へ連携開始
   function startLink() {
     if (!isGasConfigured()) {
       setMessage('src/config.js の GAS_URL がまだ設定されていません。');
@@ -105,7 +71,6 @@ export default function LinkPage() {
     window.location.href = buildGasLoginUrl();
   }
 
-  // ② 通知の許可と、端末のひもづけ
   async function enableNotifications() {
     setBusy(true);
     setMessage('設定中...');
@@ -117,7 +82,7 @@ export default function LinkPage() {
       const result = await subscribeAs(identity.id);
       if (result.ok) {
         markNotifyDone(identity.id);
-        navigate('/home', { replace: true });
+        navigate('/class', { replace: true });
         return;
       }
       setMessage(
@@ -137,59 +102,33 @@ export default function LinkPage() {
   const step = identity ? 2 : 1;
 
   return (
-    <div style={{
-      width: '100vw',
-      height: '100vh',
-      margin: 0,
-      padding: 0,
-      background: 'white',
-      display: 'flex',
-      flexDirection: 'column',
-      boxSizing: 'border-box',
-      overflow: 'hidden',
-      fontSize: `${baseFontSize}px`
-    }}>
-
+    <div 
+      onCopy={(e) => e.preventDefault()}
+      style={{
+        width: '100vw',
+        height: '100vh',
+        margin: 0,
+        padding: 0,
+        background: 'white',
+        display: 'flex',
+        flexDirection: 'column',
+        boxSizing: 'border-box',
+        overflow: 'hidden',
+        fontSize: `${baseFontSize}px`,
+        userSelect: 'none',
+        WebkitUserSelect: 'none'
+      }}
+    >
       {/* ===== ヘッダー部分 ===== */}
-      <header style={{ 
-        flexShrink: 0, 
-        paddingBottom: '0.8em', 
-        borderBottom: '1px #F3F4F6 solid',
-        width: '100%'
-      }}>
-        <div style={{ 
-          padding: '1.2em 1.5em 0.8em', 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center' 
-        }}>
-          {/* タイトルを元の「クラスルームからのお知らせ」に復元 */}
-          <div style={{ 
-            color: '#111827', 
-            fontSize: '1.6em', 
-            fontFamily: 'Inter', 
-            fontWeight: '800',
-            userSelect: 'none'
-          }}>
+      <header style={{ flexShrink: 0, paddingBottom: '0.8em', borderBottom: '1px #F3F4F6 solid', width: '100%' }}>
+        <div style={{ padding: '1.2em 1.5em 0.8em', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ color: '#111827', fontSize: '1.6em', fontFamily: 'Inter', fontWeight: '800' }}>
             クラスルームからのお知らせ
           </div>
-          
-          <img 
-            style={{ 
-              width: '1.5em', 
-              height: '1.5em', 
-              cursor: 'pointer', 
-              userSelect: 'none',
-              WebkitUserSelect: 'none' 
-            }} 
-            src={searchIcon} 
-            alt="search" 
-          />
+          <img style={{ width: '1.5em', height: '1.5em', cursor: 'pointer' }} src={searchIcon} alt="search" />
         </div>
 
-        {/* タグ表示（「1. 」「2. 」の数字を削除して復元） */}
         <div style={{ padding: '0 1.5em', display: 'flex', gap: '0.7em' }}>
-          {/* Step 1 タグ */}
           <div style={{
             padding: '0.5em 1.2em',
             borderRadius: '9999px',
@@ -200,14 +139,11 @@ export default function LinkPage() {
             fontSize: '1em',
             fontWeight: step === 1 ? '700' : '500',
             whiteSpace: 'nowrap',
-            boxSizing: 'border-box',
-            userSelect: 'none',
-            WebkitUserSelect: 'none'
+            boxSizing: 'border-box'
           }}>
             Classroom連携
           </div>
 
-          {/* Step 2 タグ */}
           <div style={{
             padding: '0.5em 1.2em',
             borderRadius: '9999px',
@@ -218,9 +154,7 @@ export default function LinkPage() {
             fontSize: '1em',
             fontWeight: step === 2 ? '700' : '500',
             whiteSpace: 'nowrap',
-            boxSizing: 'border-box',
-            userSelect: 'none',
-            WebkitUserSelect: 'none'
+            boxSizing: 'border-box'
           }}>
             通知を許可
           </div>
@@ -239,9 +173,10 @@ export default function LinkPage() {
         alignItems: 'flex-start'
       }}>
         <div style={{
+          position: 'relative',
           width: '100%',
           maxWidth: '500px',
-          padding: '1.8em',
+          padding: '1.8em 1.8em 2.5em 1.8em',
           background: 'white',
           borderRadius: '1.2em',
           outline: '1px #E5E7EB solid',
@@ -252,22 +187,12 @@ export default function LinkPage() {
           gap: '1.2em'
         }}>
 
-          {/* オフライン警告 */}
           {offline && (
-            <div style={{
-              padding: '0.8em 1em',
-              background: '#FEF2F2',
-              border: '1px solid #FECACA',
-              borderRadius: '0.6em',
-              color: '#DC2626',
-              fontSize: '0.95em',
-              lineHeight: '1.4em'
-            }}>
+            <div style={{ padding: '0.8em 1em', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: '0.6em', color: '#DC2626', fontSize: '0.95em' }}>
               インターネットに接続されていません。接続してからもう一度お試しください。
             </div>
           )}
 
-          {/* STEP 1: Classroom 連携 */}
           {!offline && step === 1 && (
             <>
               <div>
@@ -275,8 +200,7 @@ export default function LinkPage() {
                   Classroomの課題を通知で受け取る
                 </h1>
                 <p style={{ color: '#4B5563', fontSize: '1em', lineHeight: '1.6em', margin: 0 }}>
-                  新着課題やテスト範囲が出たら、このアプリにお知らせします。
-                  学校のGoogleアカウントでログインして連携します。
+                  新着課題やテスト範囲が出たら、このアプリにお知らせします。学校のGoogleアカウントでログインして連携します。
                 </p>
               </div>
 
@@ -291,26 +215,18 @@ export default function LinkPage() {
                   color: activeTheme.textColor,
                   fontSize: '1.05em',
                   fontWeight: '700',
-                  cursor: 'pointer',
-                  userSelect: 'none',
-                  WebkitUserSelect: 'none',
-                  transition: 'opacity 0.2s'
+                  cursor: 'pointer'
                 }}
               >
                 連携を開始する
               </button>
 
-              <div style={{
-                color: '#6B7280',
-                fontSize: '0.85em',
-                lineHeight: '1.5em'
-              }}>
+              <div style={{ color: '#6B7280', fontSize: '0.85em', lineHeight: '1.5em' }}>
                 ※「このアプリは確認されていません」と表示された場合は、画面内の「詳細」→「(安全ではないページ)に移動」を選択してください。
               </div>
             </>
           )}
 
-          {/* STEP 2: iOS ホーム追加案内 */}
           {!offline && step === 2 && isIos && !isStandalone && (
             <div>
               <h1 style={{ fontSize: '1.4em', fontWeight: '800', color: '#111827', margin: '0 0 0.5em 0' }}>
@@ -322,7 +238,6 @@ export default function LinkPage() {
             </div>
           )}
 
-          {/* STEP 2: 通知許可 */}
           {!offline && step === 2 && !(isIos && !isStandalone) && (
             <>
               <div>
@@ -348,16 +263,14 @@ export default function LinkPage() {
                     fontSize: '1.05em',
                     fontWeight: '700',
                     cursor: busy ? 'not-allowed' : 'pointer',
-                    opacity: busy ? 0.6 : 1,
-                    userSelect: 'none',
-                    WebkitUserSelect: 'none'
+                    opacity: busy ? 0.6 : 1
                   }}
                 >
                   通知を有効にする
                 </button>
 
                 <button 
-                  onClick={() => navigate('/home')} 
+                  onClick={() => navigate('/class')} 
                   disabled={busy}
                   style={{
                     width: '100%',
@@ -369,9 +282,7 @@ export default function LinkPage() {
                     fontSize: '1em',
                     fontWeight: '600',
                     cursor: busy ? 'not-allowed' : 'pointer',
-                    opacity: busy ? 0.6 : 1,
-                    userSelect: 'none',
-                    WebkitUserSelect: 'none'
+                    opacity: busy ? 0.6 : 1
                   }}
                 >
                   あとで設定する
@@ -380,18 +291,8 @@ export default function LinkPage() {
             </>
           )}
 
-          {/* エラー / ステータスメッセージ */}
           {message && (
-            <div style={{
-              padding: '0.8em 1em',
-              background: '#FFFBEB',
-              border: '1px solid #FCD34D',
-              borderRadius: '0.6em',
-              color: '#B45309',
-              fontSize: '0.9em',
-              whiteSpace: 'pre-wrap',
-              lineHeight: '1.4em'
-            }}>
+            <div style={{ padding: '0.8em 1em', background: '#FFFBEB', border: '1px solid #FCD34D', borderRadius: '0.6em', color: '#B45309', fontSize: '0.9em', whiteSpace: 'pre-wrap' }}>
               {message}
             </div>
           )}
@@ -417,36 +318,12 @@ export default function LinkPage() {
             <div 
               key={tab.id}
               onClick={() => {
-                if (tab.id === 'home') navigate('/home');
+                if (tab.id === 'class') navigate('/class');
               }}
-              style={{ 
-                display: 'flex', 
-                flexDirection: 'column', 
-                alignItems: 'center', 
-                gap: '0.3em',
-                cursor: 'pointer',
-                padding: '0.4em 1em',
-                borderRadius: '0.5em',
-                userSelect: 'none',
-                WebkitUserSelect: 'none'
-              }}
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.3em', cursor: 'pointer', padding: '0.4em 1em', borderRadius: '0.5em' }}
             >
-              <img 
-                style={{ 
-                  width: '1.6em', 
-                  height: '1.6em', 
-                  opacity: isActive ? 1 : 0.45,
-                  transition: 'opacity 0.2s ease-in-out'
-                }} 
-                src={isActive ? tab.activeIcon : tab.icon} 
-                alt={tab.id} 
-              />
-              <div style={{ 
-                color: isActive ? '#111827' : '#6B7280',
-                fontSize: '0.85em', 
-                fontWeight: '700',
-                transition: 'color 0.2s ease-in-out'
-              }}>
+              <img style={{ width: '1.6em', height: '1.6em', opacity: isActive ? 1 : 0.45, transition: 'opacity 0.2s' }} src={isActive ? tab.activeIcon : tab.icon} alt={tab.id} />
+              <div style={{ color: isActive ? '#111827' : '#6B7280', fontSize: '0.85em', fontWeight: '700', transition: 'color 0.2s' }}>
                 {tab.label}
               </div>
             </div>
