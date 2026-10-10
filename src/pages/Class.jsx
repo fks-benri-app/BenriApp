@@ -18,59 +18,20 @@ import settingsActiveIcon from '../assets/settings-active.svg';
 // ★ ヘッダー用（検索アイコン）
 import searchIcon from '../assets/search.svg';
 
-// --- モックデータ ---
-// const ANNOUNCEMENTS = [
-//   {
-//     id: 1,
-//     subject: '数学A',
-//     teacher: '召田先生',
-//     time: '今日 08:30',
-//     content: 'あなたたち121教室で追試します！理由はお分かりですね！あなたたちが部活を理由に勉強をサボっていたからです！追試にぶち込まれる楽しみにしてください！',
-//     isUnread: true,
-//     tag: 'test',
-//   },
-//   {
-//     id: 2,
-//     subject: '英語コミュニケーション',
-//     teacher: '伴野先生',
-//     time: '昨日 16:15',
-//     content: '課題の提出締め切りは、昨日の17:00までにしました。未提出の人は追試になります。',
-//     isUnread: false,
-//     tag: 'general',
-//   },
-//   {
-//     id: 3,
-//     subject: '地理',
-//     teacher: '佐々木先生',
-//     time: '10月22日',
-//     content: '明日のテスト、やっぱり全範囲にするね！いけるよね！',
-//     isUnread: true,
-//     tag: 'test',
-//   },
-//   {
-//     id: 4,
-//     subject: '2学年探求',
-//     teacher: '櫻井先生',
-//     time: '10月20日',
-//     content: 'はい！はい！はい！はい！はい！はい！',
-//     isUnread: true,
-//     tag: 'festival',
-//   }
-// ];
+// ★ ナビゲーションとフィルターの定数定義（コメントアウトを解除）
+const TABS = [
+  { id: 'home', label: 'ホーム', icon: homeIcon, activeIcon: homeActiveIcon },
+  { id: 'calendar', label: 'カレンダー', icon: calendarIcon, activeIcon: calendarActiveIcon },
+  { id: 'class', label: 'クラス', icon: classIcon, activeIcon: classActiveIcon },
+  { id: 'settings', label: '設定', icon: settingsIcon, activeIcon: settingsActiveIcon },
+];
 
-// const TABS = [
-//   { id: 'home', label: 'ホーム', icon: homeIcon, activeIcon: homeActiveIcon },
-//   { id: 'calendar', label: 'カレンダー', icon: calendarIcon, activeIcon: calendarActiveIcon },
-//   { id: 'class', label: 'クラス', icon: classIcon, activeIcon: classActiveIcon },
-//   { id: 'settings', label: '設定', icon: settingsIcon, activeIcon: settingsActiveIcon },
-// ];
-
-// const FILTERS = [
-//   { id: 'all', label: 'すべて' },
-//   { id: 'unread', label: '未読' },
-//   { id: 'test', label: 'テスト関連' },
-//   { id: 'festival', label: 'トンボ祭関連' },
-// ];
+const FILTERS = [
+  { id: 'all', label: 'すべて' },
+  { id: 'unread', label: '未読' },
+  { id: 'test', label: 'テスト関連' },
+  { id: 'festival', label: 'トンボ祭関連' },
+];
 
 export default function Class() {
   const { identity, signOut } = useIdentity();
@@ -190,7 +151,6 @@ export default function Class() {
               onClick={() => markRead(ann.id)} 
               style={{ 
                 position: 'relative', 
-                // ★ 下部余白を他とバランスが良い 1.2em に戻し余計な空白を解消
                 padding: '1.2em', 
                 background: 'white', 
                 borderRadius: '1.2em', 
