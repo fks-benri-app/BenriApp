@@ -14,7 +14,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<LinkPage />} />
       <Route
-        path="/home"
+        path="/class"
         element={
           <RequireIdentity>
             <Class />
