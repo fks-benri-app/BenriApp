@@ -48,6 +48,9 @@ export default function Class() {
     if (activeFilter === 'unread') return ann.isUnread;
     return ann.tag === activeFilter;
   });
+  // URL全体や、取得したIDをコンソールに出力してみる
+  console.log("現在のURL:", window.location.href);
+  console.log("読み取ったID:", identity);
 
   return (
     <div style={{
