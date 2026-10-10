@@ -35,7 +35,7 @@ const FILTERS = [
 
 export default function Class() {
   const { identity, signOut } = useIdentity();
-  const { status, items, markRead } = useAnnouncements(identity.id);
+  const { status, items, markRead } = useAnnouncements(identity?.id);
   
   const [activeTab, setActiveTab] = useState('class');
   const [activeFilter, setActiveFilter] = useState('all');
