@@ -1,7 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useIdentity } from './auth/identity';
 import LinkPage from './pages/LinkPage';
-import Class from './pages/Class';
+import Class from './pages/ClassRe';
 
 // ログイン済み(連携済み)の人だけが入れるページを包む
 function RequireIdentity({ children }) {
