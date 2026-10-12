@@ -106,7 +106,7 @@ export default function LinkPage() {
       onCopy={(e) => e.preventDefault()}
       style={{
         width: '100vw',
-        height: '100vh',
+        height: '100dvh',
         margin: 0,
         padding: 0,
         background: 'white',
@@ -116,28 +116,32 @@ export default function LinkPage() {
         overflow: 'hidden',
         fontSize: `${baseFontSize}px`,
         userSelect: 'none',
-        WebkitUserSelect: 'none'
+        WebkitUserSelect: 'none',
+        WebkitTapHighlightColor: 'transparent',
+        WebkitTouchCallout: 'none'
       }}
     >
       {/* ===== ヘッダー部分 ===== */}
-      <header style={{ flexShrink: 0, paddingBottom: '0.8em', borderBottom: '1px #F3F4F6 solid', width: '100%' }}>
-        <div style={{ padding: '1.2em 1.5em 0.8em', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ color: '#111827', fontSize: '1.6em', fontFamily: 'Inter', fontWeight: '800' }}>
+      <header style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '0.857em', paddingTop: 'calc(0.857em + env(safe-area-inset-top))', width: '100%' }}>
+        <div style={{ padding: '0 1.714em', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ color: '#111827', fontSize: '1.571em', fontFamily: 'Inter', fontWeight: '800' }}>
             クラスルームからのお知らせ
           </div>
-          <img style={{ width: '1.5em', height: '1.5em', cursor: 'pointer' }} src={searchIcon} alt="search" />
+          <img draggable={false} style={{ width: '1.571em', height: '1.571em', cursor: 'pointer' }} src={searchIcon} alt="search" />
         </div>
 
-        <div style={{ padding: '0 1.5em', display: 'flex', gap: '0.7em' }}>
+        <div style={{ padding: '0.571em 1.714em', display: 'flex', gap: '0.571em', overflowX: 'auto' }}>
           <div style={{
-            padding: '0.5em 1.2em',
-            borderRadius: '9999px',
+            padding: '0.571em 1.143em',
+            borderRadius: '0.857em',
+            flexShrink: 0,
             backgroundImage: step === 1 ? activeTheme.gradient : 'none',
             backgroundColor: step === 1 ? 'transparent' : 'white',
-            border: step === 1 ? '1.5px solid transparent' : '1.5px solid #D1D5DB',
+            outline: step === 1 ? 'none' : '1px #E5E7EB solid',
+            outlineOffset: '-1px',
             color: step === 1 ? activeTheme.textColor : '#6B7280',
             fontSize: '1em',
-            fontWeight: step === 1 ? '700' : '500',
+            fontWeight: step === 1 ? '700' : '400',
             whiteSpace: 'nowrap',
             boxSizing: 'border-box'
           }}>
@@ -145,14 +149,16 @@ export default function LinkPage() {
           </div>
 
           <div style={{
-            padding: '0.5em 1.2em',
-            borderRadius: '9999px',
+            padding: '0.571em 1.143em',
+            borderRadius: '0.857em',
+            flexShrink: 0,
             backgroundImage: step === 2 ? activeTheme.gradient : 'none',
             backgroundColor: step === 2 ? 'transparent' : 'white',
-            border: step === 2 ? '1.5px solid transparent' : '1.5px solid #D1D5DB',
+            outline: step === 2 ? 'none' : '1px #E5E7EB solid',
+            outlineOffset: '-1px',
             color: step === 2 ? activeTheme.textColor : '#6B7280',
             fontSize: '1em',
-            fontWeight: step === 2 ? '700' : '500',
+            fontWeight: step === 2 ? '700' : '400',
             whiteSpace: 'nowrap',
             boxSizing: 'border-box'
           }}>
@@ -165,7 +171,7 @@ export default function LinkPage() {
       <main style={{ 
         flex: 1,
         overflowY: 'auto',
-        padding: '1.5em',
+        padding: '0.857em 1.714em',
         width: '100%',
         boxSizing: 'border-box',
         display: 'flex',
@@ -303,11 +309,12 @@ export default function LinkPage() {
       {/* ===== ボトムナビゲーション部分 ===== */}
       <nav style={{ 
         flexShrink: 0, 
-        padding: '0.8em 1.5em', 
+        padding: '0 1.143em env(safe-area-inset-bottom)', 
+        height: 'calc(6em + env(safe-area-inset-bottom))',
         background: 'white', 
         borderTop: '1px #E5E7EB solid', 
         display: 'flex', 
-        justifyContent: 'space-around', 
+        justifyContent: 'space-between', 
         alignItems: 'center',
         width: '100%',
         boxSizing: 'border-box'
@@ -318,12 +325,12 @@ export default function LinkPage() {
             <div 
               key={tab.id}
               onClick={() => {
-                if (tab.id === 'class') navigate('/class');
+                if (tab.id === 'class' && identity) navigate('/class');
               }}
-              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.3em', cursor: 'pointer', padding: '0.4em 1em', borderRadius: '0.5em' }}
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.286em', justifyContent: 'center', width: '5.714em', cursor: 'pointer', padding: '0.4em 0', borderRadius: '0.5em' }}
             >
-              <img style={{ width: '1.6em', height: '1.6em', opacity: isActive ? 1 : 0.45, transition: 'opacity 0.2s' }} src={isActive ? tab.activeIcon : tab.icon} alt={tab.id} />
-              <div style={{ color: isActive ? '#111827' : '#6B7280', fontSize: '0.85em', fontWeight: '700', transition: 'color 0.2s' }}>
+              <img draggable={false} style={{ width: '1.571em', height: '1.571em', opacity: isActive ? 1 : 0.45, transition: 'opacity 0.2s' }} src={isActive ? tab.activeIcon : tab.icon} alt={tab.id} />
+              <div style={{ color: isActive ? '#111827' : '#6B7280', fontSize: '0.786em', fontWeight: '600', transition: 'color 0.2s' }}>
                 {tab.label}
               </div>
             </div>

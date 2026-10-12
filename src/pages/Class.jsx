@@ -55,7 +55,7 @@ export default function Class() {
   return (
     <div style={{
       width: '100vw',
-      height: '100vh',
+      height: '100dvh',
       margin: 0,
       padding: 0,
       background: 'white',
@@ -63,25 +63,29 @@ export default function Class() {
       flexDirection: 'column',
       boxSizing: 'border-box',
       overflow: 'hidden',
-      fontSize: `${baseFontSize}px`
+      fontSize: `${baseFontSize}px`,
+      WebkitTapHighlightColor: 'transparent',
+      WebkitTouchCallout: 'none'
     }}>
       
       {/* ===== ヘッダー部分 ===== */}
       <header style={{ 
         flexShrink: 0, 
-        paddingBottom: '0.8em', 
-        borderBottom: '1px #F3F4F6 solid',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0.857em',
+        paddingTop: 'calc(0.857em + env(safe-area-inset-top))',
         width: '100%'
       }}>
         <div style={{ 
-          padding: '1.2em 1.5em 0.8em', 
+          padding: '0 1.714em', 
           display: 'flex', 
           justifyContent: 'space-between', 
           alignItems: 'center' 
         }}>
           <div style={{ 
             color: '#111827', 
-            fontSize: '1.6em', 
+            fontSize: '1.571em', 
             fontFamily: 'Inter', 
             fontWeight: '800',
             userSelect: 'none'
@@ -91,9 +95,10 @@ export default function Class() {
           
           {/* 右上アイコン */}
           <img 
+            draggable={false}
             style={{ 
-              width: '1.5em', 
-              height: '1.5em', 
+              width: '1.571em',
+              height: '1.571em', 
               cursor: 'pointer', 
               userSelect: 'none',
               WebkitUserSelect: 'none' 
@@ -104,7 +109,7 @@ export default function Class() {
         </div>
 
         {/* フィルターボタン */}
-        <div style={{ padding: '0 1.5em', display: 'flex', gap: '0.7em', overflowX: 'auto' }}>
+        <div style={{ padding: '0.571em 1.714em', display: 'flex', gap: '0.571em', overflowX: 'auto' }}>
           {FILTERS.map(filter => {
             const isActive = activeFilter === filter.id;
             return (
@@ -112,15 +117,17 @@ export default function Class() {
                 key={filter.id}
                 onClick={() => setActiveFilter(filter.id)}
                 style={{
-                  padding: '0.5em 1.2em',
-                  borderRadius: '9999px',
+                  padding: '0.571em 1.143em',
+                  borderRadius: '0.857em',
+                flexShrink: 0,
                   cursor: 'pointer',
                   backgroundImage: isActive ? 'linear-gradient(135deg, #FF4D4D 0%, #FF8A1B 100%)' : 'none',
                   backgroundColor: isActive ? 'transparent' : 'white',
-                  border: isActive ? '1.5px solid transparent' : '1.5px solid #D1D5DB',
-                  color: isActive ? 'white' : '#4B5563',
+                  outline: isActive ? 'none' : '1px #E5E7EB solid',
+                outlineOffset: '-1px',
+                  color: isActive ? 'white' : '#6B7280',
                   fontSize: '1em',
-                  fontWeight: isActive ? '700' : '500',
+                  fontWeight: isActive ? '700' : '400',
                   whiteSpace: 'nowrap',
                   transition: 'all 0.2s',
                   boxSizing: 'border-box',
@@ -139,12 +146,12 @@ export default function Class() {
       <main style={{ 
         flex: 1,
         overflowY: 'auto',
-        padding: '1.2em 1.5em',
+        padding: '0.857em 1.714em',
         width: '100%',
         boxSizing: 'border-box',
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-        gap: '1.2em',
+        gap: '0.857em',
         alignContent: 'start'
       }}>
         {filteredAnnouncements.length > 0 ? (
@@ -154,40 +161,41 @@ export default function Class() {
               onClick={() => markRead(ann.id)} 
               style={{ 
                 position: 'relative', 
-                padding: '1.2em', 
-                background: 'white', 
-                borderRadius: '1.2em', 
-                outline: ann.isUnread ? '1.5px #FF4D4D solid' : '1px #E5E7EB solid', 
-                outlineOffset: ann.isUnread ? '-1.5px' : '-1px', 
+                padding: ann.isUnread ? 'calc(1.143em - 1.5px)' : '1.143em',
+                border: ann.isUnread ? '1.5px solid transparent' : 'none',
+                background: ann.isUnread ? 'linear-gradient(white, white) padding-box, linear-gradient(135deg, #FF4D4D 0%, #FF8A1B 100%) border-box' : 'white',
+                borderRadius: '1.714em',
+                outline: ann.isUnread ? 'none' : '1px #E5E7EB solid',
+                outlineOffset: '-1px',
                 display: 'flex', 
                 flexDirection: 'column', 
                 justifyContent: 'space-between',
-                gap: '1em',
+                gap: '0.857em',
                 boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
               }}
             >
               <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8em' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6em' }}>
-                    <div style={{ padding: '0.3em 0.7em', background: '#F3F4F6', borderRadius: '0.4em' }}>
-                      <div style={{ color: '#111827', fontSize: '0.85em', fontWeight: '700', userSelect: 'none' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.857em' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.571em' }}>
+                    <div style={{ padding: '0.286em 0.571em', background: '#F3F4F6', borderRadius: '0.429em' }}>
+                      <div style={{ color: '#111827', fontSize: '0.786em', fontWeight: '700', userSelect: 'none' }}>
                         {ann.subject}
                       </div>
                     </div>
-                    <div style={{ color: '#6B7280', fontSize: '0.9em', fontWeight: '600', userSelect: 'none' }}>
+                    <div style={{ color: '#6B7280', fontSize: '0.857em', fontWeight: '600', userSelect: 'none' }}>
                       {ann.teacher}
                     </div>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4em' }}>
-                    <div style={{ color: '#9CA3AF', fontSize: '0.85em', fontWeight: '400', userSelect: 'none' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.429em' }}>
+                    <div style={{ color: '#6B7280', fontSize: '0.857em', fontWeight: '400', userSelect: 'none' }}>
                       {ann.time}
                     </div>
                     {ann.isUnread && (
-                      <div style={{ width: '0.6em', height: '0.6em', background: 'linear-gradient(135deg, #FF4D4D 0%, #FF8A1B 100%)', borderRadius: '50%' }} />
+                      <div style={{ width: '0.571em', height: '0.571em', background: 'linear-gradient(135deg, #FF4D4D 0%, #FF8A1B 100%)', borderRadius: '50%' }} />
                     )}
                   </div>
                 </div>
-                <div style={{ color: '#1F2937', fontSize: '1em', lineHeight: '1.5em' , whiteSpace: 'pre-wrap'}}>
+                <div style={{ color: '#111827', fontSize: '1em', lineHeight: 1.4286, whiteSpace: 'pre-wrap'}}>
                   {ann.content}
                 </div>
               </div>
@@ -195,8 +203,8 @@ export default function Class() {
               {/* ★ 位置をカードの右下パディングに美しく揃えて配置 */}
               <div style={{ 
                 position: 'absolute', 
-                bottom: '1em', 
-                right: '1.2em',
+                bottom: '1.143em',
+                right: '1.143em',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
@@ -217,11 +225,12 @@ export default function Class() {
       {/* ===== ボトムナビゲーション部分 ===== */}
       <nav style={{ 
         flexShrink: 0, 
-        padding: '0.8em 1.5em', 
+        padding: '0 1.143em env(safe-area-inset-bottom)',
+        height: 'calc(6em + env(safe-area-inset-bottom))', 
         background: 'white', 
         borderTop: '1px #E5E7EB solid', 
         display: 'flex', 
-        justifyContent: 'space-around', 
+        justifyContent: 'space-between', 
         alignItems: 'center',
         width: '100%',
         boxSizing: 'border-box'
@@ -236,18 +245,21 @@ export default function Class() {
                 display: 'flex', 
                 flexDirection: 'column', 
                 alignItems: 'center', 
-                gap: '0.3em',
+                gap: '0.286em',
                 cursor: 'pointer',
-                padding: '0.4em 1em',
+                width: '5.714em',
+                justifyContent: 'center',
+                padding: '0.4em 0',
                 borderRadius: '0.5em',
                 userSelect: 'none',
                 WebkitUserSelect: 'none'
               }}
             >
               <img 
+            draggable={false}
                 style={{ 
-                  width: '1.6em', 
-                  height: '1.6em', 
+                  width: '1.571em',
+                  height: '1.571em', 
                   opacity: isActive ? 1 : 0.45,
                   transition: 'opacity 0.2s ease-in-out'
                 }} 
@@ -256,8 +268,8 @@ export default function Class() {
               />
               <div style={{ 
                 color: isActive ? '#111827' : '#6B7280',
-                fontSize: '0.85em', 
-                fontWeight: '700',
+                fontSize: '0.786em',
+                fontWeight: '600',
                 transition: 'color 0.2s ease-in-out'
               }}>
                 {tab.label}
