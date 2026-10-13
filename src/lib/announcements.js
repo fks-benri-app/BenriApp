@@ -16,7 +16,7 @@ function loadReadIds() {
 // タグ分けはタイトル・本文のキーワードで判定する(必要に応じて足す)
 function classify(text) {
   if (/テスト|追試|考査|試験/.test(text)) return 'test';
-  if (/トンボ祭|文化祭/.test(text)) return 'festival';
+  if (/トンボ祭|文化祭|とんぼ祭|蜻蛉祭/.test(text)) return 'festival';
   return 'general';
 }
 
@@ -29,11 +29,21 @@ function formatTime(date) {
   return `${date.getMonth() + 1}月${date.getDate()}日`;
 }
 
+// 本文から URL と、Google のアカウント選択などの案内行を取り除く。
+// (URL にはメールアドレスが含まれることがあるため、画面に出さない)
+function cleanText(text) {
+  return String(text || '')
+    .split('\n')
+    .map((line) => line.replace(/https?:\/\/\S+/g, '').trim())
+    .filter((line) => line && !/AccountChooser|accounts\.google\.com|@g\.nagano-c\.ed\.jp/.test(line))
+    .join('\n');
+}
+
 // Firestore のドキュメント → 画面(Class.jsx)が使う形
 function toAnnouncement(doc) {
   const d = doc.data();
   const receivedAt = d.receivedAt?.toDate?.() ?? new Date();
-  const lines = [d.title, d.description, d.dueDate ? `期限: ${d.dueDate}` : ''].filter(Boolean);
+  const lines = [cleanText(d.title), cleanText(d.description), d.dueDate ? `期限: ${d.dueDate}` : ''].filter(Boolean);
   return {
     id: doc.id,
     subject: d.courseName || d.category || '通知',

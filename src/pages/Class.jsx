@@ -209,9 +209,9 @@ export default function Class() {
                 alignItems: 'center',
                 justifyContent: 'center'
               }}>
-                <CopyButton 
+                {/* <CopyButton 
                   textToCopy={`【${ann.subject}】${ann.teacher}\n日時: ${ann.time}\n${ann.content}`} 
-                />
+                /> */}
               </div>
             </article>
           ))
