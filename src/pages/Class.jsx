@@ -28,7 +28,7 @@ const FILTERS = [
   { id: 'all', label: 'すべて' },
   { id: 'unread', label: '未読' },
   { id: 'test', label: 'テスト関連' },
-  { id: 'festival', label: 'トンボ祭関連' },
+  { id: 'festival', label: 'とんぼ祭関連' },
 ];
 
 // 全角/半角・大文字/小文字の違いを無視して検索できるようにそろえる
@@ -42,7 +42,8 @@ function classroomUrl(link) {
   try {
     const u = new URL(link);
     if (u.hostname !== 'classroom.google.com') return null; // 想定外のURLは開かない
-    return 'https://accounts.google.com/AccountChooser?continue=' + encodeURIComponent(link);
+    // return 'https://accounts.google.com/AccountChooser?continue=' + encodeURIComponent(link);
+    return encodeURIComponent(link);
   } catch {
     return null;
   }
@@ -87,7 +88,7 @@ export default function Class() {
   // カードを押したら既読にして、Classroom の投稿ページを新しいタブで開く
   function openAnnouncement(ann) {
     markRead(ann.id);
-    const url = classroomUrl(link);
+    const url = classroomUrl(ann.link);
     if (url) window.open(url, '_blank', 'noopener,noreferrer');
   }
 
