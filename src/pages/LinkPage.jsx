@@ -105,8 +105,8 @@ export default function LinkPage() {
     <div 
       onCopy={(e) => e.preventDefault()}
       style={{
-        width: '100vw',
-        height: '100dvh',
+        position: 'fixed',
+        inset: 0,
         margin: 0,
         padding: 0,
         background: 'white',
@@ -170,6 +170,8 @@ export default function LinkPage() {
       {/* ===== メインコンテンツ部分 ===== */}
       <main style={{ 
         flex: 1,
+        minHeight: 0,
+        overscrollBehavior: 'contain',
         overflowY: 'auto',
         padding: '0.857em 1.714em',
         width: '100%',
@@ -310,7 +312,7 @@ export default function LinkPage() {
       <nav style={{ 
         flexShrink: 0, 
         padding: '0 1.143em env(safe-area-inset-bottom)', 
-        height: 'calc(6em + env(safe-area-inset-bottom))',
+        height: 'calc(4.571em + env(safe-area-inset-bottom))',
         background: 'white', 
         borderTop: '1px #E5E7EB solid', 
         display: 'flex', 
@@ -327,10 +329,10 @@ export default function LinkPage() {
               onClick={() => {
                 if (tab.id === 'class' && identity) navigate('/class');
               }}
-              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.286em', justifyContent: 'center', width: '5.714em', cursor: 'pointer', padding: '0.4em 0', borderRadius: '0.5em' }}
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.214em', justifyContent: 'center', width: '5.714em', cursor: 'pointer', padding: '0.4em 0', touchAction: 'manipulation' }}
             >
-              <img draggable={false} style={{ width: '1.571em', height: '1.571em', opacity: isActive ? 1 : 0.45, transition: 'opacity 0.2s' }} src={isActive ? tab.activeIcon : tab.icon} alt={tab.id} />
-              <div style={{ color: isActive ? '#111827' : '#6B7280', fontSize: '0.786em', fontWeight: '600', transition: 'color 0.2s' }}>
+              <img draggable={false} style={{ width: '1.5em', height: '1.5em', opacity: isActive ? 1 : 0.45 }} src={isActive ? tab.activeIcon : tab.icon} alt={tab.id} />
+              <div style={{ color: isActive ? '#111827' : '#6B7280', fontSize: '0.786em', fontWeight: '600' }}>
                 {tab.label}
               </div>
             </div>
