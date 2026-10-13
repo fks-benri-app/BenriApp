@@ -286,6 +286,8 @@ export default function Class() {
                     ? 'linear-gradient(white, white) padding-box, linear-gradient(135deg, #FF4D4D 0%, #FF8A1B 100%) border-box'
                     : 'white',
                   borderRadius: '1.714em',
+                  //border: ann.isUnread ? '1.5px solid transparent' : '1px solid #E5E7EB',
+                  //outline: 'none',
                   outline: ann.isUnread ? 'none' : '1px #E5E7EB solid',
                   outlineOffset: '-1px',
                   display: 'flex',
