@@ -17,6 +17,8 @@ import classActiveIcon from '../assets/message-square-active.svg';
 import settingsActiveIcon from '../assets/settings-active.svg';
 
 import searchIcon from '../assets/search.svg';
+import notifyIllustration from '../assets/notify-illustration.svg';
+import linkDoneIllustration from '../assets/link-done-illustration.svg';
 
 // テーマの定義
 const THEMES = {
@@ -47,6 +49,7 @@ export default function LinkPage() {
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
+  const [slow, setSlow] = useState(false); // 10秒たっても終わらないときの補足表示
   const slowTimer = useRef(null);
 
   const [currentTheme] = useState('orangeRed');
@@ -73,10 +76,9 @@ export default function LinkPage() {
 
   async function enableNotifications() {
     setBusy(true);
-    setMessage('設定中...');
-    slowTimer.current = setTimeout(() => {
-      setMessage('設定中...\n(反応がないときは、しばらくして再度お試しください)');
-    }, 10000);
+    setMessage('');
+    setSlow(false);
+    slowTimer.current = setTimeout(() => setSlow(true), 10000);
 
     try {
       const result = await subscribeAs(identity.id);
@@ -94,6 +96,7 @@ export default function LinkPage() {
       setMessage('エラー: ' + e.message);
     } finally {
       clearTimeout(slowTimer.current);
+      setSlow(false);
       setBusy(false);
     }
   }
@@ -192,7 +195,10 @@ export default function LinkPage() {
           boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
           display: 'flex',
           flexDirection: 'column',
-          gap: '1.2em'
+          gap: '1.2em',
+          // 内容が少ないときは縦方向の中央に、多いときは上からスクロールできる
+          marginTop: 'auto',
+          marginBottom: 'auto'
         }}>
 
           {offline && (
@@ -203,14 +209,16 @@ export default function LinkPage() {
 
           {!offline && step === 1 && (
             <>
-              <div>
-                <h1 style={{ fontSize: '1.4em', fontWeight: '800', color: '#111827', margin: '0 0 0.5em 0' }}>
-                  Classroomの課題を通知で受け取る
-                </h1>
-                <p style={{ color: '#4B5563', fontSize: '1em', lineHeight: '1.6em', margin: 0 }}>
-                  新着課題やテスト範囲が出たら、このアプリにお知らせします。学校のGoogleアカウントでログインして連携します。
-                </p>
-              </div>
+              <h1 style={{ fontSize: '1.4em', fontWeight: '800', color: '#111827', margin: 0, textAlign: 'center' }}>
+                Classroomのお知らせを通知で
+              </h1>
+
+              <img
+                draggable={false}
+                src={notifyIllustration}
+                alt=""
+                style={{ display: 'block', width: '100%', maxWidth: '15em', height: 'auto', margin: '0 auto' }}
+              />
 
               <button 
                 onClick={startLink}
@@ -229,14 +237,14 @@ export default function LinkPage() {
                 連携を開始する
               </button>
 
-              <div style={{ color: '#6B7280', fontSize: '0.85em', lineHeight: '1.5em' }}>
+              <div style={{ color: '#6B7280', fontSize: '0.85em', lineHeight: '1.5em', textAlign: 'center' }}>
                 ※「このアプリは確認されていません」と表示された場合は、画面内の「詳細」→「(安全ではないページ)に移動」を選択してください。
               </div>
             </>
           )}
 
           {!offline && step === 2 && isIos && !isStandalone && (
-            <div>
+            <div style={{ textAlign: 'center' }}>
               <h1 style={{ fontSize: '1.4em', fontWeight: '800', color: '#111827', margin: '0 0 0.5em 0' }}>
                 ホーム画面に追加してください
               </h1>
@@ -248,19 +256,27 @@ export default function LinkPage() {
 
           {!offline && step === 2 && !(isIos && !isStandalone) && (
             <>
-              <div>
-                <h1 style={{ fontSize: '1.4em', fontWeight: '800', color: '#111827', margin: '0 0 0.5em 0' }}>
-                  連携できました！
+              <div style={{ textAlign: 'center' }}>
+                <h1 style={{ fontSize: '1.4em', fontWeight: '800', color: '#111827', margin: '0 0 0.4em 0' }}>
+                  連携が完了しました
                 </h1>
-                <p style={{ color: '#4B5563', fontSize: '1em', lineHeight: '1.6em', margin: 0 }}>
-                  最後に、このスマホへの通知送信を許可してください。
+                <p style={{ color: '#6B7280', fontSize: '0.95em', lineHeight: '1.6em', margin: 0 }}>
+                  最後に、通知を許可してください
                 </p>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8em', marginTop: '0.5em' }}>
-                <button 
-                  onClick={enableNotifications} 
+              <img
+                draggable={false}
+                src={linkDoneIllustration}
+                alt=""
+                style={{ display: 'block', width: '100%', maxWidth: '15em', height: 'auto', margin: '0 auto' }}
+              />
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8em' }}>
+                <button
+                  onClick={enableNotifications}
                   disabled={busy}
+                  aria-busy={busy}
                   style={{
                     width: '100%',
                     padding: '0.9em 1.2em',
@@ -270,15 +286,27 @@ export default function LinkPage() {
                     color: activeTheme.textColor,
                     fontSize: '1.05em',
                     fontWeight: '700',
-                    cursor: busy ? 'not-allowed' : 'pointer',
-                    opacity: busy ? 0.6 : 1
+                    cursor: busy ? 'default' : 'pointer',
+                    opacity: busy ? 0.85 : 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.6em'
                   }}
                 >
-                  通知を有効にする
+                  {busy && (
+                    <svg width="1.1em" height="1.1em" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <circle cx="12" cy="12" r="9" stroke="rgba(255,255,255,0.35)" strokeWidth="3" />
+                      <path d="M12 3a9 9 0 0 1 9 9" stroke="#fff" strokeWidth="3" strokeLinecap="round">
+                        <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="0.9s" repeatCount="indefinite" />
+                      </path>
+                    </svg>
+                  )}
+                  {busy ? '設定中...' : '通知を有効にする'}
                 </button>
 
-                <button 
-                  onClick={() => navigate('/class')} 
+                <button
+                  onClick={() => navigate('/class')}
                   disabled={busy}
                   style={{
                     width: '100%',
@@ -289,18 +317,24 @@ export default function LinkPage() {
                     color: '#4B5563',
                     fontSize: '1em',
                     fontWeight: '600',
-                    cursor: busy ? 'not-allowed' : 'pointer',
-                    opacity: busy ? 0.6 : 1
+                    cursor: busy ? 'default' : 'pointer',
+                    opacity: busy ? 0.5 : 1
                   }}
                 >
                   あとで設定する
                 </button>
+
+                {slow && (
+                  <div style={{ color: '#6B7280', fontSize: '0.85em', lineHeight: '1.5em', textAlign: 'center' }}>
+                    反応がないときは、しばらくして再度お試しください
+                  </div>
+                )}
               </div>
             </>
           )}
 
           {message && (
-            <div style={{ padding: '0.8em 1em', background: '#FFFBEB', border: '1px solid #FCD34D', borderRadius: '0.6em', color: '#B45309', fontSize: '0.9em', whiteSpace: 'pre-wrap' }}>
+            <div style={{ padding: '0.8em 1em', background: '#FFFBEB', border: '1px solid #FCD34D', borderRadius: '0.6em', color: '#B45309', fontSize: '0.9em', whiteSpace: 'pre-wrap', textAlign: 'center' }}>
               {message}
             </div>
           )}
