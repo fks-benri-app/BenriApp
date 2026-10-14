@@ -6,19 +6,19 @@ import { initOneSignal, subscribeAs } from '../lib/onesignal';
 import { isNotifyDone, markNotifyDone } from '../lib/storage';
 
 // アイコン類
-import homeIcon from '../assets/home.svg';
-import calendarIcon from '../assets/calendar.svg';
-import classIcon from '../assets/message-square.svg';
-import settingsIcon from '../assets/settings.svg';
+import homeIcon from '../assets/images/icons/home.svg';
+import calendarIcon from '../assets/images/icons/calendar.svg';
+import classIcon from '../assets/images/icons/message-square.svg';
+import settingsIcon from '../assets/images/icons/settings.svg';
 
-import homeActiveIcon from '../assets/home-active.svg';
-import calendarActiveIcon from '../assets/calendar-active.svg';
-import classActiveIcon from '../assets/message-square-active.svg';
-import settingsActiveIcon from '../assets/settings-active.svg';
+import homeActiveIcon from '../assets/images/icons/home-active.svg';
+import calendarActiveIcon from '../assets/images/icons/calendar-active.svg';
+import classActiveIcon from '../assets/images/icons/message-square-active.svg';
+import settingsActiveIcon from '../assets/images/icons/settings-active.svg';
 
-import searchIcon from '../assets/search.svg';
-import notifyIllustration from '../assets/notify-illustration.svg';
-import linkDoneIllustration from '../assets/link-done-illustration.svg';
+import searchIcon from '../assets/images/icons/search.svg';
+import notifyIllustration from '../assets/images/other_svgs/notify-illustration.svg';
+import linkDoneIllustration from '../assets/images/other_svgs/link-done-illustration.svg';
 
 // テーマの定義
 const THEMES = {

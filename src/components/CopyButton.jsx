@@ -1,5 +1,5 @@
 import React from 'react';
-import copyIcon from '../assets/copy.svg';
+import copyIcon from '../assets/images/icons/copy.svg';
 
 export default function CopyButton({ textToCopy }) {
   const handleCopy = async (e) => {
