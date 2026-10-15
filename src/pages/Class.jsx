@@ -49,9 +49,12 @@ function classroomUrl(link) {
   } catch {
     target = CLASSROOM_HOME;
   }
-  return USE_ACCOUNT_CHOOSER
-    ? 'https://accounts.google.com/AccountChooser?continue=' + encodeURIComponent(target)
-    : target;
+  const email = loadSchoolEmail();
+  if (!email) return target; // アドレスが分からないときは、そのまま開く
+  return (
+    'https://accounts.google.com/AccountChooser?Email=' + encodeURIComponent(email) +
+    '&continue=' + encodeURIComponent(target)
+  );
 }
 
 // 本物のリンクと同じ動きで新しいタブ(PWAでは外部ブラウザ)に開く。
@@ -62,7 +65,7 @@ function openExternal(url) {
   a.target = '_blank';
   a.rel = 'noopener noreferrer';
   document.body.appendChild(a);
-  a.click();
+  window.location.href = url;
   a.remove();
 }
 
