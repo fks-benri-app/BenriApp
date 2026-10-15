@@ -114,16 +114,18 @@ export default function LinkPage() {
         WebkitTouchCallout: 'none'
       }}
     >
+      <style>{'.no-scrollbar{scrollbar-width:none;-ms-overflow-style:none}.no-scrollbar::-webkit-scrollbar{display:none}'}</style>
+
       {/* ===== ヘッダー部分 ===== */}
       <header style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '0.857em', paddingTop: 'calc(2em + env(safe-area-inset-top))', paddingBottom: '1.143em', width: '100%' }}>
-        <div style={{ padding: '0 1.714em', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ padding: '0 1.714em', height: '34px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ color: '#111827', fontSize: '1.571em', fontFamily: 'Inter', fontWeight: '800' }}>
             クラスルームからのお知らせ
           </div>
           <img draggable={false} style={{ width: '1.571em', height: '1.571em', cursor: 'pointer' }} src={searchIcon} alt="search" />
         </div>
 
-        <div style={{ padding: '0.571em 1.714em', display: 'flex', gap: '0.571em', overflowX: 'auto' }}>
+        <div className="no-scrollbar" style={{ padding: '0.571em 1.714em', display: 'flex', gap: '0.571em', overflowX: 'auto' }}>
           <div style={{
             padding: '0.571em 1.143em',
             borderRadius: '0.857em',

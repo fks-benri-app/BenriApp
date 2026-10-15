@@ -51,7 +51,7 @@ function classroomUrl(link) {
   } catch {
     target = CLASSROOM_HOME;
   }
-  return 'https://accounts.google.com/AccountChooser?continue=' + encodeURIComponent(target);
+  return encodeURIComponent(target);
 }
 
 // 本物のリンクと同じ動きで新しいタブ(PWAでは外部ブラウザ)に開く。
@@ -113,6 +113,9 @@ const COURSE_THEMES = [
   { match: 'とんぼ祭', theme: 'orangeRed' },
 ];
 
+// カードに出す形式の名前
+const KIND_LABELS = Object.fromEntries(KIND_OPTIONS.map((k) => [k.id, k.label]));
+
 const themeOf = (name) => THEMES[name] || THEMES[DEFAULT_THEME];
 const courseTheme = (label) =>
   themeOf(COURSE_THEMES.find((c) => String(label).includes(c.match))?.theme);
@@ -132,19 +135,20 @@ function FilterSelect({ value, onChange, allLabel, options, label, theme }) {
       value={value}
       onChange={(e) => onChange(e.target.value)}
       style={{
-        flex: 1,
+        flex: '0 1 auto',
         minWidth: 0,
-        height: '38px',
-        padding: '0 34px 0 14px',
+        maxWidth: '50%',
+        height: '32px',
+        padding: '0 28px 0 12px',
         border: isActive ? '1px solid transparent' : '1px solid #E5E7EB',
-        borderRadius: '12px',
+        borderRadius: '10px',
         backgroundColor: isActive ? 'transparent' : 'white',
         backgroundImage: isActive
           ? `${chevron(onColor)}, ${theme.gradient}`
           : chevron('%236B7280'),
         backgroundRepeat: 'no-repeat',
-        backgroundPosition: isActive ? 'right 12px center, 0 0' : 'right 12px center',
-        backgroundSize: isActive ? '14px, 100% 100%' : '14px',
+        backgroundPosition: isActive ? 'right 9px center, 0 0' : 'right 9px center',
+        backgroundSize: isActive ? '13px, 100% 100%' : '13px',
         color: isActive ? theme.textColor : '#6B7280',
         fontSize: '16px',
         fontWeight: isActive ? 700 : 400,
@@ -165,6 +169,9 @@ function FilterSelect({ value, onChange, allLabel, options, label, theme }) {
     </select>
   );
 }
+
+// 横スクロールの行に出る灰色のバーを隠す(スクロールはできる)
+const NO_SCROLLBAR_CSS = '.no-scrollbar{scrollbar-width:none;-ms-overflow-style:none}.no-scrollbar::-webkit-scrollbar{display:none}';
 
 export default function Class() {
   const { identity } = useIdentity();
@@ -240,6 +247,8 @@ export default function Class() {
       WebkitTouchCallout: 'none'
     }}>
 
+      <style>{NO_SCROLLBAR_CSS}</style>
+
       {/* ===== ヘッダー部分（常に表示） ===== */}
       <header style={{
         flexShrink: 0,
@@ -253,7 +262,7 @@ export default function Class() {
       }}>
         <div style={{
           padding: '0 1.714em',
-          minHeight: '2.4em',
+          height: '34px', // 検索を開いても高さが変わらないよう固定
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
@@ -275,7 +284,7 @@ export default function Class() {
                 style={{
                   flex: 1,
                   minWidth: 0,
-                  height: '2.4em',
+                  height: '34px',
                   padding: '0 1em',
                   border: 'none',
                   outline: 'none',
@@ -342,7 +351,7 @@ export default function Class() {
         </div>
 
         {/* フィルターボタン */}
-        <div style={{ padding: '0.571em 1.714em', display: 'flex', gap: '0.571em', overflowX: 'auto' }}>
+        <div className="no-scrollbar" style={{ padding: '0.571em 1.714em', display: 'flex', gap: '0.571em', overflowX: 'auto' }}>
           {FILTERS.map((filter) => {
             const isActive = activeFilter === filter.id;
             return (
@@ -447,9 +456,18 @@ export default function Class() {
                         {ann.subject}
                       </div>
                     </div>
-                    <div style={{ color: '#6B7280', fontSize: '0.857em', fontWeight: '600' }}>
-                      {ann.teacher}
-                    </div>
+                    {KIND_LABELS[ann.kind] && (
+                      <div style={{
+                        padding: '0.286em 0.571em',
+                        borderRadius: '0.429em',
+                        background: themeOf(KIND_THEMES[ann.kind]).gradient,
+                        color: themeOf(KIND_THEMES[ann.kind]).textColor,
+                        fontSize: '0.786em',
+                        fontWeight: '700'
+                      }}>
+                        {KIND_LABELS[ann.kind]}
+                      </div>
+                    )}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.429em' }}>
                     <div style={{ color: '#6B7280', fontSize: '0.857em', fontWeight: '400' }}>

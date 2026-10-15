@@ -17,5 +17,5 @@ export const THEMES = {
   violet: { gradient: 'linear-gradient(110deg, #6943A4 0%, #9D7BD0 100%)', textColor: 'white' },
   pink: { gradient: 'linear-gradient(110deg, #B63870 0%, #E777A0 100%)', textColor: 'white' },
   gray: { gradient: 'linear-gradient(110deg, #676767 0%, #797979 100%)', textColor: 'white' },
-  def: { gradient: '#676767', textColor: 'black' }
+  //def: { gradient: 'glay', textColor: 'black' }
 };

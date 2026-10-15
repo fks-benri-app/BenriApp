@@ -40,8 +40,9 @@ function toAnnouncement(doc) {
     id: doc.id,
     subject: shortCourse(d.courseName) || d.category || '通知', // カードには授業名の最初の1語だけ
     teacher: cleanTeacher(d.teacher),
-    courseKey: courseKey(d.courseName), // 授業での絞り込み用
-    courseLabel: courseLabel(d.courseName),
+    courseKey: courseKey(d.courseName), // 教科名での絞り込み用(例: 公共)
+    courseLabel: shortCourse(d.courseName), // ドロップダウンの表示名
+    courseFull: courseLabel(d.courseName), // 検索用(授業名の全体)
     kind: kindOf(d.category), // 'announcement' | 'assignment' | 'material' | 'other'
     time: formatTime(receivedAt),
     content,
