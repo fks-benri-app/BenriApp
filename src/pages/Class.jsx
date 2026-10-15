@@ -34,8 +34,7 @@ const FILTERS = [
   { id: 'festival', label: 'とんぼ祭関連' },
 ];
 
-// Classroom の投稿ページを開くURL。
-// 保存されたリンクが空・想定外のときは、Classroom のトップを開く
+const USE_ACCOUNT_CHOOSER = false;
 const CLASSROOM_HOME = 'https://classroom.google.com/';
 
 function classroomUrl(link) {
@@ -50,11 +49,13 @@ function classroomUrl(link) {
   } catch {
     target = CLASSROOM_HOME;
   }
-  // アカウント選択画面を挟まず直接ページに飛ぶよう生URLを返す
-  return target;
+  return USE_ACCOUNT_CHOOSER
+    ? 'https://accounts.google.com/AccountChooser?continue=' + encodeURIComponent(target)
+    : target;
 }
 
 // 本物のリンクと同じ動きで新しいタブ(PWAでは外部ブラウザ)に開く。
+// window.open より、スマホやホーム画面のアプリ(PWA)で止められにくい
 function openExternal(url) {
   const a = document.createElement('a');
   a.href = url;
@@ -64,7 +65,6 @@ function openExternal(url) {
   a.click();
   a.remove();
 }
-
 
 // ===== プルダウンを選んだときの色 =====
 // 存在するテーマ名（orangeRed等）を指定してエラーを防ぐ
@@ -113,17 +113,22 @@ const COURSE_THEMES = [
 const KIND_LABELS = Object.fromEntries(KIND_OPTIONS.map((k) => [k.id, k.label]));
 
 const themeOf = (name) => THEMES[name] || THEMES[DEFAULT_THEME];
-const courseTheme = (label) =>
-  themeOf(COURSE_THEMES.find((c) => String(label).includes(c.match))?.theme);
+// 当てはまる色がなければ null
+const courseThemeOrNull = (label) => {
+  const hit = COURSE_THEMES.find((c) => String(label).includes(c.match));
+  return hit ? themeOf(hit.theme) : null;
+};
+const courseTheme = (label) => courseThemeOrNull(label) || themeOf(DEFAULT_THEME);
 
-// プルダウン(授業・形式)
+// プルダウン(授業・形式)。スマホでは端末標準の選択画面が開く
+// 文字サイズを16px未満にすると、iPhoneで押したときに画面が拡大されてしまうため16pxにしている
 const chevron = (color) =>
   `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='${color}' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`;
 
+// theme: 選んでいるときの色 { gradient, textColor }
 function FilterSelect({ value, onChange, allLabel, options, label, theme }) {
-  const safeTheme = theme || THEMES[DEFAULT_THEME];
   const isActive = value !== '';
-  const onColor = safeTheme.textColor === 'white' ? '%23FFFFFF' : '%23111827';
+  const onColor = theme.textColor === 'white' ? '%23FFFFFF' : '%23111827';
   return (
     <select
       aria-label={label}
@@ -139,12 +144,12 @@ function FilterSelect({ value, onChange, allLabel, options, label, theme }) {
         borderRadius: '10px',
         backgroundColor: isActive ? 'transparent' : 'white',
         backgroundImage: isActive
-          ? `${chevron(onColor)}, ${safeTheme.gradient}`
+          ? `${chevron(onColor)}, ${theme.gradient}`
           : chevron('%236B7280'),
         backgroundRepeat: 'no-repeat',
         backgroundPosition: isActive ? 'right 9px center, 0 0' : 'right 9px center',
         backgroundSize: isActive ? '13px, 100% 100%' : '13px',
-        color: isActive ? safeTheme.textColor : '#6B7280',
+        color: isActive ? theme.textColor : '#6B7280',
         fontSize: '16px',
         fontWeight: isActive ? 700 : 400,
         fontFamily: 'inherit',
@@ -165,6 +170,7 @@ function FilterSelect({ value, onChange, allLabel, options, label, theme }) {
   );
 }
 
+// 横スクロールの行に出る灰色のバーを隠す(スクロールはできる)
 const NO_SCROLLBAR_CSS = '.no-scrollbar{scrollbar-width:none;-ms-overflow-style:none}.no-scrollbar::-webkit-scrollbar{display:none}';
 
 export default function Class() {
@@ -176,15 +182,20 @@ export default function Class() {
   const [course, setCourse] = useState('');
   const [kind, setKind] = useState('');
 
+  // 検索
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
   const searchInputRef = useRef(null);
 
+  // フォントサイズ基準値（プログラム制御対応）
   const [baseFontSize] = useState(14);
 
+  // 授業の選択肢は、手元のお知らせから作る
   const courseOptions = useMemo(() => buildCourseOptions(items), [items]);
+  // 選んでいた授業が一覧からなくなったときは「すべて」として扱う
   const courseValue = courseOptions.some((o) => o.id === course) ? course : '';
 
+  // 選んでいる項目の色(プルダウンの背景)
   const courseColor = courseTheme(courseOptions.find((o) => o.id === courseValue)?.label);
   const kindColor = themeOf(KIND_THEMES[kind]);
 
@@ -195,6 +206,7 @@ export default function Class() {
 
   function openSearch() {
     setSearchOpen(true);
+    // 表示されてからフォーカスする(スマホではキーボードが開く)
     setTimeout(() => searchInputRef.current?.focus(), 0);
   }
 
@@ -203,6 +215,7 @@ export default function Class() {
     setQuery('');
   }
 
+  // カードを押したら既読にして、Classroom の投稿ページを新しいタブで開く
   function openAnnouncement(ann) {
     markRead(ann.id);
     openExternal(classroomUrl(ann.link));
@@ -219,6 +232,7 @@ export default function Class() {
 
   return (
     <div style={{
+      // 画面に固定する: ヘッダーとナビは常に表示され、<main> の中だけがスクロールする
       position: 'fixed',
       inset: 0,
       margin: 0,
@@ -235,7 +249,7 @@ export default function Class() {
 
       <style>{NO_SCROLLBAR_CSS}</style>
 
-      {/* ===== ヘッダー部分 ===== */}
+      {/* ===== ヘッダー部分（常に表示） ===== */}
       <header style={{
         flexShrink: 0,
         display: 'flex',
@@ -248,7 +262,7 @@ export default function Class() {
       }}>
         <div style={{
           padding: '0 1.714em',
-          height: '34px',
+          height: '34px', // 検索を開いても高さが変わらないよう固定
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
@@ -277,7 +291,7 @@ export default function Class() {
                   borderRadius: '0.857em',
                   background: '#F3F4F6',
                   color: '#111827',
-                  fontSize: '16px',
+                  fontSize: '16px', // 16px未満だと iPhone でフォーカス時に画面が拡大される
                   fontFamily: 'inherit',
                   boxSizing: 'border-box',
                   WebkitAppearance: 'none'
@@ -314,6 +328,7 @@ export default function Class() {
                 クラスルームからのお知らせ
               </div>
 
+              {/* 右上アイコン */}
               <img
                 draggable={false}
                 role="button"
@@ -335,6 +350,7 @@ export default function Class() {
           )}
         </div>
 
+        {/* フィルターボタン */}
         <div className="no-scrollbar" style={{ padding: '0.571em 1.714em', display: 'flex', gap: '0.571em', overflowX: 'auto' }}>
           {FILTERS.map((filter) => {
             const isActive = activeFilter === filter.id;
@@ -367,6 +383,7 @@ export default function Class() {
           })}
         </div>
 
+        {/* プルダウン: 授業・形式 */}
         <div style={{ padding: '0 1.714em', display: 'flex', gap: '0.571em' }}>
           <FilterSelect
             label="授業で絞り込み"
@@ -387,7 +404,7 @@ export default function Class() {
         </div>
       </header>
 
-      {/* ===== メインコンテンツ部分 ===== */}
+      {/* ===== メインコンテンツ部分（ここだけスクロールする） ===== */}
       <main style={{
         flex: 1,
         minHeight: 0,
@@ -405,7 +422,6 @@ export default function Class() {
       }}>
         {filteredAnnouncements.length > 0 ? (
           filteredAnnouncements.map((ann) => {
-            const subjectTheme = courseTheme(ann.subject);
             return (
               <article
                 key={ann.id}
@@ -435,14 +451,13 @@ export default function Class() {
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.571em' }}>
-                    {/* カード左の授業名チップにテーマカラーを適用 */}
                     <div style={{
                       padding: '0.286em 0.571em',
-                      background: subjectTheme.gradient,
+                      background: courseThemeOrNull(ann.subject)?.gradient || '#F3F4F6',
                       borderRadius: '0.429em'
                     }}>
                       <div style={{
-                        color: subjectTheme.textColor,
+                        color: courseThemeOrNull(ann.subject)?.textColor || '#111827',
                         fontSize: '0.786em',
                         fontWeight: '700'
                       }}>
@@ -484,7 +499,7 @@ export default function Class() {
         )}
       </main>
 
-      {/* ===== ボトムナビゲーション部分 ===== */}
+      {/* ===== ボトムナビゲーション部分（常に表示） ===== */}
       <nav style={{
         flexShrink: 0,
         padding: '0 1.143em env(safe-area-inset-bottom)',
@@ -517,6 +532,7 @@ export default function Class() {
                 touchAction: 'manipulation'
               }}
             >
+              {/* アニメーションなし: 押した瞬間に切り替わる */}
               <img
                 draggable={false}
                 style={{

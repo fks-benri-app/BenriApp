@@ -4,11 +4,10 @@
 export const normalize = (s) => String(s || '').normalize('NFKC').toLowerCase();
 
 // ===== 授業 =====
-// メールの授業名「２-CF② 体育 2026」→ 表示名「２-CF② 体育」
-// (空白やアンダースコアを整え、末尾の年(2026 / 2026年度)は外す)
+// メールの授業名「２-CF②　体育　2026」→ 表示名「２-CF② 体育」
+// (空白を1つにそろえ、末尾の年(2026 / 2026年度)は外す。年が変わっても同じ授業としてまとめるため)
 export function courseLabel(courseName) {
   return String(courseName || '')
-    .replace(/[_＿]+/g, ' ') // アンダースコアをスペースに置換
     .replace(/\s+/g, ' ')
     .replace(/\s*(?:19|20)\d{2}(?:年度)?$/, '')
     .trim();
@@ -27,6 +26,7 @@ export const KIND_OPTIONS = [
 ];
 
 // GAS が保存している category(「新しいお知らせ」「新しい課題」など)から形式を決める。
+// 想定外の文言のときは 'other'(「すべての形式」のときだけ表示される)
 export function kindOf(category) {
   const c = normalize(category);
   if (/課題|assignment/.test(c)) return 'assignment';
@@ -71,19 +71,24 @@ const CJK_GAP = new RegExp(`([${CJK}])[ \\t\\u3000]+(?=[${CJK}])`, 'g');
 const wideChar = new RegExp(`[${CJK}]`);
 const displayWidth = (s) => [...s].reduce((n, c) => n + (wideChar.test(c) ? 2 : 1), 0);
 
+// 日本語どうしの間にある不要な空白を取り除く(メールの折り返しで入ってしまう空白)
 export const closeCjkGaps = (s) => String(s || '').replace(CJK_GAP, '$1');
 
+// 本文から URL と、Google のアカウント選択などの案内行を取り除き、空白を整える。
+// (URL にはメールアドレスが含まれることがあるため、画面に出さない)
 export function cleanText(text) {
   return closeCjkGaps(
     String(text || '')
       .split('\n')
       .map((line) => line.replace(/https?:\/\/\S+/g, '').trim())
-      .filter((line) => line && !/AccountChooser|accounts\.google\.com|@g\.nagano-c\.ed.jp/.test(line))
+      .filter((line) => line && !/AccountChooser|accounts\.google\.com|@g\.nagano-c\.ed\.jp/.test(line))
       .join('\n')
   );
 }
 
-const SENTENCE_END = /[。！？!?」』）🥹…:：]$/;
+// メールの本文は約76桁で折り返されていて、お知らせでは最初の1行が「タイトル」になっている。
+// 折り返しの途中で切れた長い1行(文の終わりでない)なら、本文とつなげて1文に戻す
+const SENTENCE_END = /[。！？!?」』）)】…:：]$/;
 export function joinTitleAndBody(title, body) {
   if (!title) return body;
   if (!body) return title;
@@ -91,19 +96,11 @@ export function joinTitleAndBody(title, body) {
   return wrapped ? closeCjkGaps(`${title} ${body}`) : `${title}\n${body}`;
 }
 
-// 授業名から教科名だけを取り出す（数字や学年、講座、記号などのノイズを自動で排除）
+// 授業名から教科名だけを取り出す(例: 「公共 F講座 岡庭学年」→「公共」、「古典＿２Ｆ」→「古典」、
+// 「２-CF②　体育　2026」→「体育」)。記号・学年・組・年度は飛ばし、最初に残った語を使う
 export function shortCourse(courseName) {
-  const cleaned = courseLabel(courseName)
-    .replace(/[（(].*?[）)]/g, ' ')                      // 括弧内を除外
-    .replace(/[0-9０-９]+[年学年組Ff号講座クラスＣＦ]+/g, ' ') // 数字＋クラス・学年等の残骸を除外
-    .replace(/[0-9０-９]+/g, ' ')                          // 残った単体の数字も除外
-    .replace(/[-―_＿()（）[\]【】・]/g, ' ');             // 各種記号をスペースに
-
-  const tokens = cleaned.split(/\s+/).filter(Boolean);
-  
-  // 日本語の文字（漢字・ひらがな・カタカナ）を含み、ノイズワードを含まない最初の語を教科名とする
-  const subject = tokens.find((t) => /[\u3040-\u30ff\u3400-\u9fff]/.test(t) && !/組|年度|入学|学年|講座|年/.test(t));
-  
+  const tokens = courseLabel(courseName).split(/[\s_＿]+/).filter(Boolean);
+  const subject = tokens.find((t) => /[\u3040-\u30ff\u3400-\u9fff]/.test(t) && !/組|年度|入学/.test(t));
   return subject || tokens[0] || '';
 }
 
