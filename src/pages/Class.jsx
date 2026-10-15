@@ -60,13 +60,7 @@ function classroomUrl(link) {
 // 本物のリンクと同じ動きで新しいタブ(PWAでは外部ブラウザ)に開く。
 // window.open より、スマホやホーム画面のアプリ(PWA)で止められにくい
 function openExternal(url) {
-  const a = document.createElement('a');
-  a.href = url;
-  a.target = '_blank';
-  a.rel = 'noopener noreferrer';
-  document.body.appendChild(a);
   window.location.href = url;
-  a.remove();
 }
 
 // ===== プルダウンを選んだときの色 =====
