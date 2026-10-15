@@ -4,6 +4,7 @@ import { useIdentity } from '../auth/identity';
 import { buildGasLoginUrl, isGasConfigured } from '../config';
 import { initOneSignal, subscribeAs } from '../lib/onesignal';
 import { isNotifyDone, markNotifyDone } from '../lib/storage';
+import { THEMES } from '../lib/themes';
 
 // アイコン類
 import homeIcon from '../assets/images/icons/home.svg';
@@ -19,17 +20,6 @@ import settingsActiveIcon from '../assets/images/icons/settings-active.svg';
 import searchIcon from '../assets/images/icons/search.svg';
 import notifyIllustration from '../assets/images/other_svgs/notify-illustration.svg';
 import linkDoneIllustration from '../assets/images/other_svgs/link-done-illustration.svg';
-
-// テーマの定義
-const THEMES = {
-  orangeRed: { gradient: 'linear-gradient(135deg, #FF4D4D 0%, #FF8A1B 100%)', textColor: 'white' },
-  pinkRose: { gradient: 'linear-gradient(135deg, #FF4D94 0%, #FF4D8A 100%)', textColor: 'white' },
-  yellowOrange: { gradient: 'linear-gradient(135deg, #FFD14D 0%, #FFA21B 100%)', textColor: 'white' },
-  greenYellow: { gradient: 'linear-gradient(135deg, #A8FF4D 0%, #FFD11B 100%)', textColor: '#111827' },
-  cyanEmerald: { gradient: 'linear-gradient(135deg, #4DFFFF 0%, #1BFF8A 100%)', textColor: '#111827' },
-  blueCyan: { gradient: 'linear-gradient(135deg, #4DA8FF 0%, #1BFFFF 100%)', textColor: 'white' },
-  purpleViolet: { gradient: 'linear-gradient(135deg, #944DFF 0%, #4D1BFF 100%)', textColor: 'white' },
-};
 
 const ua = navigator.userAgent.toLowerCase();
 const isIos = /iphone|ipad|ipod/.test(ua);
@@ -125,7 +115,7 @@ export default function LinkPage() {
       }}
     >
       {/* ===== ヘッダー部分 ===== */}
-      <header style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '0.857em', paddingTop: 'calc(0.857em + env(safe-area-inset-top))', width: '100%' }}>
+      <header style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '0.857em', paddingTop: 'calc(2em + env(safe-area-inset-top))', paddingBottom: '1.143em', width: '100%' }}>
         <div style={{ padding: '0 1.714em', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ color: '#111827', fontSize: '1.571em', fontFamily: 'Inter', fontWeight: '800' }}>
             クラスルームからのお知らせ

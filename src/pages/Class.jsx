@@ -1,6 +1,8 @@
 import React, { useMemo, useRef, useState } from 'react';
 import { useAnnouncements } from '../lib/announcements';
 import { useIdentity } from '../auth/identity';
+import { THEMES } from '../lib/themes';
+import { KIND_OPTIONS, buildCourseOptions, filterAnnouncements } from '../lib/filters';
 
 // ★ assets 内の通常アイコン
 import homeIcon from '../assets/images/icons/home.svg';
@@ -27,26 +29,141 @@ const TABS = [
 const FILTERS = [
   { id: 'all', label: 'すべて' },
   { id: 'unread', label: '未読' },
+  { id: 'read', label: '既読' },
   { id: 'test', label: 'テスト関連' },
   { id: 'festival', label: 'とんぼ祭関連' },
 ];
 
-// 全角/半角・大文字/小文字の違いを無視して検索できるようにそろえる
-const normalize = (s) => String(s || '').normalize('NFKC').toLowerCase();
-
 // Classroom の投稿ページを開くURL。
-// 複数のGoogleアカウントでログイン中でも学校アカウントを選べるよう、アカウント選択を挟む
-// (そのまま開きたい場合は `return link;` に変える)
+// 複数のGoogleアカウントでログイン中でも学校アカウントを選べるよう、アカウント選択を挟む。
+// 保存されたリンクが空・想定外のときは、Classroom のトップを開く
+const CLASSROOM_HOME = 'https://classroom.google.com/';
+
 function classroomUrl(link) {
-  if (!link) return null;
+  let target = String(link || '').replace(/&amp;/g, '&').trim();
   try {
-    const u = new URL(link);
-    if (u.hostname !== 'classroom.google.com') return null; // 想定外のURLは開かない
-    // return 'https://accounts.google.com/AccountChooser?continue=' + encodeURIComponent(link);
-    return encodeURIComponent(link);
+    const u = new URL(target);
+    // Google の転送URL(google.com/url?q=...)に包まれていたら、中身を取り出す
+    if (u.hostname.endsWith('google.com') && u.pathname === '/url') {
+      target = u.searchParams.get('q') || u.searchParams.get('url') || '';
+    }
+    if (new URL(target).hostname !== 'classroom.google.com') target = CLASSROOM_HOME;
   } catch {
-    return null;
+    target = CLASSROOM_HOME;
   }
+  return 'https://accounts.google.com/AccountChooser?continue=' + encodeURIComponent(target);
+}
+
+// 本物のリンクと同じ動きで新しいタブ(PWAでは外部ブラウザ)に開く。
+// window.open より、スマホやホーム画面のアプリ(PWA)で止められにくい
+function openExternal(url) {
+  const a = document.createElement('a');
+  a.href = url;
+  a.target = '_blank';
+  a.rel = 'noopener noreferrer';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+
+// ===== プルダウンを選んだときの色 =====
+// 色の名前は src/lib/themes.js の THEMES にあるもの
+// (orangeRed / pinkRose / yellowOrange / greenYellow / cyanEmerald / blueCyan / purpleViolet)
+const DEFAULT_THEME = 'gray';
+
+// 形式ごと(キーは 'announcement'=お知らせ / 'assignment'=課題 / 'material'=資料)
+const KIND_THEMES = {
+  announcement: 'orangeRed',
+  assignment: 'orangeRed',
+  material: 'orangeRed',
+};
+
+// 授業ごと: 授業名に match の文字が含まれていたら、その色にする(上にあるものが優先)
+// 例: { match: '体育', theme: 'blueCyan' }
+// どれにも当てはまらない授業は DEFAULT_THEME になります
+const COURSE_THEMES = [
+  { match: '化学', theme: 'blue' },
+  { match: '物理', theme: 'indigo' },
+  { match: '生物', theme: 'teal' },
+  { match: '地学', theme: 'cyan' },
+  { match: '数学', theme: 'indigo' },
+  { match: '古典', theme: 'red' },
+  { match: 'コミュ', theme: 'shuiro' },
+  { match: '論理表現', theme: 'pink' },
+  { match: '論表', theme: 'pink' },
+  { match: '論理国語', theme: 'red' },
+  { match: '論国', theme: 'red' },
+  { match: '国語', theme: 'red' },
+  { match: '保健', theme: 'green' },
+  { match: '体育', theme: 'emerald' },
+  { match: '情報', theme: 'cyan' },
+  { match: '家庭', theme: 'lime' },
+  { match: '美術', theme: 'violet' },
+  { match: '書道', theme: 'violet' },
+  { match: '音楽', theme: 'pink' },
+  { match: '地理', theme: 'amber' },
+  { match: '史', theme: 'orange' },
+  { match: '公共', theme: 'yellow' },
+  { match: '政経', theme: 'amber' },
+  { match: '落とし物', theme: 'red' },
+  { match: '学年', theme: 'teal' },
+  { match: '探究', theme: 'emerald' },
+  { match: '生徒会', theme: 'green' },
+  { match: 'とんぼ祭', theme: 'orangeRed' },
+];
+
+const themeOf = (name) => THEMES[name] || THEMES[DEFAULT_THEME];
+const courseTheme = (label) =>
+  themeOf(COURSE_THEMES.find((c) => String(label).includes(c.match))?.theme);
+
+// プルダウン(授業・形式)。スマホでは端末標準の選択画面が開く
+// 文字サイズを16px未満にすると、iPhoneで押したときに画面が拡大されてしまうため16pxにしている
+const chevron = (color) =>
+  `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='${color}' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`;
+
+// theme: 選んでいるときの色 { gradient, textColor }
+function FilterSelect({ value, onChange, allLabel, options, label, theme }) {
+  const isActive = value !== '';
+  const onColor = theme.textColor === 'white' ? '%23FFFFFF' : '%23111827';
+  return (
+    <select
+      aria-label={label}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      style={{
+        flex: 1,
+        minWidth: 0,
+        height: '38px',
+        padding: '0 34px 0 14px',
+        border: isActive ? '1px solid transparent' : '1px solid #E5E7EB',
+        borderRadius: '12px',
+        backgroundColor: isActive ? 'transparent' : 'white',
+        backgroundImage: isActive
+          ? `${chevron(onColor)}, ${theme.gradient}`
+          : chevron('%236B7280'),
+        backgroundRepeat: 'no-repeat',
+        backgroundPosition: isActive ? 'right 12px center, 0 0' : 'right 12px center',
+        backgroundSize: isActive ? '14px, 100% 100%' : '14px',
+        color: isActive ? theme.textColor : '#6B7280',
+        fontSize: '16px',
+        fontWeight: isActive ? 700 : 400,
+        fontFamily: 'inherit',
+        textOverflow: 'ellipsis',
+        boxSizing: 'border-box',
+        WebkitAppearance: 'none',
+        appearance: 'none',
+        outline: 'none',
+        cursor: 'pointer',
+        touchAction: 'manipulation'
+      }}
+    >
+      <option value="" style={{ color: '#111827', background: 'white' }}>{allLabel}</option>
+      {options.map((o) => (
+        <option key={o.id} value={o.id} style={{ color: '#111827', background: 'white' }}>{o.label}</option>
+      ))}
+    </select>
+  );
 }
 
 export default function Class() {
@@ -55,6 +172,8 @@ export default function Class() {
 
   const [activeTab, setActiveTab] = useState('class');
   const [activeFilter, setActiveFilter] = useState('all');
+  const [course, setCourse] = useState('');
+  const [kind, setKind] = useState('');
 
   // 検索
   const [searchOpen, setSearchOpen] = useState(false);
@@ -64,15 +183,19 @@ export default function Class() {
   // フォントサイズ基準値（プログラム制御対応）
   const [baseFontSize] = useState(14);
 
-  const filteredAnnouncements = useMemo(() => {
-    const q = normalize(query.trim());
-    return items.filter((ann) => {
-      if (activeFilter === 'unread' && !ann.isUnread) return false;
-      if (activeFilter !== 'all' && activeFilter !== 'unread' && ann.tag !== activeFilter) return false;
-      if (!q) return true;
-      return normalize(`${ann.subject} ${ann.teacher} ${ann.content}`).includes(q);
-    });
-  }, [items, activeFilter, query]);
+  // 授業の選択肢は、手元のお知らせから作る
+  const courseOptions = useMemo(() => buildCourseOptions(items), [items]);
+  // 選んでいた授業が一覧からなくなったときは「すべて」として扱う
+  const courseValue = courseOptions.some((o) => o.id === course) ? course : '';
+
+  // 選んでいる項目の色(プルダウンの背景)
+  const courseColor = courseTheme(courseOptions.find((o) => o.id === courseValue)?.label);
+  const kindColor = themeOf(KIND_THEMES[kind]);
+
+  const filteredAnnouncements = useMemo(
+    () => filterAnnouncements(items, { tag: activeFilter, course: courseValue, kind, query }),
+    [items, activeFilter, courseValue, kind, query]
+  );
 
   function openSearch() {
     setSearchOpen(true);
@@ -88,8 +211,7 @@ export default function Class() {
   // カードを押したら既読にして、Classroom の投稿ページを新しいタブで開く
   function openAnnouncement(ann) {
     markRead(ann.id);
-    const url = classroomUrl(ann.link);
-    if (url) window.open(url, '_blank', 'noopener,noreferrer');
+    openExternal(classroomUrl(ann.link));
   }
 
   const emptyMessage =
@@ -124,7 +246,8 @@ export default function Class() {
         display: 'flex',
         flexDirection: 'column',
         gap: '0.857em',
-        paddingTop: 'calc(0.857em + env(safe-area-inset-top))',
+        paddingTop: 'calc(2em + env(safe-area-inset-top))',
+        paddingBottom: '1.143em',
         background: 'white',
         width: '100%'
       }}>
@@ -250,6 +373,26 @@ export default function Class() {
             );
           })}
         </div>
+
+        {/* プルダウン: 授業・形式 */}
+        <div style={{ padding: '0 1.714em', display: 'flex', gap: '0.571em' }}>
+          <FilterSelect
+            label="授業で絞り込み"
+            value={courseValue}
+            onChange={setCourse}
+            allLabel="すべての授業"
+            theme={courseColor}
+            options={courseOptions}
+          />
+          <FilterSelect
+            label="形式で絞り込み"
+            value={kind}
+            onChange={setKind}
+            allLabel="すべての形式"
+            theme={kindColor}
+            options={KIND_OPTIONS}
+          />
+        </div>
       </header>
 
       {/* ===== メインコンテンツ部分（ここだけスクロールする） ===== */}
@@ -270,11 +413,10 @@ export default function Class() {
       }}>
         {filteredAnnouncements.length > 0 ? (
           filteredAnnouncements.map((ann) => {
-            const hasLink = !!classroomUrl(ann.link);
             return (
               <article
                 key={ann.id}
-                role={hasLink ? 'link' : undefined}
+                role="link"
                 tabIndex={0}
                 onClick={() => openAnnouncement(ann)}
                 onKeyDown={(e) => { if (e.key === 'Enter') openAnnouncement(ann); }}
@@ -286,8 +428,6 @@ export default function Class() {
                     ? 'linear-gradient(white, white) padding-box, linear-gradient(135deg, #FF4D4D 0%, #FF8A1B 100%) border-box'
                     : 'white',
                   borderRadius: '1.714em',
-                  //border: ann.isUnread ? '1.5px solid transparent' : '1px solid #E5E7EB',
-                  //outline: 'none',
                   outline: ann.isUnread ? 'none' : '1px #E5E7EB solid',
                   outlineOffset: '-1px',
                   display: 'flex',
