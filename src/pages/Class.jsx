@@ -1,4 +1,6 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 import { useAnnouncements } from '../lib/announcements';
 import { useIdentity } from '../auth/identity';
 import { THEMES } from '../lib/themes';
@@ -35,10 +37,6 @@ const FILTERS = [
 ];
 
 // Classroom の投稿ページを開くURL。
-// 学校アカウントで開くため、Google のアカウント選択に学校のメールアドレスを渡す
-// (AccountChooser?Email=...&continue=...)。アドレスは画面には出さず、この端末の localStorage にだけ置く。
-// 連携ページ(GAS)から戻ってきたとき、アプリのURLの ?school=... で受け取って保存する
-// Classroom の投稿ページを開くURL。
 // 学校アカウントで開くため、?authuser=学校のアドレス を付ける。アドレスは画面には出さず、この端末の localStorage にだけ置く。
 // 連携ページ(GAS)から戻ってきたとき、アプリのURLの ?school=... で受け取って保存する
 const SCHOOL_KEY = 'schoolEmail';
@@ -60,7 +58,7 @@ function loadSchoolEmail() {
   }
 }
 
-function classroomUrl(link) {
+function classroomUrl(link, email) {
   let target = String(link || '').replace(/&amp;/g, '&').trim();
   try {
     const u = new URL(target);
@@ -72,7 +70,6 @@ function classroomUrl(link) {
   } catch {
     target = CLASSROOM_HOME;
   }
-  const email = loadSchoolEmail();
   if (!email) return target; // アドレスが分からないときは、そのまま開く
   // 投稿ページの末尾(/details)はそのままに、?authuser=学校のアドレス を付けて開く
   const u = new URL(target);
@@ -84,6 +81,24 @@ function classroomUrl(link) {
 
 // Classroom の投稿ページを、今のアプリの画面からそのまま開く(新しいタブは作らない)。
 // 戻る操作は、ブラウザ(端末)の戻るで、アプリに戻る想定
+// 学校のアドレスを、生徒の情報(users/{studentId} の schoolEmail)から読む(短期の仕組み)。
+// 読めないときは、この端末に保存された値を使う
+function useSchoolEmail(studentId) {
+  const [email, setEmail] = useState('');
+  useEffect(() => {
+    if (!studentId) return undefined;
+    return onSnapshot(
+      doc(db, 'users', studentId),
+      (snap) => {
+        const v = snap.exists() ? snap.data().schoolEmail : '';
+        setEmail(typeof v === 'string' && v ? v : loadSchoolEmail());
+      },
+      () => setEmail(loadSchoolEmail())
+    );
+  }, [studentId]);
+  return email || loadSchoolEmail();
+}
+
 function openExternal(url) {
   window.location.href = url;
 }
@@ -130,6 +145,7 @@ const COURSE_THEMES = [
   { match: '探究', theme: 'emerald' },
   { match: '生徒会', theme: 'green' },
   { match: 'とんぼ祭', theme: 'orangeRed' },
+  { match: '組', theme: 'gray' },
 ];
 
 // カードに出す形式の名前
@@ -199,6 +215,7 @@ const NO_SCROLLBAR_CSS = '.no-scrollbar{scrollbar-width:none;-ms-overflow-style:
 export default function Class() {
   const { identity } = useIdentity();
   const { status, items, markRead } = useAnnouncements(identity?.id);
+  const schoolEmail = useSchoolEmail(identity?.id);
 
   const [activeTab, setActiveTab] = useState('class');
   const [activeFilter, setActiveFilter] = useState('all');
@@ -241,7 +258,7 @@ export default function Class() {
   // カードを押したら既読にして、Classroom の投稿ページを新しいタブで開く
   function openAnnouncement(ann) {
     markRead(ann.id);
-    openExternal(classroomUrl(ann.link));
+    openExternal(classroomUrl(ann.link, schoolEmail));
   }
 
   const emptyMessage =
