@@ -70,10 +70,10 @@ function classroomUrl(link, email) {
   } catch {
     target = CLASSROOM_HOME;
   }
-  // 課題・資料の投稿ページは、末尾に /details がないと一覧になるので付ける(お知らせなど他の形はそのまま)
+  // 課題(a)・資料(m)・お知らせ(p)の投稿ページは、末尾に /details がないと一覧になるので付ける
   try {
     const t = new URL(target);
-    t.pathname = t.pathname.replace(/\/+$/, '').replace(/^(\/c\/[^/]+\/(?:a|m)\/[^/]+)$/, '$1/details');
+    t.pathname = t.pathname.replace(/\/+$/, '').replace(/^(\/c\/[^/]+\/(?:a|m|p)\/[^/]+)$/, '$1/details');
     target = t.toString();
   } catch {
     /* そのまま */
@@ -107,10 +107,13 @@ function useSchoolEmail(studentId) {
   return email || loadSchoolEmail();
 }
 
+// Classroom を開く。いったん自分の中継ページ(public/open.html)を通してから移動する。
+// 中継ページは、Classroom のURLのときだけ、すぐに移動する(戻るでアプリに戻れる)
 function openExternal(url) {
-  window.location.href = url;
+  const relay = new URL(`${import.meta.env.BASE_URL}open.html`, window.location.origin);
+  relay.searchParams.set('u', url);
+  window.location.href = relay.toString();
 }
-
 // ===== プルダウンを選んだときの色 =====
 // 存在するテーマ名（orangeRed等）を指定してエラーを防ぐ
 const DEFAULT_THEME = 'gray';

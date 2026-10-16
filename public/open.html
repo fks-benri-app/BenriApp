@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- アプリのURL(生徒IDを含むことがある)を、移動先に渡さない -->
+  <meta name="referrer" content="no-referrer" />
+  <meta name="robots" content="noindex" />
+  <title>Classroomを開いています</title>
+  <style>
+    html, body { height: 100%; margin: 0; }
+    body {
+      display: flex; align-items: center; justify-content: center;
+      background: #fff; color: #6B7280; font-size: 14px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+    }
+    a { color: #2563eb; }
+  </style>
+</head>
+<body>
+  <p id="msg">Classroomを開いています…</p>
+  <script>
+    // アプリから ?u=(移動先のURL)を受け取り、Classroom のURLのときだけ、すぐに移動する。
+    // location.replace を使うので、この中継ページは履歴に残らず、「戻る」でアプリに戻れる。
+    (function () {
+      var msg = document.getElementById('msg');
+      var raw = new URLSearchParams(location.search).get('u') || '';
+      var target = '';
+      try {
+        var u = new URL(raw);
+        // 悪用(他のサイトへの転送)を防ぐため、classroom.google.com の https だけを許可する
+        if (u.protocol === 'https:' && u.hostname === 'classroom.google.com') target = u.toString();
+      } catch (e) { /* 無効なURL */ }
+
+      if (!target) {
+        msg.textContent = '開けないリンクです。';
+        return;
+      }
+      location.replace(target);
+
+      // 移動しなかったときの手動リンク
+      setTimeout(function () {
+        var a = document.createElement('a');
+        a.href = target;
+        a.textContent = 'こちら';
+        msg.textContent = '開かない場合は ';
+        msg.appendChild(a);
+        msg.appendChild(document.createTextNode(' をタップしてください'));
+      }, 2500);
+    })();
+  </script>
+</body>
+</html>
