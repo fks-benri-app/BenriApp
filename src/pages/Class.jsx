@@ -34,8 +34,28 @@ const FILTERS = [
   { id: 'festival', label: 'とんぼ祭関連' },
 ];
 
-const USE_ACCOUNT_CHOOSER = false;
+// Classroom の投稿ページを開くURL。
+// 学校アカウントで開くため、Google のアカウント選択に学校のメールアドレスを渡す
+// (AccountChooser?Email=...&continue=...)。アドレスは画面には出さず、この端末の localStorage にだけ置く。
+// 連携ページ(GAS)から戻ってきたとき、アプリのURLの ?school=... で受け取って保存する
+const SCHOOL_KEY = 'schoolEmail';
 const CLASSROOM_HOME = 'https://classroom.google.com/';
+
+function loadSchoolEmail() {
+  try {
+    const p = new URLSearchParams(window.location.search).get('school');
+    if (p && /^[^\s@]+@[^\s@]+$/.test(p)) {
+      localStorage.setItem(SCHOOL_KEY, p);
+      // アドレスをURLに残さない
+      const u = new URL(window.location.href);
+      u.searchParams.delete('school');
+      window.history.replaceState(null, '', u.toString());
+    }
+    return localStorage.getItem(SCHOOL_KEY) || '';
+  } catch {
+    return '';
+  }
+}
 
 function classroomUrl(link) {
   let target = String(link || '').replace(/&amp;/g, '&').trim();
@@ -57,8 +77,8 @@ function classroomUrl(link) {
   );
 }
 
-// 本物のリンクと同じ動きで新しいタブ(PWAでは外部ブラウザ)に開く。
-// window.open より、スマホやホーム画面のアプリ(PWA)で止められにくい
+// Classroom の投稿ページを、今のアプリの画面からそのまま開く(新しいタブは作らない)。
+// 戻る操作は、ブラウザ(端末)の戻るで、アプリに戻る想定
 function openExternal(url) {
   window.location.href = url;
 }
@@ -82,6 +102,7 @@ const COURSE_THEMES = [
   { match: '地学', theme: 'cyan' },
   { match: '数学', theme: 'indigo' },
   { match: '古典', theme: 'red' },
+  { match: '英語', theme: 'cyan' },
   { match: 'コミュ', theme: 'shuiro' },
   { match: '論理表現', theme: 'pink' },
   { match: '論表', theme: 'pink' },
@@ -90,7 +111,7 @@ const COURSE_THEMES = [
   { match: '国語', theme: 'red' },
   { match: '保健', theme: 'green' },
   { match: '体育', theme: 'emerald' },
-  { match: '情報', theme: 'cyan' },
+  { match: '情報', theme: 'blue' },
   { match: '家庭', theme: 'lime' },
   { match: '美術', theme: 'violet' },
   { match: '書道', theme: 'violet' },
