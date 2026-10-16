@@ -70,6 +70,14 @@ function classroomUrl(link, email) {
   } catch {
     target = CLASSROOM_HOME;
   }
+  // 課題・資料の投稿ページは、末尾に /details がないと一覧になるので付ける(お知らせなど他の形はそのまま)
+  try {
+    const t = new URL(target);
+    t.pathname = t.pathname.replace(/\/+$/, '').replace(/^(\/c\/[^/]+\/(?:a|m)\/[^/]+)$/, '$1/details');
+    target = t.toString();
+  } catch {
+    /* そのまま */
+  }
   if (!email) return target; // アドレスが分からないときは、そのまま開く
   // 投稿ページの末尾(/details)はそのままに、?authuser=学校のアドレス を付けて開く
   const u = new URL(target);
