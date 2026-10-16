@@ -38,6 +38,9 @@ const FILTERS = [
 // 学校アカウントで開くため、Google のアカウント選択に学校のメールアドレスを渡す
 // (AccountChooser?Email=...&continue=...)。アドレスは画面には出さず、この端末の localStorage にだけ置く。
 // 連携ページ(GAS)から戻ってきたとき、アプリのURLの ?school=... で受け取って保存する
+// Classroom の投稿ページを開くURL。
+// 学校アカウントで開くため、?authuser=学校のアドレス を付ける。アドレスは画面には出さず、この端末の localStorage にだけ置く。
+// 連携ページ(GAS)から戻ってきたとき、アプリのURLの ?school=... で受け取って保存する
 const SCHOOL_KEY = 'schoolEmail';
 const CLASSROOM_HOME = 'https://classroom.google.com/';
 
@@ -71,10 +74,12 @@ function classroomUrl(link) {
   }
   const email = loadSchoolEmail();
   if (!email) return target; // アドレスが分からないときは、そのまま開く
-  return (
-    'https://accounts.google.com/AccountChooser?Email=' + encodeURIComponent(email) +
-    '&continue=' + encodeURIComponent(target)
-  );
+  // 投稿ページの末尾(/details)はそのままに、?authuser=学校のアドレス を付けて開く
+  const u = new URL(target);
+  u.search = '';
+  u.hash = '';
+  u.searchParams.set('authuser', email);
+  return u.toString();
 }
 
 // Classroom の投稿ページを、今のアプリの画面からそのまま開く(新しいタブは作らない)。
