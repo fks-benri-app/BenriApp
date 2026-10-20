@@ -36,6 +36,13 @@ function toAnnouncement(doc) {
   const receivedAt = d.receivedAt?.toDate?.() ?? new Date();
   const body = joinTitleAndBody(cleanText(d.title), cleanText(d.description));
   const content = [body, d.dueDate ? `期限: ${d.dueDate}` : ''].filter(Boolean).join('\n');
+  // 詳細画面用の全文(GAS が body を保存している投稿だけ。古い投稿は content で代用する)
+  const fullBody = d.body ? joinTitleAndBody(cleanText(d.title), cleanText(d.body)) : '';
+  let attachments = [];
+  try {
+    const a = JSON.parse(d.attachments || '[]');
+    if (Array.isArray(a)) attachments = a.filter((x) => x && x.url);
+  } catch { /* 添付が壊れていても他は表示する */ }
   return {
     id: doc.id,
     subject: shortCourse(d.courseName) || d.category || '通知', // カードには授業名の最初の1語だけ
@@ -46,6 +53,9 @@ function toAnnouncement(doc) {
     kind: kindOf(d.category), // 'announcement' | 'assignment' | 'material' | 'other'
     time: formatTime(receivedAt),
     content,
+    body: fullBody, // 全文(なければ空)
+    due: d.dueDate || '', // 期限(なければ空)
+    attachments, // [{type,title,url}](GAS が Classroom API から保存。なければ空)
     tag: classify(`${d.title || ''} ${d.description || ''}`),
     link: d.link || null,
   };

@@ -107,13 +107,12 @@ function useSchoolEmail(studentId) {
   return email || loadSchoolEmail();
 }
 
-// Classroom を開く。いったん自分の中継ページ(public/open.html)を通してから移動する。
-// 中継ページは、Classroom のURLのときだけ、すぐに移動する(戻るでアプリに戻れる)
+// Classroom の投稿ページを開く。新しいタブは作らず、今の画面から移動する。
+// (Android のホーム画面アプリでは、アプリ内の表示(閉じるとアプリに戻る)で開く。タブが増えない)
 function openExternal(url) {
-  const relay = new URL(`${import.meta.env.BASE_URL}open.html`, window.location.origin);
-  relay.searchParams.set('u', url);
-  window.location.href = relay.toString();
+  window.location.href = url;
 }
+
 // ===== プルダウンを選んだときの色 =====
 // 存在するテーマ名（orangeRed等）を指定してエラーを防ぐ
 const DEFAULT_THEME = 'gray';
@@ -221,12 +220,232 @@ function FilterSelect({ value, onChange, allLabel, options, label, theme }) {
 }
 
 // 横スクロールの行に出る灰色のバーを隠す(スクロールはできる)
+// ===== 開発用モック(コード上のスイッチ。false なら一切表示されず、本番に影響しない) =====
+const DEV_MOCK = true;
+const MOCK_ITEMS = [
+  {
+    id: '__mock_attach', subject: '古典', teacher: 'テスト先生', courseKey: '古典', courseLabel: '古典',
+    courseFull: '古典＿２Ｆ', kind: 'announcement', time: '今日 09:00', isUnread: true, tag: 'general',
+    content: '【モック】添付つきのお知らせ', body: '【モック】添付つきのお知らせ\n添付のPDFとリンクを確認してください。',
+    due: '', link: 'https://classroom.google.com/c/AAA/p/BBB',
+    attachments: [
+      { type: 'drive', title: '2026w_poster.pdf', url: 'https://drive.google.com/file/d/xxx/view' },
+      { type: 'link', title: 'https://example.com/info', url: 'https://example.com/info' },
+      { type: 'youtube', title: '解説動画', url: 'https://www.youtube.com/watch?v=xxx' },
+    ],
+  },
+  {
+    id: '__mock_assign', subject: '数学', teacher: 'テスト先生', courseKey: '数学', courseLabel: '数学',
+    courseFull: '数学_２Ｆ', kind: 'assignment', time: '昨日 18:30', isUnread: true, tag: 'general',
+    content: '【モック】期限つきの課題\n期限: 10月31日', body: '【モック】期限つきの課題\n問題集 p.40-45 を解いて提出。',
+    due: '10月31日', link: 'https://classroom.google.com/c/AAA/a/CCC', attachments: [],
+  },
+];
+
 const NO_SCROLLBAR_CSS = '.no-scrollbar{scrollbar-width:none;-ms-overflow-style:none}.no-scrollbar::-webkit-scrollbar{display:none}';
+
+// ===== 詳細画面(カードを押すと開く。アプリの中で完結し、Classroom には移動しない) =====
+const ATTACH_HINT = /添付|資料|PDF|ＰＤＦ|プリント|配布|スライド/i;
+
+function withAuthuser(url, email) {
+  try {
+    const u = new URL(url);
+    if (email && /(^|\.)google\.com$/.test(u.hostname) && !u.searchParams.has('authuser')) u.searchParams.set('authuser', email);
+    return u.toString();
+  } catch { return url; }
+}
+
+const ATTACH_ICON = { drive: '📄', link: '🔗', youtube: '▶️', form: '📝' };
+
+function DetailView({ ann, baseFontSize, onBack, onOpenClassroom, onOpenUrl }) {
+  const attachments = ann.attachments || [];
+  const hasFullBody = !!ann.body;
+  const body = hasFullBody ? ann.body : ann.content;
+  const courseT = courseThemeOrNull(ann.subject);
+  const mayHaveAttachment = attachments.length === 0 && (ann.kind === 'material' || ATTACH_HINT.test(body));
+  return (
+    <div style={{
+      position: 'fixed',
+      inset: 0,
+      background: 'white',
+      display: 'flex',
+      flexDirection: 'column',
+      overflow: 'hidden',
+      fontSize: `${baseFontSize}px`,
+      WebkitTapHighlightColor: 'transparent'
+    }}>
+      <header style={{
+        flexShrink: 0,
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.857em',
+        padding: 'calc(1.143em + env(safe-area-inset-top)) 1.143em 0.857em',
+        borderBottom: '1px #F3F4F6 solid'
+      }}>
+        <button
+          type="button"
+          onClick={onBack}
+          aria-label="戻る"
+          style={{
+            width: '2.143em',
+            height: '2.143em',
+            padding: 0,
+            border: 'none',
+            background: 'transparent',
+            color: '#434343',
+            cursor: 'pointer',
+            flexShrink: 0,
+            touchAction: 'manipulation'
+          }}
+        >
+          <svg viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true" style={{ display: 'block', width: '100%', height: '100%' }}>
+            <path d="m313-440 224 224-57 56-320-320 320-320 57 56-224 224h487v80H313Z" />
+          </svg>
+        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.571em', flex: 1, minWidth: 0 }}>
+          <div style={{
+            padding: '0.286em 0.571em',
+            background: courseT?.gradient || '#F3F4F6',
+            borderRadius: '0.429em'
+          }}>
+            <div style={{ color: courseT?.textColor || '#111827', fontSize: '0.786em', fontWeight: '700' }}>
+              {ann.subject}
+            </div>
+          </div>
+          {KIND_LABELS[ann.kind] && (
+            <div style={{
+              padding: '0.286em 0.571em',
+              borderRadius: '0.429em',
+              background: themeOf(KIND_THEMES[ann.kind]).gradient,
+              color: themeOf(KIND_THEMES[ann.kind]).textColor,
+              fontSize: '0.786em',
+              fontWeight: '700'
+            }}>
+              {KIND_LABELS[ann.kind]}
+            </div>
+          )}
+        </div>
+        <div style={{ color: '#6B7280', fontSize: '0.857em', flexShrink: 0 }}>{ann.time}</div>
+      </header>
+
+      <main style={{
+        flex: 1,
+        minHeight: 0,
+        overflowY: 'auto',
+        overscrollBehavior: 'contain',
+        WebkitOverflowScrolling: 'touch',
+        padding: '1.143em 1.714em'
+      }}>
+        <div style={{ maxWidth: '40em', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1em' }}>
+          {ann.teacher && (
+            <div style={{ color: '#6B7280', fontSize: '0.857em' }}>{ann.teacher}</div>
+          )}
+          <div style={{
+            color: '#111827',
+            fontSize: '1.0714em',
+            lineHeight: 1.7,
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-word'
+          }}>
+            {body}
+          </div>
+          {hasFullBody && ann.due && (
+            <div style={{
+              padding: '0.7em 1em',
+              background: '#FFF7ED',
+              border: '1px solid #FED7AA',
+              borderRadius: '0.6em',
+              color: '#C2410C',
+              fontSize: '0.929em',
+              fontWeight: '600'
+            }}>
+              期限: {ann.due}
+            </div>
+          )}
+          {attachments.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5em' }}>
+              <div style={{ color: '#6B7280', fontSize: '0.857em', fontWeight: '600' }}>添付ファイル</div>
+              {attachments.map((f, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => onOpenUrl(f.url)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '0.7em', textAlign: 'left',
+                    padding: '0.8em 1em', background: '#F9FAFB', border: '1px solid #E5E7EB',
+                    borderRadius: '0.6em', color: '#111827', fontSize: '0.929em',
+                    cursor: 'pointer', font: 'inherit', width: '100%'
+                  }}
+                >
+                  <span aria-hidden="true">{ATTACH_ICON[f.type] || '📎'}</span>
+                  <span style={{ flex: 1, minWidth: 0, wordBreak: 'break-all' }}>{f.title || f.url}</span>
+                </button>
+              ))}
+            </div>
+          )}
+          <div style={{
+            padding: '0.8em 1em',
+            background: mayHaveAttachment ? '#FFFBEB' : '#F9FAFB',
+            border: `1px solid ${mayHaveAttachment ? '#FCD34D' : '#F3F4F6'}`,
+            borderRadius: '0.6em',
+            color: mayHaveAttachment ? '#B45309' : '#6B7280',
+            fontSize: '0.857em',
+            lineHeight: 1.6
+          }}>
+            {mayHaveAttachment
+              ? '添付資料があるかもしれません。ファイルの確認や提出は、下のボタンからClassroomで行ってください。'
+              : '添付資料や提出は、下のボタンからClassroomで確認してください。'}
+          </div>
+        </div>
+      </main>
+
+      <footer style={{
+        flexShrink: 0,
+        padding: '0.857em 1.714em calc(0.857em + env(safe-area-inset-bottom))',
+        borderTop: '1px #E5E7EB solid'
+      }}>
+        <div style={{ maxWidth: '40em', margin: '0 auto' }}>
+          <button
+            type="button"
+            onClick={onOpenClassroom}
+            style={{
+              width: '100%',
+              padding: '0.9em 1.2em',
+              border: 'none',
+              borderRadius: '0.5em',
+              background: '#111827',
+              color: 'white',
+              fontFamily: 'inherit',
+              fontSize: '1.05em',
+              fontWeight: '700',
+              cursor: 'pointer',
+              touchAction: 'manipulation'
+            }}
+          >
+            Classroomで開く
+          </button>
+        </div>
+      </footer>
+    </div>
+  );
+}
 
 export default function Class() {
   const { identity } = useIdentity();
-  const { status, items, markRead } = useAnnouncements(identity?.id);
+  const real = useAnnouncements(identity?.id);
+  const { markRead } = real;
+  // 開発用: DEV_MOCK を true にすると、先頭にモックが加わる(本番は false のまま)
+  const status = DEV_MOCK ? 'ready' : real.status;
+  const items = useMemo(() => (DEV_MOCK ? [...MOCK_ITEMS, ...real.items] : real.items), [real.items]);
   const schoolEmail = useSchoolEmail(identity?.id);
+
+  // 詳細画面。端末の戻るボタンでも、一覧に戻れるように、履歴(history)に積む
+  const [detailId, setDetailId] = useState(() => window.history.state?.__detail ?? null);
+  useEffect(() => {
+    const onPop = () => setDetailId(window.history.state?.__detail ?? null);
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
 
   const [activeTab, setActiveTab] = useState('class');
   const [activeFilter, setActiveFilter] = useState('all');
@@ -266,11 +485,20 @@ export default function Class() {
     setQuery('');
   }
 
-  // カードを押したら既読にして、Classroom の投稿ページを新しいタブで開く
+  // カードを押したら既読にして、アプリ内の詳細画面を開く(Classroom には移動しない)
   function openAnnouncement(ann) {
     markRead(ann.id);
-    openExternal(classroomUrl(ann.link, schoolEmail));
+    window.history.pushState({ ...(window.history.state || {}), __detail: ann.id }, '');
+    setDetailId(ann.id);
   }
+
+  function closeDetail() {
+    // 詳細を開いた履歴があるときは戻る。ないとき(再読み込みなど)は、その場で一覧に戻す
+    if (window.history.state?.__detail) window.history.back();
+    else setDetailId(null);
+  }
+
+  const detail = detailId ? items.find((a) => a.id === detailId) : null;
 
   const emptyMessage =
     status === 'loading'
@@ -280,6 +508,18 @@ export default function Class() {
         : query.trim()
           ? `「${query.trim()}」に一致するお知らせはありません`
           : '該当するお知らせはありません';
+
+  if (detail) {
+    return (
+      <DetailView
+        ann={detail}
+        baseFontSize={baseFontSize}
+        onBack={closeDetail}
+        onOpenClassroom={() => openExternal(classroomUrl(detail.link, schoolEmail))}
+        onOpenUrl={(u) => openExternal(withAuthuser(u, schoolEmail))}
+      />
+    );
+  }
 
   return (
     <div style={{
