@@ -227,7 +227,7 @@ function FilterSelect({ value, onChange, allLabel, options, label, theme }) {
 
 // 横スクロールの行に出る灰色のバーを隠す(スクロールはできる)
 // ===== 開発用モック(コード上のスイッチ。false なら一切表示されず、本番に影響しない) =====
-const DEV_MOCK = true;
+const DEV_MOCK = false;
 const MOCK_THUMB = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='88' height='72'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%2377b3ff'/><stop offset='1' stop-color='%23ff9acb'/></linearGradient></defs><rect width='88' height='72' fill='url(%23g)'/></svg>";
 const MOCK_ITEMS = [
   {
@@ -615,10 +615,15 @@ export default function Class() {
 
   // 一斉既読: いま一覧に出ている(絞り込み後の)未読をまとめて既読にする
   const unreadShown = useMemo(() => filteredAnnouncements.filter((a) => a.isUnread), [filteredAnnouncements]);
+  // 確認は小さなアプリ内の画面で出す(ブラウザの確認ダイアログは、タイトルがサイトのURLになって変えられないため)
+  const [readAllAsk, setReadAllAsk] = useState(false);
   function readAllShown() {
     if (unreadShown.length === 0) return;
-    if (!window.confirm(`表示中の未読 ${unreadShown.length} 件をすべて既読にしますか?`)) return;
+    setReadAllAsk(true);
+  }
+  function confirmReadAll() {
     markAllRead(unreadShown.map((a) => a.id));
+    setReadAllAsk(false);
   }
 
   function openSearch() {
@@ -1001,6 +1006,20 @@ export default function Class() {
           );
         })}
       </nav>
+
+      {readAllAsk && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', fontFamily: GOOGLE_FONT }}>
+          <div onClick={() => setReadAllAsk(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)' }} />
+          <div role="dialog" aria-modal="true" style={{ position: 'relative', width: '100%', maxWidth: '320px', background: 'white', borderRadius: '20px', padding: '24px', boxShadow: '0 8px 24px rgba(0,0,0,0.2)' }}>
+            <div style={{ fontSize: '18px', fontWeight: 600, color: '#111827', marginBottom: '8px' }}>すべて既読にしますか?</div>
+            <div style={{ fontSize: '14px', lineHeight: '20px', color: '#6B7280', marginBottom: '20px' }}>表示中の未読 {unreadShown.length} 件を既読にします。</div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+              <button type="button" onClick={() => setReadAllAsk(false)} style={{ padding: '10px 16px', border: 'none', background: 'transparent', color: '#6B7280', borderRadius: '999px', fontFamily: 'inherit', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>キャンセル</button>
+              <button type="button" onClick={confirmReadAll} style={{ padding: '10px 16px', border: 'none', background: '#111827', color: 'white', borderRadius: '999px', fontFamily: 'inherit', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>既読にする</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {detail && (
         <DetailView
