@@ -231,6 +231,12 @@ const DEV_MOCK = true;
 const MOCK_THUMB = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='88' height='72'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%2377b3ff'/><stop offset='1' stop-color='%23ff9acb'/></linearGradient></defs><rect width='88' height='72' fill='url(%23g)'/></svg>";
 const MOCK_ITEMS = [
   {
+    id: '__mock_list', subject: '倫理', teacher: '秋本裕子', courseKey: '倫理', courseLabel: '倫理',
+    courseFull: '倫理_２Ｆ', kind: 'announcement', time: '10月15日', isUnread: true, tag: 'general',
+    content: '【モック】一問一答の箇条書き', body: '', due: '', link: 'https://classroom.google.com/c/AAA/p/DDD', attachments: [],
+    rawBody: 'プリント１２一問一答解答\n1.     \n功利主義\n\n\n2.     \n功利性の原理\n\n\n3.     \n最大多数の最大幸福\n\n\n10.   \n他者危害の原則\n\nプリント１３一問一答解答\n1.     \nヘーゲル\n2.     \n絶対精神\n3.     \n「世界史は自由の意識の進歩」\n9.     \n欲望の体系\n10.   \n人倫の喪失態\n\n\n\n\n\n\n11.   \n人倫の完成態\n\nプリントNo13の一問一答答えです\n\n1ヘーゲル\n2絶対精神\n3「世界史は自由の意識の進歩」\n4弁証法\n5反，ジンテーゼ\n\n来週は10月25日に実施します。',
+  },
+  {
     id: '__mock_attach', subject: '古典', teacher: '召田義一', courseKey: '古典', courseLabel: '古典',
     courseFull: '古典＿２Ｆ', kind: 'announcement', time: '10月16日', isUnread: true, tag: 'general',
     content: '【モック】添付つきのお知らせ', body: '', due: '', link: 'https://classroom.google.com/c/AAA/p/BBB',
@@ -297,8 +303,71 @@ const GOOGLE_FONT = "'Google Sans', Roboto, 'Hiragino Sans', 'Noto Sans JP', 'Yu
 const URL_RE = /(https?:\/\/[^\s<>"'　]+)/g;
 
 // 本文は整形せず、そのまま出す(改行・空白は保つ)。URL だけリンクにする。
-// 例外: 「1.」「1)」「①」などで始まる行が2行以上つづく所は、番号をそろえた箇条書きにする
-const LIST_RE = /^([ \t\u3000]*)([0-9０-９]{1,3}(?:[.．](?![0-9０-９])|[)）、])|[（(][0-9０-９]{1,3}[)）]|[①-⑳])[ \t\u3000]*(\S.*)$/;
+// 例外: 番号つきの行が2行以上つづく所は、番号をそろえた箇条書きにする。次の形に対応
+//   「1.功利主義」「1)」「（1）」「①」(番号のあとに文章)
+//   「1.」だけの行のあとに文章が来る形(Word からの貼り付けなど。間の空行は詰める)
+//   「1ヘーゲル」のように区切りなしで1から順に並ぶ形
+const NUM_RE = '[0-9０-９]{1,3}';
+const LIST_RE = new RegExp('^[ \\t\\u3000]*(' + NUM_RE + '(?:[.．](?![0-9０-９])|[)）、])|[（(]' + NUM_RE + '[)）]|[①-⑳])[ \\t\\u3000]*(\\S.*)$');
+const MARKER_ONLY_RE = new RegExp('^[ \\t\\u3000]*(' + NUM_RE + '(?:[.．]|[)）、])|[（(]' + NUM_RE + '[)）]|[①-⑳])[ \\t\\u3000]*$');
+const PLAIN_NUM_RE = new RegExp('^[ \\t\\u3000]*(' + NUM_RE + ')(?![0-9０-９.．)）、])[ \\t\\u3000]*([^0-9０-９\\s月日年時分秒%％:：/／\\-].*)$');
+
+function markerNumber(marker) {
+  const c = marker.charCodeAt(0);
+  if (c >= 0x2460 && c <= 0x2473) return c - 0x2460 + 1; // ①-⑳
+  const d = marker.replace(/[^0-9０-９]/g, '').replace(/[０-９]/g, (x) => String(x.charCodeAt(0) - 0xFF10));
+  return d ? parseInt(d, 10) : NaN;
+}
+
+const isBlank = (l) => l.trim() === '';
+
+// lines[i] から始まる箇条書きの1項目を読む。読めなければ null
+function parseItem(lines, i) {
+  const line = lines[i];
+  let m = LIST_RE.exec(line);
+  if (m) return { kind: 'marked', n: markerNumber(m[1]), marker: m[1], body: m[2].trim(), next: i + 1 };
+  m = MARKER_ONLY_RE.exec(line);
+  if (m) {
+    let j = i + 1;
+    while (j < lines.length && isBlank(lines[j])) j += 1;
+    if (j < lines.length && !MARKER_ONLY_RE.test(lines[j]) && !LIST_RE.test(lines[j])) {
+      return { kind: 'marked', n: markerNumber(m[1]), marker: m[1], body: lines[j].trim(), next: j + 1 };
+    }
+    return null;
+  }
+  m = PLAIN_NUM_RE.exec(line);
+  if (m) {
+    const n = parseInt(m[1].replace(/[０-９]/g, (x) => String(x.charCodeAt(0) - 0xFF10)), 10);
+    return { kind: 'plain', n, marker: `${n}.`, body: m[2].trim(), next: i + 1 };
+  }
+  return null;
+}
+
+// lines[i] から始まる箇条書きを集める。2項目に満たなければ null
+function collectList(lines, i) {
+  const items = [];
+  let j = i;
+  let prevN = null;
+  while (j < lines.length) {
+    let it = parseItem(lines, j);
+    if (!it && items.length > 0) {
+      // 空行をはさんで、次の番号(前の番号+1)が来ていれば同じ箇条書きとして続ける
+      let k = j;
+      while (k < lines.length && isBlank(lines[k])) k += 1;
+      if (k > j && k < lines.length) {
+        const it2 = parseItem(lines, k);
+        if (it2 && (it2.kind === 'plain' ? it2.n === prevN + 1 : it2.n > prevN)) it = it2;
+      }
+    }
+    if (!it) break;
+    if (items.length === 0 && it.kind === 'plain' && it.n !== 1) break; // 区切りなしは1から始まるものだけ
+    if (items.length > 0 && (it.kind === 'plain' || items[items.length - 1].kind === 'plain') && it.n !== prevN + 1) break;
+    items.push(it);
+    prevN = it.n;
+    j = it.next;
+  }
+  return items.length >= 2 ? { items, end: j } : null;
+}
 
 function Linkified({ text, onOpenUrl }) {
   const parts = String(text || '').split(URL_RE);
@@ -319,26 +388,15 @@ function Linkified({ text, onOpenUrl }) {
 }
 
 function PostText({ text, onOpenUrl }) {
-  const lines = String(text || '').split('\n');
+  const lines = String(text || '').split(/\r?\n/);
   const blocks = [];
   let i = 0;
   while (i < lines.length) {
-    const m = LIST_RE.exec(lines[i]);
-    if (m) {
-      // 連続する番号つきの行を集める
-      const items = [];
-      let j = i;
-      while (j < lines.length) {
-        const mj = LIST_RE.exec(lines[j]);
-        if (!mj) break;
-        items.push({ marker: mj[2], body: mj[3] });
-        j += 1;
-      }
-      if (items.length >= 2) {
-        blocks.push({ list: items, key: i });
-        i = j;
-        continue;
-      }
+    const list = collectList(lines, i);
+    if (list) {
+      blocks.push({ list: list.items, key: i });
+      i = list.end;
+      continue;
     }
     blocks.push({ line: lines[i], key: i });
     i += 1;
@@ -348,7 +406,7 @@ function PostText({ text, onOpenUrl }) {
       <div key={b.key} style={{ margin: '4px 0' }}>
         {b.list.map((it, k) => (
           <div key={k} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', paddingLeft: '8px' }}>
-            <span style={{ flexShrink: 0, minWidth: '1.8em', textAlign: 'right' }}>{it.marker}</span>
+            <span style={{ flexShrink: 0, minWidth: '2em', textAlign: 'right' }}>{it.marker}</span>
             <span style={{ flex: 1, minWidth: 0, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
               <Linkified text={it.body} onOpenUrl={onOpenUrl} />
             </span>
@@ -773,6 +831,23 @@ export default function Class() {
             theme={kindColor}
             options={KIND_OPTIONS}
           />
+          {/* 一斉既読(ヘッダー内なのでスクロールしても見える) */}
+          <button
+            type="button"
+            onClick={readAllShown}
+            disabled={unreadShown.length === 0}
+            aria-label="表示中の未読をすべて既読にする"
+            title="表示中の未読をすべて既読にする"
+            style={{
+              marginLeft: 'auto', flexShrink: 0, width: '32px', height: '32px', padding: 0,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              border: '1px solid #E5E7EB', borderRadius: '10px', background: 'white',
+              color: unreadShown.length === 0 ? '#D1D5DB' : '#6B7280',
+              cursor: unreadShown.length === 0 ? 'default' : 'pointer', touchAction: 'manipulation'
+            }}
+          >
+            <Icon name="doneAll" size={18} />
+          </button>
         </div>
       </header>
 
@@ -792,22 +867,6 @@ export default function Class() {
         alignContent: 'start',
         borderTop: '1px #F3F4F6 solid'
       }}>
-        {unreadShown.length > 0 && (
-          <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'flex-end' }}>
-            <button
-              type="button"
-              onClick={readAllShown}
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: '0.4em', padding: '0.35em 0.9em',
-                border: '1px solid #E5E7EB', borderRadius: '999px', background: 'white', color: '#6B7280',
-                fontFamily: 'inherit', fontSize: '0.929em', fontWeight: 600, cursor: 'pointer', touchAction: 'manipulation'
-              }}
-            >
-              <Icon name="doneAll" size={16} />
-              表示中をすべて既読にする({unreadShown.length})
-            </button>
-          </div>
-        )}
         {filteredAnnouncements.length > 0 ? (
           filteredAnnouncements.map((ann) => {
             return (
