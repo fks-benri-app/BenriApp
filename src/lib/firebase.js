@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
+import { initializeFirestore, persistentLocalCache, persistentSingleTabManager } from 'firebase/firestore';
 // ★ config.js から firebaseConfig をしっかりインポートします
 import { firebaseConfig } from '../config';
 
@@ -9,4 +9,7 @@ if (!firebaseConfig) {
 }
 
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
+// オフライン時も前に読み込んだお知らせを表示できるよう、端末(IndexedDB)に保存する
+export const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({ tabManager: persistentSingleTabManager({}) }),
+});

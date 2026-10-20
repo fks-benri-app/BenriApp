@@ -1010,7 +1010,7 @@ export default function Class() {
       {readAllAsk && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', fontFamily: GOOGLE_FONT }}>
           <div onClick={() => setReadAllAsk(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)' }} />
-          <div role="dialog" aria-modal="true" style={{ position: 'relative', width: '100%', maxWidth: '320px', background: 'white', borderRadius: '20px', padding: '24px', boxShadow: '0 8px 24px rgba(0,0,0,0.2)' }}>
+          <div role="dialog" aria-modal="true" style={{ position: 'relative', width: '100%', maxWidth: '320px', background: 'white', borderRadius: '20px', padding: '24px', userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none', boxShadow: '0 8px 24px rgba(0,0,0,0.2)' }}>
             <div style={{ fontSize: '18px', fontWeight: 600, color: '#111827', marginBottom: '8px' }}>すべて既読にしますか?</div>
             <div style={{ fontSize: '14px', lineHeight: '20px', color: '#6B7280', marginBottom: '20px' }}>表示中の未読 {unreadShown.length} 件を既読にします。</div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
