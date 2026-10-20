@@ -41,7 +41,7 @@ function toAnnouncement(doc) {
   let attachments = [];
   try {
     const a = JSON.parse(d.attachments || '[]');
-    if (Array.isArray(a)) attachments = a.filter((x) => x && x.url);
+    if (Array.isArray(a)) attachments = a.filter((x) => x && x.url); // [{type,title,url,thumb?}]
   } catch { /* 添付が壊れていても他は表示する */ }
   return {
     id: doc.id,
@@ -69,7 +69,7 @@ function toAnnouncement(doc) {
 /**
  * 画面が使うのはこのフックだけ。
  * 将来ログインを入れて保存先のパスが変わっても、ここだけ直せば画面は変わらない。
- * @returns {{ status: 'loading'|'ready'|'error', items: Array, markRead: (id: string) => void }}
+ * @returns {{ status: 'loading'|'ready'|'error', items: Array, markRead: (id: string) => void, markAllRead: (ids: string[]) => void }}
  */
 export function useAnnouncements(studentId) {
   const [state, setState] = useState({ status: 'loading', items: [] });
@@ -104,10 +104,22 @@ export function useAnnouncements(studentId) {
     });
   }, []);
 
+  // 渡された id をまとめて既読にする(一斉既読)。状態の更新と保存は1回だけ
+  const markAllRead = useCallback((ids) => {
+    setReadIds((prev) => {
+      const next = new Set(prev);
+      let changed = false;
+      ids.forEach((id) => { if (!next.has(id)) { next.add(id); changed = true; } });
+      if (!changed) return prev;
+      storage.set(READ_KEY, JSON.stringify([...next].slice(-500)));
+      return next;
+    });
+  }, []);
+
   const items = useMemo(
     () => state.items.map((a) => ({ ...a, isUnread: !readIds.has(a.id) })),
     [state.items, readIds]
   );
 
-  return { status: state.status, items, markRead };
+  return { status: state.status, items, markRead, markAllRead, readIds };
 }

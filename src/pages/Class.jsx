@@ -228,15 +228,17 @@ function FilterSelect({ value, onChange, allLabel, options, label, theme }) {
 // 横スクロールの行に出る灰色のバーを隠す(スクロールはできる)
 // ===== 開発用モック(コード上のスイッチ。false なら一切表示されず、本番に影響しない) =====
 const DEV_MOCK = true;
+const MOCK_THUMB = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='88' height='72'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%2377b3ff'/><stop offset='1' stop-color='%23ff9acb'/></linearGradient></defs><rect width='88' height='72' fill='url(%23g)'/></svg>";
 const MOCK_ITEMS = [
   {
     id: '__mock_attach', subject: '古典', teacher: '召田義一', courseKey: '古典', courseLabel: '古典',
     courseFull: '古典＿２Ｆ', kind: 'announcement', time: '10月16日', isUnread: true, tag: 'general',
     content: '【モック】添付つきのお知らせ', body: '', due: '', link: 'https://classroom.google.com/c/AAA/p/BBB',
-    rawBody: 'https://forms.gle/xZbA5yp8aYTGonGG8\n来年度科目選択のフォーム入力が未入力の人に送信しています。\n\nこちらへ入力をお願いします。\n    (空白と改行はそのまま表示されます)',
+    rawBody: 'https://forms.gle/xZbA5yp8aYTGonGG8\n来年度科目選択のフォーム入力が未入力の人に送信しています。\n\nこちらへ入力をお願いします。\n    (空白と改行はそのまま表示されます)\n\n【持ち物】\n1. 筆記用具\n2. 問題集(p.40-45を解いておく。長い説明が折り返されても番号の下にそろいます)\n3. 体育館シューズ\n\n①集合は8時30分 ②解散は15時',
     attachments: [
       { type: 'drive', title: '2026w_poster.pdf', url: 'https://drive.google.com/file/d/xxx/view' },
-      { type: 'drive', title: '2026年7月9日（8:39）.jpg', url: 'https://drive.google.com/file/d/yyy/view' },
+      { type: 'drive', title: '2026年7月9日（8:39）.jpg', url: 'https://drive.google.com/file/d/yyy/view', thumb: MOCK_THUMB },
+      { type: 'drive', title: '読み込めない画像.png', url: 'https://drive.google.com/file/d/zzz/view', thumb: 'https://invalid.example/none.png' },
       { type: 'link', title: 'https://example.com/info', url: 'https://example.com/info' },
       { type: 'youtube', title: '解説動画', url: 'https://www.youtube.com/watch?v=xxx' },
     ],
@@ -271,6 +273,7 @@ const ICON_PATHS = {
   file: 'M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z',
   link: 'M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z',
   youtube: 'M10 16.5l6-4.5-6-4.5v9zM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z',
+  doneAll: 'M18 7l-1.41-1.41-6.34 6.34 1.41 1.41L18 7zm4.24-1.41L11.66 16.17 7.48 12l-1.41 1.41L11.66 19l12-12-1.42-1.41zM.41 13.41L6 19l1.41-1.41L1.83 12 .41 13.41z',
   form: 'M3 3v18h18V3H3zm7 14H6v-2h4v2zm0-4H6v-2h4v2zm0-4H6V7h4v2zm8 8h-6v-2h6v2zm0-4h-6v-2h6v2zm0-4h-6V7h6v2z',
 };
 
@@ -293,8 +296,11 @@ const POST_STYLES = {
 const GOOGLE_FONT = "'Google Sans', Roboto, 'Hiragino Sans', 'Noto Sans JP', 'Yu Gothic UI', Arial, sans-serif";
 const URL_RE = /(https?:\/\/[^\s<>"'　]+)/g;
 
-// 本文は整形せず、そのまま出す(改行・空白は保つ)。URL だけリンクにする
-function PostText({ text, onOpenUrl }) {
+// 本文は整形せず、そのまま出す(改行・空白は保つ)。URL だけリンクにする。
+// 例外: 「1.」「1)」「①」などで始まる行が2行以上つづく所は、番号をそろえた箇条書きにする
+const LIST_RE = /^([ \t\u3000]*)([0-9０-９]{1,3}(?:[.．](?![0-9０-９])|[)）、])|[（(][0-9０-９]{1,3}[)）]|[①-⑳])[ \t\u3000]*(\S.*)$/;
+
+function Linkified({ text, onOpenUrl }) {
   const parts = String(text || '').split(URL_RE);
   return parts.map((p, i) =>
     i % 2 === 1 ? (
@@ -312,6 +318,51 @@ function PostText({ text, onOpenUrl }) {
   );
 }
 
+function PostText({ text, onOpenUrl }) {
+  const lines = String(text || '').split('\n');
+  const blocks = [];
+  let i = 0;
+  while (i < lines.length) {
+    const m = LIST_RE.exec(lines[i]);
+    if (m) {
+      // 連続する番号つきの行を集める
+      const items = [];
+      let j = i;
+      while (j < lines.length) {
+        const mj = LIST_RE.exec(lines[j]);
+        if (!mj) break;
+        items.push({ marker: mj[2], body: mj[3] });
+        j += 1;
+      }
+      if (items.length >= 2) {
+        blocks.push({ list: items, key: i });
+        i = j;
+        continue;
+      }
+    }
+    blocks.push({ line: lines[i], key: i });
+    i += 1;
+  }
+  return blocks.map((b) =>
+    b.list ? (
+      <div key={b.key} style={{ margin: '4px 0' }}>
+        {b.list.map((it, k) => (
+          <div key={k} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', paddingLeft: '8px' }}>
+            <span style={{ flexShrink: 0, minWidth: '1.8em', textAlign: 'right' }}>{it.marker}</span>
+            <span style={{ flex: 1, minWidth: 0, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
+              <Linkified text={it.body} onOpenUrl={onOpenUrl} />
+            </span>
+          </div>
+        ))}
+      </div>
+    ) : (
+      <div key={b.key} style={{ minHeight: '20px', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
+        <Linkified text={b.line} onOpenUrl={onOpenUrl} />
+      </div>
+    )
+  );
+}
+
 function attachmentLabel(f) {
   if (f.type === 'youtube') return 'YouTube';
   if (f.type === 'link') return 'リンク';
@@ -323,18 +374,32 @@ function attachmentLabel(f) {
 
 function AttachmentCard({ f, onOpenUrl }) {
   const iconName = f.type === 'youtube' ? 'youtube' : f.type === 'link' ? 'link' : f.type === 'form' ? 'form' : 'file';
+  // サムネイル(画像など)があれば、アイコンの代わりに出す。読み込めなかったらアイコンに戻す
+  const [thumbFailed, setThumbFailed] = useState(false);
+  const showThumb = !!f.thumb && !thumbFailed;
   return (
     <button
       type="button"
       onClick={() => onOpenUrl(f.url)}
       style={{
-        display: 'flex', alignItems: 'stretch', width: '100%', padding: 0, textAlign: 'left',
+        display: 'flex', alignItems: 'stretch', width: '100%', minHeight: '72px', padding: 0, textAlign: 'left',
         background: 'white', border: '1px solid #c4c7c5', borderRadius: '8px', overflow: 'hidden',
         cursor: 'pointer', font: 'inherit', color: 'inherit', touchAction: 'manipulation'
       }}
     >
-      <span style={{ width: '72px', flexShrink: 0, background: '#f0f4f9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#444746', borderRight: '1px solid #c4c7c5' }}>
-        <Icon name={iconName} size={32} />
+      <span style={{ width: '88px', flexShrink: 0, background: '#f0f4f9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#444746', borderRight: '1px solid #c4c7c5', position: 'relative' }}>
+        {showThumb ? (
+          <img
+            src={f.thumb}
+            alt=""
+            loading="lazy"
+            referrerPolicy="no-referrer"
+            onError={() => setThumbFailed(true)}
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+          />
+        ) : (
+          <Icon name={iconName} size={32} />
+        )}
       </span>
       <span style={{ flex: 1, minWidth: 0, padding: '12px 16px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '2px' }}>
         <span style={{ fontSize: '14px', lineHeight: '20px', fontWeight: 500, color: '#1f1f1f', wordBreak: 'break-all' }}>{f.title || f.url}</span>
@@ -399,7 +464,7 @@ function DetailView({ ann, onBack, onOpenClassroom, onOpenUrl }) {
 
             {/* 本文: 整形なし */}
             {text && (
-              <div style={{ marginBottom: '16px', fontSize: '14px', lineHeight: '20px', color: '#1f1f1f', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
+              <div style={{ marginBottom: '16px', fontSize: '14px', lineHeight: '20px', color: '#1f1f1f' }}>
                 <PostText text={text} onOpenUrl={onOpenUrl} />
               </div>
             )}
@@ -429,10 +494,13 @@ function DetailView({ ann, onBack, onOpenClassroom, onOpenUrl }) {
 export default function Class() {
   const { identity } = useIdentity();
   const real = useAnnouncements(identity?.id);
-  const { markRead } = real;
+  const { markRead, markAllRead } = real;
   // 開発用: DEV_MOCK を true にすると、先頭にモックが加わる(本番は false のまま)
   const status = DEV_MOCK ? 'ready' : real.status;
-  const items = useMemo(() => (DEV_MOCK ? [...MOCK_ITEMS, ...real.items] : real.items), [real.items]);
+  const items = useMemo(
+    () => (DEV_MOCK ? [...MOCK_ITEMS.map((m) => ({ ...m, isUnread: !real.readIds.has(m.id) })), ...real.items] : real.items),
+    [real.items, real.readIds]
+  );
   const schoolEmail = useSchoolEmail(identity?.id);
 
   // 詳細画面。端末の戻るボタンでも、一覧に戻れるように、履歴(history)に積む
@@ -486,6 +554,14 @@ export default function Class() {
     () => filterAnnouncements(items, { tag: activeFilter, course: courseValue, kind, query }),
     [items, activeFilter, courseValue, kind, query]
   );
+
+  // 一斉既読: いま一覧に出ている(絞り込み後の)未読をまとめて既読にする
+  const unreadShown = useMemo(() => filteredAnnouncements.filter((a) => a.isUnread), [filteredAnnouncements]);
+  function readAllShown() {
+    if (unreadShown.length === 0) return;
+    if (!window.confirm(`表示中の未読 ${unreadShown.length} 件をすべて既読にしますか?`)) return;
+    markAllRead(unreadShown.map((a) => a.id));
+  }
 
   function openSearch() {
     setSearchOpen(true);
@@ -716,6 +792,22 @@ export default function Class() {
         alignContent: 'start',
         borderTop: '1px #F3F4F6 solid'
       }}>
+        {unreadShown.length > 0 && (
+          <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'flex-end' }}>
+            <button
+              type="button"
+              onClick={readAllShown}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: '0.4em', padding: '0.35em 0.9em',
+                border: '1px solid #E5E7EB', borderRadius: '999px', background: 'white', color: '#6B7280',
+                fontFamily: 'inherit', fontSize: '0.929em', fontWeight: 600, cursor: 'pointer', touchAction: 'manipulation'
+              }}
+            >
+              <Icon name="doneAll" size={16} />
+              表示中をすべて既読にする({unreadShown.length})
+            </button>
+          </div>
+        )}
         {filteredAnnouncements.length > 0 ? (
           filteredAnnouncements.map((ann) => {
             return (
