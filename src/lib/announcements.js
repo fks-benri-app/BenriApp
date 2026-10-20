@@ -54,6 +54,11 @@ function toAnnouncement(doc) {
     time: formatTime(receivedAt),
     content,
     body: fullBody, // 全文(なければ空)
+    rawBody: typeof d.rawBody === 'string' ? d.rawBody : '', // Classroom の原文(改行・空白そのまま。なければ空)
+    postTitle: d.postTitle || '', // 課題・資料のタイトル(API の原文)
+    title: cleanText(d.title),
+    bodyOnly: cleanText(d.description),
+    deleted: d.deleted === true, // 先生が削除した投稿
     due: d.dueDate || '', // 期限(なければ空)
     attachments, // [{type,title,url}](GAS が Classroom API から保存。なければ空)
     tag: classify(`${d.title || ''} ${d.description || ''}`),
@@ -81,7 +86,7 @@ export function useAnnouncements(studentId) {
     // onSnapshot なので、新しい通知が保存されると画面が自動で更新される
     return onSnapshot(
       q,
-      (snap) => setState({ status: 'ready', items: snap.docs.map(toAnnouncement) }),
+      (snap) => setState({ status: 'ready', items: snap.docs.map(toAnnouncement).filter((a) => !a.deleted) }),
       (error) => {
         console.error(error);
         setState({ status: 'error', items: [] });
