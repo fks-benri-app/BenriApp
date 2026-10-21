@@ -298,7 +298,7 @@ export default function LinkPage() {
                   opacity: busy ? 0.85 : 1
                 }}
               >
-                {busy ? '解除しています...' : '連携し直す'}
+                {busy ? '解除しています...' : '再連携する'}
               </button>
             </>
           )}
@@ -491,7 +491,7 @@ export default function LinkPage() {
                 marginBottom: '20px',
               }}
             >
-              この端末の通知登録を解除し、Classroom連携をやり直します。
+              この端末の通知登録を解除し、Classroomと再連携します。
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
@@ -528,7 +528,7 @@ export default function LinkPage() {
                   cursor: 'pointer',
                 }}
               >
-                連携し直す
+                再連携する
               </button>
             </div>
           </div>
