@@ -777,7 +777,7 @@ export default function Class() {
                     display: 'inline-flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    width: '2em',
+                    width: '2.5em',
                     height: '1.571em',
                     padding: 0,
                     border: 'none',
@@ -901,8 +901,7 @@ export default function Class() {
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
         gap: '0.857em',
-        alignContent: 'start',
-        background: '#F3F4F6'
+        alignContent: 'start'
       }}>
         {filteredAnnouncements.length > 0 ? (
           filteredAnnouncements.map((ann) => {
