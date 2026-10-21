@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useIdentity } from '../auth/identity';
 import { buildGasLoginUrl, isGasConfigured } from '../config';
-import { initOneSignal, subscribeAs } from '../lib/onesignal';
-import { isNotifyDone, markNotifyDone } from '../lib/storage';
+import { initOneSignal, subscribeAs, unsubscribe } from '../lib/onesignal';
+import { isNotifyDone, markNotifyDone, KEYS, storage } from '../lib/storage';
 import { THEMES } from '../lib/themes';
 
 // アイコン類
@@ -52,9 +52,7 @@ export default function LinkPage() {
     initOneSignal();
   }, []);
 
-  if (identity && isNotifyDone(identity.id)) {
-    return <Navigate to="/class" replace />;
-  }
+  const notifyDone = !!(identity && isNotifyDone(identity.id));
 
   function startLink() {
     if (!isGasConfigured()) {
@@ -62,6 +60,33 @@ export default function LinkPage() {
       return;
     }
     window.location.href = buildGasLoginUrl();
+  }
+
+  async function restartLink() {
+    if (!identity) {
+      setMessage('連携情報を確認できません。いったんログインし直してください。');
+      return;
+    }
+    if (!isGasConfigured()) {
+      setMessage('src/config.js の GAS_URL がまだ設定されていません。');
+      return;
+    }
+    const confirmed = window.confirm(
+      'この端末の通知登録を解除し、Classroom連携をやり直しますか？次の画面で連携を解除してから再登録します。'
+    );
+    if (!confirmed) return;
+
+    setBusy(true);
+    setMessage('');
+    try {
+      // この端末のOneSignal紐づけを解除してから、GAS側の解除・再連携画面へ移動する
+      await unsubscribe();
+      storage.remove(KEYS.notifyDoneFor);
+      window.location.href = buildGasLoginUrl();
+    } catch (e) {
+      setMessage('この端末の通知登録を解除できませんでした: ' + e.message);
+      setBusy(false);
+    }
   }
 
   async function enableNotifications() {
@@ -235,7 +260,44 @@ export default function LinkPage() {
             </>
           )}
 
-          {!offline && step === 2 && isIos && !isStandalone && (
+          {!offline && step === 2 && notifyDone && (
+            <>
+              <div style={{ textAlign: 'center' }}>
+                <h1 style={{ fontSize: '1.4em', fontWeight: '800', color: '#111827', margin: '0 0 0.4em 0' }}>
+                  連携済みです
+                </h1>
+                <p style={{ color: '#6B7280', fontSize: '0.95em', lineHeight: '1.6em', margin: 0 }}>
+                  連携をやり直す場合は、下のボタンから進んでください。
+                </p>
+              </div>
+              <img
+                draggable={false}
+                src={linkDoneIllustration}
+                alt=""
+                style={{ display: 'block', width: '100%', maxWidth: '15em', height: 'auto', margin: '0 auto' }}
+              />
+              <button
+                onClick={restartLink}
+                disabled={busy}
+                style={{
+                  width: '100%',
+                  padding: '0.9em 1.2em',
+                  borderRadius: '0.8em',
+                  border: 'none',
+                  backgroundImage: activeTheme.gradient,
+                  color: activeTheme.textColor,
+                  fontSize: '1.05em',
+                  fontWeight: '700',
+                  cursor: busy ? 'default' : 'pointer',
+                  opacity: busy ? 0.85 : 1
+                }}
+              >
+                {busy ? '解除しています...' : '連携し直す'}
+              </button>
+            </>
+          )}
+
+          {!offline && step === 2 && !notifyDone && isIos && !isStandalone && (
             <div style={{ textAlign: 'center' }}>
               <h1 style={{ fontSize: '1.4em', fontWeight: '800', color: '#111827', margin: '0 0 0.5em 0' }}>
                 ホーム画面に追加してください
@@ -246,7 +308,7 @@ export default function LinkPage() {
             </div>
           )}
 
-          {!offline && step === 2 && !(isIos && !isStandalone) && (
+          {!offline && step === 2 && !notifyDone && !(isIos && !isStandalone) && (
             <>
               <div style={{ textAlign: 'center' }}>
                 <h1 style={{ fontSize: '1.4em', fontWeight: '800', color: '#111827', margin: '0 0 0.4em 0' }}>

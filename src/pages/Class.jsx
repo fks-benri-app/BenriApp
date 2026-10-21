@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAnnouncements } from '../lib/announcements';
@@ -550,6 +551,7 @@ function DetailView({ ann, onBack, onOpenClassroom, onOpenUrl }) {
 }
 
 export default function Class() {
+  const navigate = useNavigate();
   const { identity } = useIdentity();
   const real = useAnnouncements(identity?.id);
   const { markRead, markAllRead } = real;
@@ -764,23 +766,59 @@ export default function Class() {
               </div>
 
               {/* 右上アイコン */}
-              <img
-                draggable={false}
-                role="button"
-                tabIndex={0}
-                onClick={openSearch}
-                onKeyDown={(e) => { if (e.key === 'Enter') openSearch(); }}
-                style={{
-                  width: '1.571em',
-                  height: '1.571em',
-                  cursor: 'pointer',
-                  userSelect: 'none',
-                  WebkitUserSelect: 'none',
-                  touchAction: 'manipulation'
-                }}
-                src={searchIcon}
-                alt="検索"
-              />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.9em', flexShrink: 0 }}>
+                <button
+                  type="button"
+                  onClick={() => navigate('/?relink=1')}
+                  aria-label="通知設定・連携し直す"
+                  title="通知設定・連携し直す"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '1.571em',
+                    height: '1.571em',
+                    padding: 0,
+                    border: 'none',
+                    background: 'transparent',
+                    color: '#374151',
+                    cursor: 'pointer',
+                    touchAction: 'manipulation'
+                  }}
+                >
+                  <svg
+                    width="100%"
+                    height="100%"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
+                    <path d="M10 21h4" />
+                  </svg>
+                </button>
+                <img
+                  draggable={false}
+                  role="button"
+                  tabIndex={0}
+                  onClick={openSearch}
+                  onKeyDown={(e) => { if (e.key === 'Enter') openSearch(); }}
+                  style={{
+                    width: '1.571em',
+                    height: '1.571em',
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                    WebkitUserSelect: 'none',
+                    touchAction: 'manipulation'
+                  }}
+                  src={searchIcon}
+                  alt="検索"
+                />
+              </div>
             </>
           )}
         </div>
