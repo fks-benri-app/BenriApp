@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useIdentity } from '../auth/identity';
 import { buildGasLoginUrl, isGasConfigured } from '../config';
 import { initOneSignal, subscribeAs, unsubscribe } from '../lib/onesignal';
@@ -17,7 +17,6 @@ import calendarActiveIcon from '../assets/images/icons/calendar-active.svg';
 import classActiveIcon from '../assets/images/icons/message-square-active.svg';
 import settingsActiveIcon from '../assets/images/icons/settings-active.svg';
 
-import searchIcon from '../assets/images/icons/search.svg';
 import notifyIllustration from '../assets/images/other_svgs/notify-illustration.svg';
 import linkDoneIllustration from '../assets/images/other_svgs/link-done-illustration.svg';
 
@@ -37,8 +36,11 @@ const TABS = [
 export default function LinkPage() {
   const { identity } = useIdentity();
   const navigate = useNavigate();
+  const location = useLocation();
+  const relinkMode = new URLSearchParams(location.search).get('relink') === '1';
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
+  const [restartConfirm, setRestartConfirm] = useState(false);
   const [slow, setSlow] = useState(false); // 10秒たっても終わらないときの補足表示
   const slowTimer = useRef(null);
 
@@ -54,6 +56,10 @@ export default function LinkPage() {
 
   const notifyDone = !!(identity && isNotifyDone(identity.id));
 
+  if (notifyDone && !relinkMode) {
+    return <Navigate to="/class" replace />;
+  }
+
   function startLink() {
     if (!isGasConfigured()) {
       setMessage('src/config.js の GAS_URL がまだ設定されていません。');
@@ -62,7 +68,7 @@ export default function LinkPage() {
     window.location.href = buildGasLoginUrl();
   }
 
-  async function restartLink() {
+  function restartLink() {
     if (!identity) {
       setMessage('連携情報を確認できません。いったんログインし直してください。');
       return;
@@ -71,15 +77,16 @@ export default function LinkPage() {
       setMessage('src/config.js の GAS_URL がまだ設定されていません。');
       return;
     }
-    const confirmed = window.confirm(
-      'この端末の通知登録を解除し、Classroom連携をやり直しますか？次の画面で連携を解除してから再登録します。'
-    );
-    if (!confirmed) return;
 
+    setRestartConfirm(true);
+  }
+
+  async function confirmRestartLink() {
+    setRestartConfirm(false);
     setBusy(true);
     setMessage('');
+
     try {
-      // この端末のOneSignal紐づけを解除してから、GAS側の解除・再連携画面へ移動する
       await unsubscribe();
       storage.remove(KEYS.notifyDoneFor);
       window.location.href = buildGasLoginUrl();
@@ -147,7 +154,6 @@ export default function LinkPage() {
           <div style={{ color: '#111827', fontSize: '1.571em', fontFamily: 'Inter', fontWeight: '800' }}>
             クラスルームからのお知らせ
           </div>
-          <img draggable={false} style={{ width: '1.571em', height: '1.571em', cursor: 'pointer' }} src={searchIcon} alt="search" />
         </div>
 
         <div className="no-scrollbar" style={{ padding: '0.571em 1.714em', display: 'flex', gap: '0.571em', overflowX: 'auto' }}>
@@ -427,6 +433,107 @@ export default function LinkPage() {
           );
         })}
       </nav>
+
+      {/* カスタムダイアログ */}
+      {restartConfirm && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 100,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '24px',
+            fontFamily: 'inherit',
+          }}
+        >
+          <div
+            onClick={() => setRestartConfirm(false)}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'rgba(0,0,0,0.4)',
+            }}
+          />
+
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="restart-confirm-title"
+            style={{
+              position: 'relative',
+              width: '100%',
+              maxWidth: '320px',
+              background: 'white',
+              borderRadius: '20px',
+              padding: '24px',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
+            }}
+          >
+            <div
+              id="restart-confirm-title"
+              style={{
+                fontSize: '18px',
+                fontWeight: 600,
+                color: '#111827',
+                marginBottom: '8px',
+              }}
+            >
+              Classroomとの連携をやり直しますか？
+            </div>
+
+            <div
+              style={{
+                fontSize: '14px',
+                lineHeight: '20px',
+                color: '#6B7280',
+                marginBottom: '20px',
+              }}
+            >
+              この端末の通知登録を解除し、Classroom連携をやり直します。
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+              <button
+                type="button"
+                onClick={() => setRestartConfirm(false)}
+                style={{
+                  padding: '10px 16px',
+                  border: 'none',
+                  background: 'transparent',
+                  color: '#6B7280',
+                  borderRadius: '999px',
+                  fontFamily: 'inherit',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                キャンセル
+              </button>
+
+              <button
+                type="button"
+                onClick={confirmRestartLink}
+                style={{
+                  padding: '10px 16px',
+                  border: 'none',
+                  background: '#111827',
+                  color: 'white',
+                  borderRadius: '999px',
+                  fontFamily: 'inherit',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                連携し直す
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

@@ -19,8 +19,9 @@ import calendarActiveIcon from '../assets/images/icons/calendar-active.svg';
 import classActiveIcon from '../assets/images/icons/message-square-active.svg';
 import settingsActiveIcon from '../assets/images/icons/settings-active.svg';
 
-// ★ ヘッダー用（検索アイコン）
+// ★ ヘッダー用アイコン
 import searchIcon from '../assets/images/icons/search.svg';
+import bellIcon from '../assets/images/icons/bell.svg';
 
 const TABS = [
   { id: 'home', label: 'ホーム', icon: homeIcon, activeIcon: homeActiveIcon },
@@ -776,7 +777,7 @@ export default function Class() {
                     display: 'inline-flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    width: '1.571em',
+                    width: '2em',
                     height: '1.571em',
                     padding: 0,
                     border: 'none',
@@ -786,20 +787,13 @@ export default function Class() {
                     touchAction: 'manipulation'
                   }}
                 >
-                  <svg
-                    width="100%"
-                    height="100%"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+                  <img
+                    src={bellIcon}
+                    alt=""
                     aria-hidden="true"
-                  >
-                    <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
-                    <path d="M10 21h4" />
-                  </svg>
+                    draggable={false}
+                    style={{ width: '100%', height: '100%' }}
+                  />
                 </button>
                 <img
                   draggable={false}
