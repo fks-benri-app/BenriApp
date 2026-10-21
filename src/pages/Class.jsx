@@ -26,7 +26,7 @@ import bellIcon from '../assets/images/icons/bell.svg';
 const TABS = [
   { id: 'home', label: 'ホーム', icon: homeIcon, activeIcon: homeActiveIcon },
   { id: 'calendar', label: 'カレンダー', icon: calendarIcon, activeIcon: calendarActiveIcon },
-  { id: 'class', label: 'クラス', icon: classIcon, activeIcon: classActiveIcon },
+  { id: 'class', label: 'お知らせ', icon: classIcon, activeIcon: classActiveIcon },
   { id: 'settings', label: '設定', icon: settingsIcon, activeIcon: settingsActiveIcon },
 ];
 
@@ -81,7 +81,7 @@ function classroomUrl(link, email) {
   // 課題(a)・資料(m)・お知らせ(p)の投稿ページは、末尾に /details がないと一覧になるので付ける
   try {
     const t = new URL(target);
-    t.pathname = t.pathname.replace(/\/+$/, '').replace(/^(\/c\/[^/]+\/(?:a|m|p)\/[^/]+)$/, '$1/details');
+    t.pathname = t.pathname.replace(/\/+$/, '').replace(/^(\/c\/[^/]+\/(?:a\vert{}m\vert{}p)\/[^/]+)$/, '$1/details');
     target = t.toString();
   } catch {
     /* そのまま */
@@ -302,7 +302,7 @@ const POST_STYLES = {
 };
 
 const GOOGLE_FONT = "'Google Sans', Roboto, 'Hiragino Sans', 'Noto Sans JP', 'Yu Gothic UI', Arial, sans-serif";
-const URL_RE = /(https?:\/\/[^\s<>"'　]+)/g;
+const URL_RE = /(https?:\/\/[^\s<>"' ]+)/g;
 
 // 本文は整形せず、そのまま出す(改行・空白は保つ)。URL だけリンクにする。
 // 例外: 番号つきの行が2行以上つづく所は、番号をそろえた箇条書きにする。次の形に対応
@@ -722,7 +722,7 @@ export default function Class() {
                 style={{
                   flex: 1,
                   minWidth: 0,
-                  height: '34px',
+                  height: '40px',
                   padding: '0 1em',
                   border: 'none',
                   outline: 'none',
@@ -758,12 +758,12 @@ export default function Class() {
             <>
               <div style={{
                 color: '#111827',
-                fontSize: '1.571em',
+                fontSize: '1.871em',
                 fontFamily: 'Inter',
                 fontWeight: '800',
                 userSelect: 'none'
               }}>
-                クラスルームからのお知らせ
+                お知らせ
               </div>
 
               {/* 右上アイコン */}
@@ -902,7 +902,7 @@ export default function Class() {
         gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
         gap: '0.857em',
         alignContent: 'start',
-        borderTop: '1px #F3F4F6 solid'
+        background: '#F3F4F6'
       }}>
         {filteredAnnouncements.length > 0 ? (
           filteredAnnouncements.map((ann) => {

@@ -29,7 +29,7 @@ const isStandalone =
 const TABS = [
   { id: 'home', label: 'ホーム', icon: homeIcon, activeIcon: homeActiveIcon },
   { id: 'calendar', label: 'カレンダー', icon: calendarIcon, activeIcon: calendarActiveIcon },
-  { id: 'class', label: 'クラス', icon: classIcon, activeIcon: classActiveIcon },
+  { id: 'class', label: 'お知らせ', icon: classIcon, activeIcon: classActiveIcon },
   { id: 'settings', label: '設定', icon: settingsIcon, activeIcon: settingsActiveIcon },
 ];
 
@@ -150,9 +150,9 @@ export default function LinkPage() {
 
       {/* ===== ヘッダー部分 ===== */}
       <header style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '0.857em', paddingTop: 'calc(2em + env(safe-area-inset-top))', paddingBottom: '1.143em', width: '100%' }}>
-        <div style={{ padding: '0 1.714em', height: '34px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ color: '#111827', fontSize: '1.571em', fontFamily: 'Inter', fontWeight: '800' }}>
-            クラスルームからのお知らせ
+        <div style={{ padding: '0 1.714em', height: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ color: '#111827', fontSize: '1.871em', fontFamily: 'Inter', fontWeight: '800' }}>
+            お知らせ
           </div>
         </div>
 
