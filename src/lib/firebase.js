@@ -1,4 +1,5 @@
 import { initializeApp } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
 import { initializeFirestore, persistentLocalCache, persistentSingleTabManager } from 'firebase/firestore';
 // ★ config.js から firebaseConfig をしっかりインポートします
 import { firebaseConfig } from '../config';
@@ -9,6 +10,8 @@ if (!firebaseConfig) {
 }
 
 const app = initializeApp(firebaseConfig);
+// ログインは GAS が発行したカスタムトークンで行う(学校アカウントは外部の Google ログインを使えないため)
+export const auth = getAuth(app);
 // オフライン時も前に読み込んだお知らせを表示できるよう、端末(IndexedDB)に保存する
 export const db = initializeFirestore(app, {
   localCache: persistentLocalCache({ tabManager: persistentSingleTabManager({}) }),
