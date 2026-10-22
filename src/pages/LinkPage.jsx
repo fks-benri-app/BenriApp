@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useIdentity } from '../auth/identity';
 import { buildGasLoginUrl, isGasConfigured } from '../config';
-import { initOneSignal, subscribeAs, unsubscribe } from '../lib/onesignal';
+import { initOneSignal, subscribeAs } from '../lib/onesignal';
 import { isNotifyDone, markNotifyDone, KEYS, storage } from '../lib/storage';
 import { THEMES } from '../lib/themes';
 
@@ -87,11 +87,13 @@ export default function LinkPage() {
     setMessage('');
 
     try {
-      await unsubscribe();
+      // OneSignal の紐づけは、ここでは解除しない(通知を許可する段階で付け替える)。
+      // 途中で戻っても、通知が届かなくなるのを防ぐため。
       storage.remove(KEYS.notifyDoneFor);
+      storage.set('relinking', '1');
       window.location.href = buildGasLoginUrl();
     } catch (e) {
-      setMessage('この端末の通知登録を解除できませんでした: ' + e.message);
+      setMessage('再連携の準備に失敗しました: ' + e.message);
       setBusy(false);
     }
   }
@@ -106,6 +108,7 @@ export default function LinkPage() {
       const result = await subscribeAs(identity.id);
       if (result.ok) {
         markNotifyDone(identity.id);
+        storage.remove('relinking');
         navigate('/class', { replace: true });
         return;
       }
@@ -318,7 +321,7 @@ export default function LinkPage() {
             <>
               <div style={{ textAlign: 'center' }}>
                 <h1 style={{ fontSize: '1.4em', fontWeight: '800', color: '#111827', margin: '0 0 0.4em 0' }}>
-                  連携が完了しました
+                  {storage.get('relinking') === '1' ? '通知を許可すると再連携が完了します' : '連携が完了しました'}
                 </h1>
                 <p style={{ color: '#6B7280', fontSize: '0.95em', lineHeight: '1.6em', margin: 0 }}>
                   最後に、通知を許可してください
