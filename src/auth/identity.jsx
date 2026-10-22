@@ -24,7 +24,9 @@ function loadIdentity() {
   const params = url.searchParams;
 
   if (params.get('reset') === '1') {
+    const keepRead = storage.get('readIds');  // 既読の記録を残す
     storage.clearAll(); // 開発用: ?reset=1 で端末側の状態を初期化
+    //if (keepRead) storage.set('readIds', keepRead);
   }
 
   const fromUrl = params.get('studentId');

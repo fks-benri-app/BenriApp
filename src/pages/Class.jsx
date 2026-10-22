@@ -771,8 +771,8 @@ export default function Class() {
                 <button
                   type="button"
                   onClick={() => navigate('/?relink=1')}
-                  aria-label="通知設定・連携し直す"
-                  title="通知設定・連携し直す"
+                  aria-label="通知設定・再連携"
+                  title="通知設定・再連携"
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
