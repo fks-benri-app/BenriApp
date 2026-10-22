@@ -10,6 +10,9 @@ function RequireIdentity({ children }) {
 }
 
 export default function App() {
+  const { ready } = useIdentity();
+  // ログイン状態の確認が終わるまでは何も出さない(連携画面が一瞬ちらつくのを防ぐ)
+  if (!ready) return null;
   return (
     <Routes>
       <Route path="/" element={<LinkPage />} />
