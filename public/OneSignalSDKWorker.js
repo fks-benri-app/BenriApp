@@ -17,25 +17,6 @@ self.addEventListener('activate', (e) => {
   })());
 });
 
-// ===== 通知の中身を受け取る(調査用) =====
-// 通知が届いたときの生のデータを、ログに出し、キャッシュにも1件だけ残す。
-// OneSignal 側の push 処理とは別に動く(リスナーは複数登録できる)。
-// 形式が分かったら、ここでお知らせを保存する処理に差し替える。
-const PUSH_CACHE = 'benri-push';
-
-self.addEventListener('push', (event) => {
-  event.waitUntil((async () => {
-    try {
-      const raw = event.data ? event.data.text() : '';
-      console.log('[push] raw payload:', raw);
-      const c = await caches.open(PUSH_CACHE);
-      await c.put('/last', new Response(raw, { headers: { 'Content-Type': 'application/json' } }));
-    } catch (e) {
-      console.log('[push] 記録に失敗:', e && e.message);
-    }
-  })());
-});
-
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET') return;
