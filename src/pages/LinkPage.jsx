@@ -3,6 +3,7 @@ import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useIdentity } from '../auth/identity';
 import { buildGasLoginUrl, isGasConfigured } from '../config';
 import { initOneSignal, subscribeAs } from '../lib/onesignal';
+import { usePushKey } from '../lib/pushStatus';
 import { isNotifyDone, markNotifyDone, KEYS, storage } from '../lib/storage';
 import { THEMES } from '../lib/themes';
 
@@ -54,6 +55,9 @@ export default function LinkPage() {
     initOneSignal();
   }, []);
 
+  // OneSignal の External ID に使う値(生徒IDではなく、推測できない値)
+  const pushKey = usePushKey(identity?.id);
+
   const notifyDone = !!(identity && isNotifyDone(identity.id));
 
   if (notifyDone && !relinkMode) {
@@ -99,13 +103,17 @@ export default function LinkPage() {
   }
 
   async function enableNotifications() {
+    if (!pushKey) {
+      setMessage('通知の準備中です。少し待ってから、もう一度お試しください。');
+      return;
+    }
     setBusy(true);
     setMessage('');
     setSlow(false);
     slowTimer.current = setTimeout(() => setSlow(true), 10000);
 
     try {
-      const result = await subscribeAs(identity.id);
+      const result = await subscribeAs(pushKey);
       if (result.ok) {
         markNotifyDone(identity.id);
         storage.remove('relinking');

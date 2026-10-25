@@ -36,7 +36,8 @@ export function initOneSignal() {
 }
 
 /**
- * 通知を許可してもらい、externalId(= studentId)にこの端末をひもづける。
+ * 通知を許可してもらい、externalId にこの端末をひもづける。
+ * externalId は生徒IDではなく、GAS が作った推測できない値(users/{id}.pushKey)を渡すこと。
  * @returns {{ ok: true } | { ok: false, reason: 'denied' | 'timeout' }}
  */
 export async function subscribeAs(externalId) {
