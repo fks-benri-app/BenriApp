@@ -65,6 +65,27 @@ export async function subscribeAs(externalId) {
   });
 }
 
+/**
+ * 通知を許可ずみの端末で、購読の状態を確認し、ずれていれば付け直す(アプリを開くたびに呼ぶ)。
+ * - 通知を許可していない端末には何もしない。
+ * - External ID が違う / 空なら、正しい生徒IDでつなぎ直す。
+ * - 購読が OFF になっていれば ON に戻す。
+ * ※ サーバー側だけで無効になっている場合は、ここでは直せない(GAS が検知して「通知を直す」カードを出す)。
+ */
+export async function ensureSubscription(externalId) {
+  await initOneSignal();
+  return withOneSignal(async (OneSignal) => {
+    if (!OneSignal.Notifications.permission) return { ok: false, reason: 'no-permission' };
+    if (OneSignal.User.externalId !== externalId) {
+      await OneSignal.login(externalId);
+    }
+    if (!OneSignal.User.PushSubscription.optedIn) {
+      await OneSignal.User.PushSubscription.optIn();
+    }
+    return { ok: true };
+  });
+}
+
 // 将来ログアウト機能をつけたときに使う
 export async function unsubscribe() {
   await initOneSignal();

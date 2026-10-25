@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <title>通知を直す</title>
+  <style>
+    html, body { margin: 0; height: 100%; }
+    body {
+      display: flex; align-items: center; justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+      color: #111827; background: #fff;
+    }
+    main { max-width: 22em; padding: 1.5em; text-align: center; }
+    h1 { margin: 0 0 0.6em; font-size: 1.3em; }
+    p { margin: 0.4em 0; color: #6B7280; line-height: 1.6; font-size: 0.95em; }
+    a { color: #2563eb; }
+    .err { color: #B45309; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1 id="title">通知を直しています…</h1>
+    <p id="msg">そのままお待ちください。</p>
+  </main>
+
+  <!--
+    通知が届かなくなったときの修復ページ。
+    アプリ本体(OneSignal)を読み込まない、単独のページとして動かす。
+    OneSignal が端末に残している古い記録を消してから、通知の許可の画面へ戻す。
+    (ログイン情報は消さない)
+  -->
+  <script>
+    (async function () {
+      var title = document.getElementById('title');
+      var msg = document.getElementById('msg');
+      var base = location.pathname.replace(/repair\.html$/, '');
+
+      function deleteDb(name) {
+        return new Promise(function (resolve) {
+          var req = indexedDB.deleteDatabase(name);
+          req.onsuccess = req.onerror = req.onblocked = function () { resolve(); };
+        });
+      }
+
+      try {
+        // 1. Service Worker を解除する
+        if (navigator.serviceWorker) {
+          var regs = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(regs.map(function (r) { return r.unregister(); }));
+        }
+
+        // 2. アプリのキャッシュを消す
+        if (window.caches) {
+          var keys = await caches.keys();
+          await Promise.all(keys.filter(function (k) { return k.indexOf('benri-') === 0; })
+            .map(function (k) { return caches.delete(k); }));
+        }
+
+        // 3. OneSignal が端末に残している記録(IndexedDB)を消す
+        var names = [];
+        if (indexedDB.databases) {
+          var dbs = await indexedDB.databases();
+          names = dbs.map(function (d) { return d.name; })
+            .filter(function (n) { return n && /one_?signal/i.test(n); });
+        } else {
+          names = ['ONE_SIGNAL_SDK_DB'];
+        }
+        await Promise.all(names.map(deleteDb));
+
+        // 4. OneSignal の localStorage と、「通知設定ずみ」の印を消す
+        Object.keys(localStorage)
+          .filter(function (k) { return /onesignal/i.test(k); })
+          .forEach(function (k) { localStorage.removeItem(k); });
+        localStorage.removeItem('cn:notifyDoneFor');
+
+        title.textContent = '完了しました';
+        msg.textContent = '通知の設定画面に移動します。「通知を有効にする」を押してください。';
+        setTimeout(function () { location.replace(base + '#/'); }, 1200);
+      } catch (e) {
+        title.textContent = 'うまくいきませんでした';
+        msg.className = 'err';
+        msg.textContent = String((e && e.message) || e);
+        var a = document.createElement('p');
+        a.innerHTML = '<a href="' + base + '#/">アプリに戻る</a>';
+        document.querySelector('main').appendChild(a);
+      }
+    })();
+  </script>
+</body>
+</html>

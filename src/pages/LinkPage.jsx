@@ -128,6 +128,8 @@ export default function LinkPage() {
 
   const offline = !navigator.onLine;
   const step = identity ? 2 : 1;
+  // 以前この端末を使っていた人(生徒IDが残っている)で、今はログインしていない → 再ログインを案内する
+  const needsRelogin = !identity && !!storage.get(KEYS.studentId);
 
   return (
     <div 
@@ -235,6 +237,12 @@ export default function LinkPage() {
 
           {!offline && step === 1 && (
             <>
+              {needsRelogin && (
+                <div style={{ padding: '0.8em 1em', background: '#FFFBEB', border: '1px solid #FCD34D', borderRadius: '0.6em', color: '#B45309', fontSize: '0.9em', lineHeight: '1.6em', textAlign: 'left' }}>
+                  <div style={{ fontWeight: 700, marginBottom: '0.3em' }}>ログイン方法が変わりました</div>
+                  お手数ですが、下の「連携を開始する」を押して、ログインし直してください。「連携済みです」と表示されたら、「再連携する」は押さず、左下の「←」で戻ると完了です。
+                </div>
+              )}
               <h1 style={{ fontSize: '1.4em', fontWeight: '800', color: '#111827', margin: 0, textAlign: 'center' }}>
                 Classroomのお知らせを通知で
               </h1>
