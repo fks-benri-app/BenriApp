@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAnnouncements } from '../lib/announcements';
+import { ensureSubscription } from '../lib/onesignal';
+import { usePushBroken, goRepairNotifications } from '../lib/pushStatus';
 import { useIdentity } from '../auth/identity';
 import { THEMES } from '../lib/themes';
 import { KIND_OPTIONS, buildCourseOptions, filterAnnouncements } from '../lib/filters';
@@ -563,6 +565,13 @@ export default function Class() {
     [real.items, real.readIds]
   );
   const schoolEmail = useSchoolEmail(identity?.id);
+  const pushBroken = usePushBroken(identity?.id);
+
+  // 開くたびに、この端末の通知の購読が正しい状態か確認する(ずれていれば付け直す)
+  useEffect(() => {
+    if (!identity?.id) return;
+    ensureSubscription(identity.id).catch(() => {});
+  }, [identity?.id]);
 
   // 詳細画面。端末の戻るボタンでも、一覧に戻れるように、履歴(history)に積む
   const [detailId, setDetailId] = useState(() => window.history.state?.__detail ?? BOOT_OPEN ?? null);
@@ -903,6 +912,25 @@ export default function Class() {
         gap: '0.857em',
         alignContent: 'start'
       }}>
+        {pushBroken && (
+          <div style={{
+            gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: '0.8em', flexWrap: 'wrap',
+            padding: '0.8em 1em', background: '#FFFBEB', border: '1px solid #FCD34D',
+            borderRadius: '0.6em', color: '#B45309', fontSize: '0.9em', lineHeight: '1.5em'
+          }}>
+            <span style={{ flex: '1 1 14em' }}>この端末に通知が届いていない可能性があります。</span>
+            <button
+              type="button"
+              onClick={goRepairNotifications}
+              style={{
+                padding: '0.5em 1em', border: 'none', borderRadius: '999px', background: '#111827',
+                color: 'white', fontSize: '1em', fontWeight: 600, cursor: 'pointer', touchAction: 'manipulation'
+              }}
+            >
+              通知を直す
+            </button>
+          </div>
+        )}
         {filteredAnnouncements.length > 0 ? (
           filteredAnnouncements.map((ann) => {
             return (

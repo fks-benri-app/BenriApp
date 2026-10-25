@@ -24,6 +24,8 @@ self.addEventListener('fetch', (event) => {
   // このアプリの中身だけ対象(Firebase・GAS・OneSignal などの通信は触らない)
   if (url.origin !== self.location.origin || !url.href.startsWith(APP_SCOPE)) return;
   if (url.pathname.includes('OneSignal')) return;
+  // repair.html など別のページは触らない(アプリ本体の画面として、キャッシュに入れないため)
+  if (url.pathname.endsWith('.html')) return;
 
   if (req.mode === 'navigate') {
     // 画面は、まずネットワーク。だめならキャッシュの画面を出す

@@ -1,0 +1,20 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 本人(ログインした生徒の uid = 生徒ID)だけが読める。書き込みは GAS(サービスアカウント)だけで、
+    // サービスアカウントはルールを素通りするので、アプリからの書き込みは全部拒否する。
+    match /users/{studentId}/announcements/{id} {
+      allow read: if request.auth != null && request.auth.uid == studentId;
+      allow write: if false;
+    }
+
+    // schoolEmail と pushBroken を含む生徒の情報。こちらも本人だけが読める。
+    match /users/{studentId} {
+      allow read: if request.auth != null && request.auth.uid == studentId;
+      allow write: if false;
+    }
+
+    // ここに書いていないパスは、すべて拒否される(既定)。
+  }
+}
