@@ -59,16 +59,6 @@ export default function LinkPage() {
 
   // OneSignal の External ID に使う値(生徒IDではなく、推測できない値)
   const pushKey = usePushKey(identity?.id);
-  // 初回(キャッシュを消した直後など)は、キーがサーバーから届くまで少しかかる。それまでは押せなくする
-  const [keyWaitSlow, setKeyWaitSlow] = useState(false);
-  useEffect(() => {
-    if (!identity || pushKey) {
-      setKeyWaitSlow(false);
-      return undefined;
-    }
-    const t = setTimeout(() => setKeyWaitSlow(true), 15000);
-    return () => clearTimeout(t);
-  }, [identity, pushKey]);
 
   const notifyDone = !!(identity && isNotifyDone(identity.id));
 
@@ -109,16 +99,13 @@ export default function LinkPage() {
   }
 
   async function enableNotifications() {
-    if (!pushKey) {
-      setMessage('通知の準備中です。少し待ってから、もう一度お試しください。');
-      return;
-    }
     setBusy(true);
     setMessage('');
     setSlow(false);
 
     try {
       // ブラウザの許可画面を押すまでの時間は数えない(許可が終わってから10秒たったら補足を出す)
+      // キーがまだ届いていなくても許可は進める。ひもづけは、キーが届いたあとにお知らせ画面が自動で行う
       const result = await subscribeAs(pushKey, () => {
         slowTimer.current = setTimeout(() => setSlow(true), 10000);
       });
@@ -320,13 +307,12 @@ export default function LinkPage() {
               </div>
               <div style={dialogBody}>最後に、通知を許可してください。</div>
               {message && <div style={{ ...dialogBody, color: '#B45309' }}>{message}</div>}
-              {!pushKey && keyWaitSlow && <div style={{ ...dialogBody, fontSize: '13px' }}>準備に時間がかかっています。通信を確認して、しばらくしてから開き直してください。</div>}
               {slow && <div style={{ ...dialogBody, fontSize: '13px' }}>反応がないときは、しばらくして再度お試しください</div>}
               <div style={dialogActions}>
                 <button type="button" onClick={() => navigate('/class')} disabled={busy} style={textBtn(busy)}>あとで設定する</button>
-                <button type="button" onClick={enableNotifications} disabled={busy || !pushKey} aria-busy={busy || !pushKey} style={darkBtn(busy || !pushKey)}>
-                  {(busy || !pushKey) && <Spinner />}
-                  {busy ? '設定中...' : !pushKey ? '準備しています...' : '通知を有効にする'}
+                <button type="button" onClick={enableNotifications} disabled={busy} aria-busy={busy} style={darkBtn(busy)}>
+                  {busy && <Spinner />}
+                  {busy ? '設定中...' : '通知を有効にする'}
                 </button>
               </div>
             </>
