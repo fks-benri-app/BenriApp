@@ -1,6 +1,4 @@
 import React from 'react';
-import { THEMES } from '../lib/themes';
-import { KIND_OPTIONS } from '../lib/filters';
 
 // ★ assets 内の通常アイコン(Class.jsx と同じ)
 import homeIcon from '../assets/images/icons/home.svg';
@@ -37,20 +35,8 @@ const FILTERS = [
 
 const NO_SCROLLBAR_CSS = '.no-scrollbar{scrollbar-width:none;-ms-overflow-style:none}.no-scrollbar::-webkit-scrollbar{display:none}';
 
-const DEFAULT_THEME = 'gray';
-const themeOf = (name) => THEMES[name] || THEMES[DEFAULT_THEME];
-const KIND_LABELS = Object.fromEntries(KIND_OPTIONS.map((k) => [k.id, k.label]));
-const KIND_THEMES = { announcement: 'orangeRed', assignment: 'orangeRed', material: 'orangeRed' };
 
 const DONE_ALL_PATH = 'M18 7l-1.41-1.41-6.34 6.34 1.41 1.41L18 7zm4.24-1.41L11.66 16.17 7.48 12l-1.41 1.41L11.66 19l12-12-1.42-1.41zM.41 13.41L6 19l1.41-1.41L1.83 12 .41 13.41z';
-
-// 背景に見せる、表示用のサンプル(実際のお知らせではない)
-const SAMPLE = [
-  { id: 's1', subject: '数学', theme: 'indigo', kind: 'assignment', time: '今日 8:45', isUnread: true, content: '問題集の提出について\n期限: 10月31日' },
-  { id: 's2', subject: '古典', theme: 'red', kind: 'announcement', time: '昨日 18:30', isUnread: true, content: '来週の授業の持ち物について' },
-  { id: 's3', subject: '化学', theme: 'blue', kind: 'material', time: '10月23日', isUnread: false, content: '実験のレポートの書き方の資料です' },
-  { id: 's4', subject: '体育', theme: 'emerald', kind: 'announcement', time: '10月22日', isUnread: false, content: '体育館シューズを忘れないようにしてください' },
-];
 
 // ===== プルダウンの見た目(Class.jsx の FilterSelect と同じ。選べない) =====
 const chevron = (color) =>
@@ -188,7 +174,7 @@ export function TitleHeader({ title }) {
   );
 }
 
-// ===== お知らせ画面(Class.jsx)の見た目。ダイアログの背景に使う =====
+// ===== お知らせ画面(Class.jsx)の見た目。ダイアログの背景に使う(カードは出さず「読み込み中…」) =====
 export default function ClassBackdrop() {
   return (
     <div
@@ -325,73 +311,9 @@ export default function ClassBackdrop() {
         gap: '0.857em',
         alignContent: 'start'
       }}>
-        {SAMPLE.map((ann) => {
-          const courseTheme = themeOf(ann.theme);
-          return (
-            <article
-              key={ann.id}
-              style={{
-                position: 'relative',
-                padding: ann.isUnread ? 'calc(1.143em - 1.5px)' : '1.143em',
-                border: ann.isUnread ? '1.5px solid transparent' : 'none',
-                background: ann.isUnread
-                  ? 'linear-gradient(white, white) padding-box, linear-gradient(135deg, #FF4D4D 0%, #FF8A1B 100%) border-box'
-                  : 'white',
-                borderRadius: '1.714em',
-                outline: ann.isUnread ? 'none' : '1px #E5E7EB solid',
-                outlineOffset: '-1px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '0.857em',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
-                userSelect: 'none',
-                WebkitUserSelect: 'none',
-                touchAction: 'manipulation'
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.571em' }}>
-                  <div style={{
-                    padding: '0.286em 0.571em',
-                    background: courseTheme.gradient,
-                    borderRadius: '0.429em'
-                  }}>
-                    <div style={{
-                      color: courseTheme.textColor,
-                      fontSize: '0.786em',
-                      fontWeight: '700'
-                    }}>
-                      {ann.subject}
-                    </div>
-                  </div>
-                  {KIND_LABELS[ann.kind] && (
-                    <div style={{
-                      padding: '0.286em 0.571em',
-                      borderRadius: '0.429em',
-                      background: themeOf(KIND_THEMES[ann.kind]).gradient,
-                      color: themeOf(KIND_THEMES[ann.kind]).textColor,
-                      fontSize: '0.786em',
-                      fontWeight: '700'
-                    }}>
-                      {KIND_LABELS[ann.kind]}
-                    </div>
-                  )}
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.429em' }}>
-                  <div style={{ color: '#6B7280', fontSize: '0.857em', fontWeight: '400' }}>
-                    {ann.time}
-                  </div>
-                  {ann.isUnread && (
-                    <div style={{ width: '0.571em', height: '0.571em', background: 'linear-gradient(135deg, #FF4D4D 0%, #FF8A1B 100%)', borderRadius: '50%' }} />
-                  )}
-                </div>
-              </div>
-              <div style={{ color: '#111827', fontSize: '1em', lineHeight: 1.4286, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                {ann.content}
-              </div>
-            </article>
-          );
-        })}
+        <div style={{ padding: '3em 0', textAlign: 'center', color: '#9CA3AF', gridColumn: '1 / -1', userSelect: 'none' }}>
+          読み込み中…
+        </div>
       </main>
 
       {/* ===== ボトムナビゲーション部分 ===== */}
