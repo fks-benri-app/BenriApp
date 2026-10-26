@@ -40,7 +40,10 @@ export function usePushKey(studentId) {
         const v = snap.exists() ? snap.data().pushKey : '';
         setKey(typeof v === 'string' ? v : '');
       },
-      () => setKey('')
+      (err) => {
+        console.warn('[usePushKey] pushKey を読めませんでした', err && err.code);
+        setKey('');
+      }
     );
   }, [studentId]);
   return key;
