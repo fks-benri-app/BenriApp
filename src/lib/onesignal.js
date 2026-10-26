@@ -38,21 +38,25 @@ export function initOneSignal() {
 /**
  * 通知を許可してもらい、externalId にこの端末をひもづける。
  * externalId は生徒IDではなく、GAS が作った推測できない値(users/{id}.pushKey)を渡すこと。
+ * @param {() => void} [onPermissionDone] 許可の画面が終わって、登録の待ちに入るときに呼ばれる
  * @returns {{ ok: true } | { ok: false, reason: 'denied' | 'timeout' }}
  */
-export async function subscribeAs(externalId) {
+export async function subscribeAs(externalId, onPermissionDone) {
   await initOneSignal();
   return withOneSignal(async (OneSignal) => {
     await OneSignal.Notifications.requestPermission();
     if (!OneSignal.Notifications.permission) {
       return { ok: false, reason: 'denied' };
     }
+    if (onPermissionDone) onPermissionDone();
 
     // 重複ユーザー防止: login の前に既存の匿名ひもづけを解除する
     await OneSignal.logout();
     await OneSignal.login(externalId);
 
-    for (let i = 0; i < 20; i++) {
+    // 初回(キャッシュを消した直後など)は Service Worker の登録と購読の作成が重なって遅いので、30秒まで待つ
+    const startedAt = Date.now();
+    for (let i = 0; i < 60; i++) {
       if (
         OneSignal.User.PushSubscription.id &&
         OneSignal.User.externalId === externalId
@@ -62,6 +66,13 @@ export async function subscribeAs(externalId) {
       }
       await sleep(500);
     }
+    // 原因の調べやすさのため、どこまで進んだかをコンソールに残す
+    console.warn('[subscribeAs] timeout', {
+      waitedMs: Date.now() - startedAt,
+      subscriptionId: OneSignal.User.PushSubscription.id || null,
+      externalId: OneSignal.User.externalId || null,
+      optedIn: OneSignal.User.PushSubscription.optedIn,
+    });
     return { ok: false, reason: 'timeout' };
   });
 }
