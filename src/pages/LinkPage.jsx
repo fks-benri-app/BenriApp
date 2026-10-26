@@ -3,7 +3,7 @@ import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useIdentity } from '../auth/identity';
 import { buildGasLoginUrl, isGasConfigured } from '../config';
 import { initOneSignal, subscribeAs } from '../lib/onesignal';
-import { usePushKey } from '../lib/pushStatus';
+import { usePushKey, markPushFixed } from '../lib/pushStatus';
 import { isNotifyDone, markNotifyDone, KEYS, storage } from '../lib/storage';
 import ClassBackdrop, { BottomNav, TitleHeader } from '../components/ClassBackdrop';
 import loginIllustration from '../assets/images/other_svgs/login.svg';
@@ -111,6 +111,7 @@ export default function LinkPage() {
       });
       if (result.ok) {
         markNotifyDone(identity.id);
+        if (result.synced) markPushFixed();
         storage.remove('relinking');
         navigate('/class', { replace: true });
         return;
@@ -185,7 +186,7 @@ export default function LinkPage() {
                 {needsRelogin && notice('#FFFBEB', '#FCD34D', '#B45309', (
                   <>
                     <div style={{ fontWeight: 700, marginBottom: '0.3em' }}>ログイン方法が変わりました</div>
-                    お手数ですが、下の「Googleでログイン」を押して、ログインし直してください。「連携済みです」と表示されたら、「再連携する」は押さず、左下の「←」で戻ると完了です。
+                    お手数ですが、下の「Googleでログイン」を押して、ログインし直してください。「連携済みです」と表示されたら、「再連携する」は押さず、左下の「←」(押せないときは右上の「×」)で戻ると完了です。
                   </>
                 ))}
 

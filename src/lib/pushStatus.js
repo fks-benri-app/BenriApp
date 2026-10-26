@@ -49,6 +49,23 @@ export function usePushKey(studentId) {
   return key;
 }
 
+// 通知を付け直した直後は「通知を直す」を出さない。
+// pushBroken は GAS が次に通知を送ったときにしか戻らないため、直しても、しばらくカードが残ってしまう。
+// 時間が過ぎても GAS が「届いていない」と判断し続けていれば、また出る。
+const FIXED_KEY = 'cn:pushFixedAt';
+const FIXED_HIDE_MS = 6 * 60 * 60 * 1000;
+
+export function markPushFixed() {
+  try { localStorage.setItem(FIXED_KEY, String(Date.now())); } catch { /* 保存できなくても動く */ }
+}
+
+export function isPushRecentlyFixed() {
+  try {
+    const t = Number(localStorage.getItem(FIXED_KEY));
+    return t > 0 && Date.now() - t < FIXED_HIDE_MS;
+  } catch { return false; }
+}
+
 // 修復ページ(public/repair.html)へ移動する
 export function goRepairNotifications() {
   window.location.href = import.meta.env.BASE_URL + 'repair.html';
