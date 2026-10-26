@@ -94,13 +94,16 @@ export async function ensureSubscription(externalId) {
   await initOneSignal();
   return withOneSignal(async (OneSignal) => {
     if (!OneSignal.Notifications.permission) return { ok: false, reason: 'no-permission' };
+    let changed = false;
     if (OneSignal.User.externalId !== externalId) {
       await OneSignal.login(externalId);
+      changed = true;
     }
     if (!OneSignal.User.PushSubscription.optedIn) {
       await OneSignal.User.PushSubscription.optIn();
+      changed = true;
     }
-    return { ok: true };
+    return { ok: true, changed };
   });
 }
 
