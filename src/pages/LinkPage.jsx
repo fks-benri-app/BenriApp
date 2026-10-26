@@ -5,34 +5,39 @@ import { buildGasLoginUrl, isGasConfigured } from '../config';
 import { initOneSignal, subscribeAs } from '../lib/onesignal';
 import { usePushKey } from '../lib/pushStatus';
 import { isNotifyDone, markNotifyDone, KEYS, storage } from '../lib/storage';
-import { THEMES } from '../lib/themes';
+import ClassBackdrop from '../components/ClassBackdrop';
+import InstallGuide, { InstallSteps, isIos, isStandalone, needsInstall } from '../components/InstallGuide';
 
-// アイコン類
-import homeIcon from '../assets/images/icons/home.svg';
-import calendarIcon from '../assets/images/icons/calendar.svg';
-import classIcon from '../assets/images/icons/message-square.svg';
-import settingsIcon from '../assets/images/icons/settings.svg';
+const GOOGLE_FONT = "'Google Sans', Roboto, 'Hiragino Sans', 'Noto Sans JP', 'Yu Gothic UI', Arial, sans-serif";
 
-import homeActiveIcon from '../assets/images/icons/home-active.svg';
-import calendarActiveIcon from '../assets/images/icons/calendar-active.svg';
-import classActiveIcon from '../assets/images/icons/message-square-active.svg';
-import settingsActiveIcon from '../assets/images/icons/settings-active.svg';
+// Class.jsx の一斉既読ダイアログと同じ見た目
+const dialogTitle = { fontSize: '18px', fontWeight: 600, color: '#111827', marginBottom: '8px' };
+const dialogBody = { fontSize: '14px', lineHeight: '20px', color: '#6B7280', marginBottom: '20px' };
+const dialogActions = { display: 'flex', justifyContent: 'flex-end', gap: '8px', flexWrap: 'wrap' };
+const textBtn = (busy) => ({ padding: '10px 16px', border: 'none', background: 'transparent', color: '#6B7280', borderRadius: '999px', fontFamily: 'inherit', fontSize: '14px', fontWeight: 600, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.5 : 1 });
+const darkBtn = (busy) => ({ padding: '10px 16px', border: 'none', background: '#111827', color: 'white', borderRadius: '999px', fontFamily: 'inherit', fontSize: '14px', fontWeight: 600, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.85 : 1, display: 'inline-flex', alignItems: 'center', gap: '8px' });
 
-import notifyIllustration from '../assets/images/other_svgs/notify-illustration.svg';
-import linkDoneIllustration from '../assets/images/other_svgs/link-done-illustration.svg';
+function GoogleG() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 48 48" aria-hidden="true">
+      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+    </svg>
+  );
+}
 
-const ua = navigator.userAgent.toLowerCase();
-const isIos = /iphone|ipad|ipod/.test(ua);
-const isStandalone =
-  window.navigator.standalone === true ||
-  window.matchMedia('(display-mode: standalone)').matches;
-
-const TABS = [
-  { id: 'home', label: 'ホーム', icon: homeIcon, activeIcon: homeActiveIcon },
-  { id: 'calendar', label: 'カレンダー', icon: calendarIcon, activeIcon: calendarActiveIcon },
-  { id: 'class', label: 'お知らせ', icon: classIcon, activeIcon: classActiveIcon },
-  { id: 'settings', label: '設定', icon: settingsIcon, activeIcon: settingsActiveIcon },
-];
+function Spinner() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" stroke="rgba(255,255,255,0.35)" strokeWidth="3" />
+      <path d="M12 3a9 9 0 0 1 9 9" stroke="#fff" strokeWidth="3" strokeLinecap="round">
+        <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="0.9s" repeatCount="indefinite" />
+      </path>
+    </svg>
+  );
+}
 
 export default function LinkPage() {
   const { identity } = useIdentity();
@@ -41,15 +46,11 @@ export default function LinkPage() {
   const relinkMode = new URLSearchParams(location.search).get('relink') === '1';
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
-  const [restartConfirm, setRestartConfirm] = useState(false);
   const [slow, setSlow] = useState(false); // 10秒たっても終わらないときの補足表示
+  const [guideOpen, setGuideOpen] = useState(needsInstall); // ホーム画面に追加していないスマホには、先に案内を出す
   const slowTimer = useRef(null);
 
-  const [currentTheme] = useState('orangeRed');
-  const activeTheme = THEMES[currentTheme] || THEMES.orangeRed;
   const [baseFontSize] = useState(14);
-
-  const activeTab = 'class';
 
   useEffect(() => {
     initOneSignal();
@@ -72,7 +73,7 @@ export default function LinkPage() {
     window.location.href = buildGasLoginUrl();
   }
 
-  function restartLink() {
+  async function confirmRestartLink() {
     if (!identity) {
       setMessage('連携情報を確認できません。いったんログインし直してください。');
       return;
@@ -81,12 +82,6 @@ export default function LinkPage() {
       setMessage('src/config.js の GAS_URL がまだ設定されていません。');
       return;
     }
-
-    setRestartConfirm(true);
-  }
-
-  async function confirmRestartLink() {
-    setRestartConfirm(false);
     setBusy(true);
     setMessage('');
 
@@ -135,425 +130,200 @@ export default function LinkPage() {
   }
 
   const offline = !navigator.onLine;
-  const step = identity ? 2 : 1;
   // 以前この端末を使っていた人(生徒IDが残っている)で、今はログインしていない → 再ログインを案内する
   const needsRelogin = !identity && !!storage.get(KEYS.studentId);
 
-  return (
-    <div 
-      onCopy={(e) => e.preventDefault()}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        margin: 0,
-        padding: 0,
-        background: 'white',
-        display: 'flex',
-        flexDirection: 'column',
-        boxSizing: 'border-box',
-        overflow: 'hidden',
-        fontSize: `${baseFontSize}px`,
-        userSelect: 'none',
-        WebkitUserSelect: 'none',
-        WebkitTapHighlightColor: 'transparent',
-        WebkitTouchCallout: 'none'
-      }}
-    >
-      <style>{'.no-scrollbar{scrollbar-width:none;-ms-overflow-style:none}.no-scrollbar::-webkit-scrollbar{display:none}'}</style>
+  const rootStyle = {
+    position: 'fixed',
+    inset: 0,
+    margin: 0,
+    padding: 0,
+    background: 'white',
+    boxSizing: 'border-box',
+    overflow: 'hidden',
+    fontSize: `${baseFontSize}px`,
+    fontFamily: GOOGLE_FONT,
+    userSelect: 'none',
+    WebkitUserSelect: 'none',
+    WebkitTapHighlightColor: 'transparent',
+    WebkitTouchCallout: 'none',
+  };
 
-      {/* ===== ヘッダー部分 ===== */}
-      <header style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '0.857em', paddingTop: 'calc(2em + env(safe-area-inset-top))', paddingBottom: '1.143em', width: '100%' }}>
-        <div style={{ padding: '0 1.714em', height: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ color: '#111827', fontSize: '1.871em', fontFamily: 'Inter', fontWeight: '800' }}>
-            お知らせ
-          </div>
-        </div>
+  const notice = (bg, border, color, children) => (
+    <div style={{ padding: '0.8em 1em', background: bg, border: `1px solid ${border}`, borderRadius: '0.6em', color, fontSize: '0.9em', lineHeight: '1.6em', textAlign: 'left', whiteSpace: 'pre-wrap' }}>
+      {children}
+    </div>
+  );
 
-        <div className="no-scrollbar" style={{ padding: '0.571em 1.714em', display: 'flex', gap: '0.571em', overflowX: 'auto' }}>
-          <div style={{
-            padding: '0.571em 1.143em',
-            borderRadius: '0.857em',
-            flexShrink: 0,
-            backgroundImage: step === 1 ? activeTheme.gradient : 'none',
-            backgroundColor: step === 1 ? 'transparent' : 'white',
-            outline: step === 1 ? 'none' : '1px #E5E7EB solid',
-            outlineOffset: '-1px',
-            color: step === 1 ? activeTheme.textColor : '#6B7280',
-            fontSize: '1em',
-            fontWeight: step === 1 ? '700' : '400',
-            whiteSpace: 'nowrap',
-            boxSizing: 'border-box'
-          }}>
-            Classroom連携
-          </div>
-
-          <div style={{
-            padding: '0.571em 1.143em',
-            borderRadius: '0.857em',
-            flexShrink: 0,
-            backgroundImage: step === 2 ? activeTheme.gradient : 'none',
-            backgroundColor: step === 2 ? 'transparent' : 'white',
-            outline: step === 2 ? 'none' : '1px #E5E7EB solid',
-            outlineOffset: '-1px',
-            color: step === 2 ? activeTheme.textColor : '#6B7280',
-            fontSize: '1em',
-            fontWeight: step === 2 ? '700' : '400',
-            whiteSpace: 'nowrap',
-            boxSizing: 'border-box'
-          }}>
-            通知を許可
-          </div>
-        </div>
-      </header>
-
-      {/* ===== メインコンテンツ部分 ===== */}
-      <main style={{ 
-        flex: 1,
-        minHeight: 0,
-        overscrollBehavior: 'contain',
-        overflowY: 'auto',
-        padding: '0.857em 1.714em',
-        width: '100%',
-        boxSizing: 'border-box',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'flex-start'
-      }}>
-        <div style={{
-          position: 'relative',
-          width: '100%',
-          maxWidth: '500px',
-          padding: '1.8em 1.8em 2.5em 1.8em',
-          background: 'white',
-          borderRadius: '1.2em',
-          outline: '1px #E5E7EB solid',
-          outlineOffset: '-1px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '1.2em',
-          // 内容が少ないときは縦方向の中央に、多いときは上からスクロールできる
-          marginTop: 'auto',
-          marginBottom: 'auto'
-        }}>
-
-          {offline && (
-            <div style={{ padding: '0.8em 1em', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: '0.6em', color: '#DC2626', fontSize: '0.95em' }}>
-              インターネットに接続されていません。接続してからもう一度お試しください。
+  // ================= step 1: ログイン画面 =================
+  if (!identity) {
+    return (
+      <div onCopy={(e) => e.preventDefault()} style={{ ...rootStyle, display: 'flex', flexDirection: 'column', alignItems: 'center', overflowY: 'auto' }}>
+        <div
+          style={{
+            width: '100%',
+            maxWidth: '26em',
+            minHeight: '100%',
+            boxSizing: 'border-box',
+            padding: 'calc(3em + env(safe-area-inset-top)) 2.286em calc(2em + env(safe-area-inset-bottom))',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: '2em',
+            margin: '0 auto',
+          }}
+        >
+          {guideOpen ? (
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', width: '100%' }}>
+              <InstallGuide onSkip={() => setGuideOpen(false)} />
             </div>
-          )}
-
-          {!offline && step === 1 && (
+          ) : (
             <>
-              {needsRelogin && (
-                <div style={{ padding: '0.8em 1em', background: '#FFFBEB', border: '1px solid #FCD34D', borderRadius: '0.6em', color: '#B45309', fontSize: '0.9em', lineHeight: '1.6em', textAlign: 'left' }}>
-                  <div style={{ fontWeight: 700, marginBottom: '0.3em' }}>ログイン方法が変わりました</div>
-                  お手数ですが、下の「連携を開始する」を押して、ログインし直してください。「連携済みです」と表示されたら、「再連携する」は押さず、左下の「←」で戻ると完了です。
+              {/* 上: アプリ名と説明 */}
+              <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3.4em' }}>
+                <div style={{ textAlign: 'center', color: '#111827', fontSize: '2em', fontFamily: 'Inter', fontWeight: 800 }}>
+                  Classroom通知
                 </div>
-              )}
-              <h1 style={{ fontSize: '1.4em', fontWeight: '800', color: '#111827', margin: 0, textAlign: 'center' }}>
-                Classroomのお知らせを通知で
-              </h1>
-
-              <img
-                draggable={false}
-                src={notifyIllustration}
-                alt=""
-                style={{ display: 'block', width: '100%', maxWidth: '15em', height: 'auto', margin: '0 auto' }}
-              />
-
-              <button 
-                onClick={startLink}
-                style={{
-                  width: '100%',
-                  padding: '0.9em 1.2em',
-                  borderRadius: '0.8em',
-                  border: 'none',
-                  backgroundImage: activeTheme.gradient,
-                  color: activeTheme.textColor,
-                  fontSize: '1.05em',
-                  fontWeight: '700',
-                  cursor: 'pointer'
-                }}
-              >
-                連携を開始する
-              </button>
-
-              <div style={{ color: '#6B7280', fontSize: '0.85em', lineHeight: '1.5em', textAlign: 'center' }}>
-                ※「このアプリは確認されていません」と表示された場合は、画面内の「詳細」→「(安全ではないページ)に移動」を選択してください。
-              </div>
-            </>
-          )}
-
-          {!offline && step === 2 && notifyDone && (
-            <>
-              <div style={{ textAlign: 'center' }}>
-                <h1 style={{ fontSize: '1.4em', fontWeight: '800', color: '#111827', margin: '0 0 0.4em 0' }}>
-                  連携済みです
-                </h1>
-                <p style={{ color: '#6B7280', fontSize: '0.95em', lineHeight: '1.6em', margin: 0 }}>
-                  連携をやり直す場合は、下のボタンから進んでください。
-                </p>
-              </div>
-              <img
-                draggable={false}
-                src={linkDoneIllustration}
-                alt=""
-                style={{ display: 'block', width: '100%', maxWidth: '15em', height: 'auto', margin: '0 auto' }}
-              />
-              <button
-                onClick={restartLink}
-                disabled={busy}
-                style={{
-                  width: '100%',
-                  padding: '0.9em 1.2em',
-                  borderRadius: '0.8em',
-                  border: 'none',
-                  backgroundImage: activeTheme.gradient,
-                  color: activeTheme.textColor,
-                  fontSize: '1.05em',
-                  fontWeight: '700',
-                  cursor: busy ? 'default' : 'pointer',
-                  opacity: busy ? 0.85 : 1
-                }}
-              >
-                {busy ? '解除しています...' : '再連携する'}
-              </button>
-            </>
-          )}
-
-          {!offline && step === 2 && !notifyDone && isIos && !isStandalone && (
-            <div style={{ textAlign: 'center' }}>
-              <h1 style={{ fontSize: '1.4em', fontWeight: '800', color: '#111827', margin: '0 0 0.5em 0' }}>
-                ホーム画面に追加してください
-              </h1>
-              <p style={{ color: '#4B5563', fontSize: '1em', lineHeight: '1.6em', margin: 0 }}>
-                iPhoneで通知を受け取るには、ブラウザの共有ボタンから「ホーム画面に追加」を行い、追加されたアイコンから開き直してください。
-              </p>
-            </div>
-          )}
-
-          {!offline && step === 2 && !notifyDone && !(isIos && !isStandalone) && (
-            <>
-              <div style={{ textAlign: 'center' }}>
-                <h1 style={{ fontSize: '1.4em', fontWeight: '800', color: '#111827', margin: '0 0 0.4em 0' }}>
-                  {storage.get('relinking') === '1' ? '通知を許可すると再連携が完了します' : '連携が完了しました'}
-                </h1>
-                <p style={{ color: '#6B7280', fontSize: '0.95em', lineHeight: '1.6em', margin: 0 }}>
-                  最後に、通知を許可してください
-                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.143em' }}>
+                  <div style={{ textAlign: 'center', color: 'black', fontSize: '1.143em', fontWeight: 600, lineHeight: '1.5em' }}>ログイン</div>
+                  <div style={{ textAlign: 'center', color: 'black', fontSize: '1em', lineHeight: '1.5em' }}>
+                    学校のGoogleアカウントで<br />ログインしてください
+                  </div>
+                </div>
               </div>
 
-              <img
-                draggable={false}
-                src={linkDoneIllustration}
-                alt=""
-                style={{ display: 'block', width: '100%', maxWidth: '15em', height: 'auto', margin: '0 auto' }}
-              />
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8em' }}>
+              {/* 中央: Googleでログイン */}
+              <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '1.143em' }}>
+                {offline && notice('#FEF2F2', '#FECACA', '#DC2626', 'インターネットに接続されていません。接続してからもう一度お試しください。')}
+                {needsRelogin && notice('#FFFBEB', '#FCD34D', '#B45309', (
+                  <>
+                    <div style={{ fontWeight: 700, marginBottom: '0.3em' }}>ログイン方法が変わりました</div>
+                    お手数ですが、下の「Googleでログイン」を押して、ログインし直してください。「連携済みです」と表示されたら、「再連携する」は押さず、左下の「←」で戻ると完了です。
+                  </>
+                ))}
                 <button
-                  onClick={enableNotifications}
-                  disabled={busy}
-                  aria-busy={busy}
+                  type="button"
+                  onClick={startLink}
+                  disabled={offline}
                   style={{
                     width: '100%',
-                    padding: '0.9em 1.2em',
-                    borderRadius: '0.8em',
-                    border: 'none',
-                    backgroundImage: activeTheme.gradient,
-                    color: activeTheme.textColor,
-                    fontSize: '1.05em',
-                    fontWeight: '700',
-                    cursor: busy ? 'default' : 'pointer',
-                    opacity: busy ? 0.85 : 1,
+                    height: '3.857em',
+                    borderRadius: '1.286em',
+                    border: '1px solid #E5E7EB',
+                    background: 'white',
+                    boxShadow: '0px 8px 16px rgba(0, 0, 0, 0.12)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: '0.6em'
+                    gap: '0.8em',
+                    color: '#111827',
+                    fontFamily: 'inherit',
+                    fontSize: '1.143em',
+                    fontWeight: 700,
+                    cursor: offline ? 'default' : 'pointer',
+                    opacity: offline ? 0.5 : 1,
+                    touchAction: 'manipulation',
                   }}
                 >
-                  {busy && (
-                    <svg width="1.1em" height="1.1em" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                      <circle cx="12" cy="12" r="9" stroke="rgba(255,255,255,0.35)" strokeWidth="3" />
-                      <path d="M12 3a9 9 0 0 1 9 9" stroke="#fff" strokeWidth="3" strokeLinecap="round">
-                        <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="0.9s" repeatCount="indefinite" />
-                      </path>
-                    </svg>
-                  )}
-                  {busy ? '設定中...' : '通知を有効にする'}
+                  <GoogleG />
+                  Googleでログイン
                 </button>
+                {message && notice('#FFFBEB', '#FCD34D', '#B45309', message)}
+              </div>
 
-                <button
-                  onClick={() => navigate('/class')}
-                  disabled={busy}
-                  style={{
-                    width: '100%',
-                    padding: '0.8em 1.2em',
-                    borderRadius: '0.8em',
-                    border: '1.5px solid #D1D5DB',
-                    background: 'white',
-                    color: '#4B5563',
-                    fontSize: '1em',
-                    fontWeight: '600',
-                    cursor: busy ? 'default' : 'pointer',
-                    opacity: busy ? 0.5 : 1
-                  }}
-                >
-                  あとで設定する
-                </button>
-
-                {slow && (
-                  <div style={{ color: '#6B7280', fontSize: '0.85em', lineHeight: '1.5em', textAlign: 'center' }}>
-                    反応がないときは、しばらくして再度お試しください
-                  </div>
+              {/* 下: 補足 */}
+              <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.8em' }}>
+                <div style={{ color: '#6B7280', fontSize: '0.85em', lineHeight: '1.5em', textAlign: 'center' }}>
+                  ※「このアプリは確認されていません」と表示された場合は、画面内の「詳細」→「(安全ではないページ)に移動」を選択してください。
+                </div>
+                {needsInstall && (
+                  <button
+                    type="button"
+                    onClick={() => setGuideOpen(true)}
+                    style={{ padding: '0.5em 1em', border: 'none', background: 'transparent', color: '#6B7280', fontFamily: 'inherit', fontSize: '0.85em', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
+                  >
+                    ホーム画面への追加方法を見る
+                  </button>
                 )}
               </div>
             </>
           )}
-
-          {message && (
-            <div style={{ padding: '0.8em 1em', background: '#FFFBEB', border: '1px solid #FCD34D', borderRadius: '0.6em', color: '#B45309', fontSize: '0.9em', whiteSpace: 'pre-wrap', textAlign: 'center' }}>
-              {message}
-            </div>
-          )}
-
         </div>
-      </main>
+      </div>
+    );
+  }
 
-      {/* ===== ボトムナビゲーション部分 ===== */}
-      <nav style={{ 
-        flexShrink: 0, 
-        padding: '0 1.143em env(safe-area-inset-bottom)', 
-        height: 'calc(4.571em + env(safe-area-inset-bottom))',
-        background: 'white', 
-        borderTop: '1px #E5E7EB solid', 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        width: '100%',
-        boxSizing: 'border-box'
-      }}>
-        {TABS.map(tab => {
-          const isActive = activeTab === tab.id;
-          return (
-            <div 
-              key={tab.id}
-              onClick={() => {
-                if (tab.id === 'class' && identity) navigate('/class');
-              }}
-              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.214em', justifyContent: 'center', width: '5.714em', cursor: 'pointer', padding: '0.4em 0', touchAction: 'manipulation' }}
-            >
-              <img draggable={false} style={{ width: '1.5em', height: '1.5em', opacity: isActive ? 1 : 0.45 }} src={isActive ? tab.activeIcon : tab.icon} alt={tab.id} />
-              <div style={{ color: isActive ? '#111827' : '#6B7280', fontSize: '0.786em', fontWeight: '600' }}>
-                {tab.label}
-              </div>
-            </div>
-          );
-        })}
-      </nav>
+  // ================= step 2: お知らせ画面の上にダイアログ =================
+  const iosNeedsHome = isIos && !isStandalone;
 
-      {/* カスタムダイアログ */}
-      {restartConfirm && (
+  return (
+    <div onCopy={(e) => e.preventDefault()} style={rootStyle}>
+      <ClassBackdrop />
+
+      <div style={{ position: 'fixed', inset: 0, zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', fontFamily: GOOGLE_FONT }}>
+        {/* 暗幕: 連携済み(再連携の確認)のときだけ、押すとお知らせに戻る */}
         <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 100,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '24px',
-            fontFamily: 'inherit',
-          }}
+          onClick={() => { if (notifyDone && !busy) navigate('/class'); }}
+          style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)' }}
+        />
+
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="link-dialog-title"
+          style={{ position: 'relative', width: '100%', maxWidth: '320px', maxHeight: '100%', overflowY: 'auto', background: 'white', borderRadius: '20px', padding: '24px', userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none', boxShadow: '0 8px 24px rgba(0,0,0,0.2)', boxSizing: 'border-box' }}
         >
-          <div
-            onClick={() => setRestartConfirm(false)}
-            style={{
-              position: 'absolute',
-              inset: 0,
-              background: 'rgba(0,0,0,0.4)',
-            }}
-          />
-
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="restart-confirm-title"
-            style={{
-              position: 'relative',
-              width: '100%',
-              maxWidth: '320px',
-              background: 'white',
-              borderRadius: '20px',
-              padding: '24px',
-              boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
-            }}
-          >
-            <div
-              id="restart-confirm-title"
-              style={{
-                fontSize: '18px',
-                fontWeight: 600,
-                color: '#111827',
-                marginBottom: '8px',
-              }}
-            >
-              Classroomとの連携をやり直しますか？
-            </div>
-
-            <div
-              style={{
-                fontSize: '14px',
-                lineHeight: '20px',
-                color: '#6B7280',
-                marginBottom: '20px',
-              }}
-            >
-              この端末の通知登録を解除し、Classroomと再連携します。
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-              <button
-                type="button"
-                onClick={() => setRestartConfirm(false)}
-                style={{
-                  padding: '10px 16px',
-                  border: 'none',
-                  background: 'transparent',
-                  color: '#6B7280',
-                  borderRadius: '999px',
-                  fontFamily: 'inherit',
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                キャンセル
-              </button>
-
-              <button
-                type="button"
-                onClick={confirmRestartLink}
-                style={{
-                  padding: '10px 16px',
-                  border: 'none',
-                  background: '#111827',
-                  color: 'white',
-                  borderRadius: '999px',
-                  fontFamily: 'inherit',
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                再連携する
-              </button>
-            </div>
-          </div>
+          {offline ? (
+            <>
+              <div id="link-dialog-title" style={dialogTitle}>オフラインです</div>
+              <div style={dialogBody}>インターネットに接続されていません。接続してからもう一度お試しください。</div>
+            </>
+          ) : notifyDone ? (
+            /* 連携済み(再連携) */
+            <>
+              <div id="link-dialog-title" style={dialogTitle}>連携済みです</div>
+              <div style={dialogBody}>
+                Classroomとの連携をやり直しますか?ログインし直したあと、通知の許可をもう一度行います。
+              </div>
+              {message && <div style={{ ...dialogBody, color: '#B45309' }}>{message}</div>}
+              <div style={dialogActions}>
+                <button type="button" onClick={() => navigate('/class')} disabled={busy} style={textBtn(busy)}>戻る</button>
+                <button type="button" onClick={confirmRestartLink} disabled={busy} style={darkBtn(busy)}>
+                  {busy ? '準備しています...' : '再連携する'}
+                </button>
+              </div>
+            </>
+          ) : iosNeedsHome ? (
+            /* 通知未許可: iPhone でホーム画面に追加していない */
+            <>
+              <div id="link-dialog-title" style={dialogTitle}>ホーム画面に追加してください</div>
+              <div style={dialogBody}>iPhoneで通知を受け取るには、ホーム画面に追加したアイコンから開き直す必要があります。</div>
+              <div style={{ marginBottom: '20px' }}><InstallSteps /></div>
+              <div style={dialogActions}>
+                <button type="button" onClick={() => navigate('/class')} style={textBtn(false)}>あとで設定する</button>
+              </div>
+            </>
+          ) : (
+            /* 通知未許可 */
+            <>
+              <div id="link-dialog-title" style={dialogTitle}>
+                {storage.get('relinking') === '1' ? '通知を許可すると再連携が完了します' : '連携が完了しました'}
+              </div>
+              <div style={dialogBody}>最後に、通知を許可してください。</div>
+              {message && <div style={{ ...dialogBody, color: '#B45309' }}>{message}</div>}
+              {slow && <div style={{ ...dialogBody, fontSize: '13px' }}>反応がないときは、しばらくして再度お試しください</div>}
+              <div style={dialogActions}>
+                <button type="button" onClick={() => navigate('/class')} disabled={busy} style={textBtn(busy)}>あとで設定する</button>
+                <button type="button" onClick={enableNotifications} disabled={busy} aria-busy={busy} style={darkBtn(busy)}>
+                  {busy && <Spinner />}
+                  {busy ? '設定中...' : '通知を有効にする'}
+                </button>
+              </div>
+            </>
+          )}
         </div>
-      )}
-
+      </div>
     </div>
   );
 }
