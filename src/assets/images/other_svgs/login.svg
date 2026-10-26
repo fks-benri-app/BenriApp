@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="180" viewBox="0 0 240 180" fill="none">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FF4D4D"/>
+      <stop offset="1" stop-color="#FF8A1B"/>
+    </linearGradient>
+  </defs>
+  <!-- 仮の絵です。同じ名前(login.svg)のファイルで置き換えてください -->
+  <rect x="50" y="24" width="140" height="132" rx="28" fill="white" stroke="#E5E7EB" stroke-width="2"/>
+  <circle cx="120" cy="76" r="22" fill="url(#g)"/>
+  <path d="M80 130c4-20 20-30 40-30s36 10 40 30" stroke="url(#g)" stroke-width="10" stroke-linecap="round"/>
+</svg>
