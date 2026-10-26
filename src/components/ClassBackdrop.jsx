@@ -1,106 +1,401 @@
 import React from 'react';
 import { THEMES } from '../lib/themes';
+import { KIND_OPTIONS } from '../lib/filters';
 
+// ★ assets 内の通常アイコン(Class.jsx と同じ)
 import homeIcon from '../assets/images/icons/home.svg';
 import calendarIcon from '../assets/images/icons/calendar.svg';
 import classIcon from '../assets/images/icons/message-square.svg';
 import settingsIcon from '../assets/images/icons/settings.svg';
+// ★ 発光（アクティブ）バージョンアイコン
+import homeActiveIcon from '../assets/images/icons/home-active.svg';
+import calendarActiveIcon from '../assets/images/icons/calendar-active.svg';
 import classActiveIcon from '../assets/images/icons/message-square-active.svg';
+import settingsActiveIcon from '../assets/images/icons/settings-active.svg';
+// ★ ヘッダー用アイコン
+import searchIcon from '../assets/images/icons/search.svg';
+import bellIcon from '../assets/images/icons/bell.svg';
 
-// ダイアログの背後に見せる、お知らせ画面(Class.jsx)の見た目だけの再現。
-// Class.jsx 本体を重ねると通知登録などの処理が裏で動いてしまうため、静的な見た目だけを置く。
+// このファイルは、Class.jsx の見た目の部分(ヘッダー・フィルター・カード・ボトムナビ)を、
+// スタイルそのままで写したもの。通知や検索・既読などの「機能」は付けていない(表示だけ)。
+// Class.jsx の見た目を変えたときは、ここも合わせて直す。
+
 const TABS = [
-  { id: 'home', label: 'ホーム', icon: homeIcon },
-  { id: 'calendar', label: 'カレンダー', icon: calendarIcon },
-  { id: 'class', label: 'お知らせ', icon: classActiveIcon, active: true },
-  { id: 'settings', label: '設定', icon: settingsIcon },
+  { id: 'home', label: 'ホーム', icon: homeIcon, activeIcon: homeActiveIcon },
+  { id: 'calendar', label: 'カレンダー', icon: calendarIcon, activeIcon: calendarActiveIcon },
+  { id: 'class', label: 'お知らせ', icon: classIcon, activeIcon: classActiveIcon },
+  { id: 'settings', label: '設定', icon: settingsIcon, activeIcon: settingsActiveIcon },
 ];
 
-const CHIPS = ['すべて', '未読', 'テスト関連'];
-const CARD_COLORS = ['#FF4D4D', '#E5E7EB', '#E5E7EB', '#E5E7EB'];
+const FILTERS = [
+  { id: 'all', label: 'すべて' },
+  { id: 'unread', label: '未読' },
+  { id: 'read', label: '既読' },
+  { id: 'test', label: 'テスト関連' },
+  { id: 'festival', label: 'とんぼ祭関連' },
+];
 
-const bar = (w, h = '0.9em', bg = '#F3F4F6') => ({
-  width: w,
-  height: h,
-  borderRadius: '0.4em',
-  background: bg,
-});
+const NO_SCROLLBAR_CSS = '.no-scrollbar{scrollbar-width:none;-ms-overflow-style:none}.no-scrollbar::-webkit-scrollbar{display:none}';
 
+const DEFAULT_THEME = 'gray';
+const themeOf = (name) => THEMES[name] || THEMES[DEFAULT_THEME];
+const KIND_LABELS = Object.fromEntries(KIND_OPTIONS.map((k) => [k.id, k.label]));
+const KIND_THEMES = { announcement: 'orangeRed', assignment: 'orangeRed', material: 'orangeRed' };
+
+const DONE_ALL_PATH = 'M18 7l-1.41-1.41-6.34 6.34 1.41 1.41L18 7zm4.24-1.41L11.66 16.17 7.48 12l-1.41 1.41L11.66 19l12-12-1.42-1.41zM.41 13.41L6 19l1.41-1.41L1.83 12 .41 13.41z';
+
+// 背景に見せる、表示用のサンプル(実際のお知らせではない)
+const SAMPLE = [
+  { id: 's1', subject: '数学', theme: 'indigo', kind: 'assignment', time: '今日 8:45', isUnread: true, content: '問題集の提出について\n期限: 10月31日' },
+  { id: 's2', subject: '古典', theme: 'red', kind: 'announcement', time: '昨日 18:30', isUnread: true, content: '来週の授業の持ち物について' },
+  { id: 's3', subject: '化学', theme: 'blue', kind: 'material', time: '10月23日', isUnread: false, content: '実験のレポートの書き方の資料です' },
+  { id: 's4', subject: '体育', theme: 'emerald', kind: 'announcement', time: '10月22日', isUnread: false, content: '体育館シューズを忘れないようにしてください' },
+];
+
+// ===== プルダウンの見た目(Class.jsx の FilterSelect と同じ。選べない) =====
+const chevron = (color) =>
+  `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='${color}' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`;
+
+function FilterSelectView({ allLabel }) {
+  return (
+    <select
+      aria-hidden="true"
+      tabIndex={-1}
+      value=""
+      onChange={() => {}}
+      style={{
+        flex: '0 1 auto',
+        minWidth: 0,
+        maxWidth: '50%',
+        height: '32px',
+        padding: '0 28px 0 12px',
+        border: '1px solid #E5E7EB',
+        borderRadius: '10px',
+        backgroundColor: 'white',
+        backgroundImage: chevron('%236B7280'),
+        backgroundRepeat: 'no-repeat',
+        backgroundPosition: 'right 9px center',
+        backgroundSize: '13px',
+        color: '#6B7280',
+        fontSize: '16px',
+        fontWeight: 400,
+        fontFamily: 'inherit',
+        textOverflow: 'ellipsis',
+        boxSizing: 'border-box',
+        WebkitAppearance: 'none',
+        appearance: 'none',
+        outline: 'none',
+        touchAction: 'manipulation',
+      }}
+    >
+      <option value="">{allLabel}</option>
+    </select>
+  );
+}
+
+// ===== ボトムナビゲーション部分(Class.jsx と同じ。ログイン画面でも使う) =====
+export function BottomNav({ activeTab, onSelect }) {
+  return (
+    <nav style={{
+      flexShrink: 0,
+      padding: '0 1.143em env(safe-area-inset-bottom)',
+      height: 'calc(4.571em + env(safe-area-inset-bottom))',
+      background: 'white',
+      borderTop: '1px #E5E7EB solid',
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      width: '100%',
+      boxSizing: 'border-box'
+    }}>
+      {TABS.map((tab) => {
+        const isActive = activeTab === tab.id;
+        return (
+          <div
+            key={tab.id}
+            onClick={onSelect ? () => onSelect(tab.id) : undefined}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.214em',
+              width: '5.714em',
+              cursor: 'pointer',
+              padding: '0.4em 0',
+              userSelect: 'none',
+              WebkitUserSelect: 'none',
+              touchAction: 'manipulation'
+            }}
+          >
+            {/* アニメーションなし: 押した瞬間に切り替わる */}
+            <img
+              draggable={false}
+              style={{
+                width: '1.5em',
+                height: '1.5em',
+                opacity: isActive ? 1 : 0.45
+              }}
+              src={isActive ? tab.activeIcon : tab.icon}
+              alt={tab.id}
+            />
+            <div style={{
+              color: isActive ? '#111827' : '#6B7280',
+              fontSize: '0.786em',
+              fontWeight: '600'
+            }}>
+              {tab.label}
+            </div>
+          </div>
+        );
+      })}
+    </nav>
+  );
+}
+
+// ===== ヘッダー(タイトルの行だけ。Class.jsx と同じ寸法) =====
+export function TitleHeader({ title }) {
+  return (
+    <header style={{
+      flexShrink: 0,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '0.857em',
+      paddingTop: 'calc(2em + env(safe-area-inset-top))',
+      paddingBottom: '1.143em',
+      background: 'white',
+      width: '100%'
+    }}>
+      <div style={{
+        padding: '0 1.714em',
+        height: '34px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        gap: '0.857em'
+      }}>
+        <div style={{
+          color: '#111827',
+          fontSize: '1.871em',
+          fontFamily: 'Inter',
+          fontWeight: '800',
+          userSelect: 'none'
+        }}>
+          {title}
+        </div>
+      </div>
+    </header>
+  );
+}
+
+// ===== お知らせ画面(Class.jsx)の見た目。ダイアログの背景に使う =====
 export default function ClassBackdrop() {
-  const theme = THEMES.orangeRed;
   return (
     <div
       aria-hidden="true"
       style={{
         position: 'absolute',
         inset: 0,
+        background: 'white',
         display: 'flex',
         flexDirection: 'column',
-        background: 'white',
-        pointerEvents: 'none',
+        boxSizing: 'border-box',
         overflow: 'hidden',
+        pointerEvents: 'none',
+        WebkitTapHighlightColor: 'transparent',
+        WebkitTouchCallout: 'none'
       }}
     >
-      <header style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '0.857em', paddingTop: 'calc(2em + env(safe-area-inset-top))', paddingBottom: '1.143em', width: '100%' }}>
-        <div style={{ padding: '0 1.714em', height: '40px', display: 'flex', alignItems: 'center', color: '#111827', fontSize: '1.871em', fontFamily: 'Inter', fontWeight: 800 }}>
-          お知らせ
-        </div>
-        <div style={{ padding: '0.571em 1.714em', display: 'flex', gap: '0.571em' }}>
-          {CHIPS.map((label, i) => (
+      <style>{NO_SCROLLBAR_CSS}</style>
+
+      {/* ===== ヘッダー部分 ===== */}
+      <header style={{
+        flexShrink: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0.857em',
+        paddingTop: 'calc(2em + env(safe-area-inset-top))',
+        paddingBottom: '1.143em',
+        background: 'white',
+        width: '100%'
+      }}>
+        <div style={{
+          padding: '0 1.714em',
+          height: '34px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: '0.857em'
+        }}>
+          <div style={{
+            color: '#111827',
+            fontSize: '1.871em',
+            fontFamily: 'Inter',
+            fontWeight: '800',
+            userSelect: 'none'
+          }}>
+            お知らせ
+          </div>
+
+          {/* 右上アイコン */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.9em', flexShrink: 0 }}>
             <div
-              key={label}
               style={{
-                padding: '0.571em 1.143em',
-                borderRadius: '0.857em',
-                flexShrink: 0,
-                backgroundImage: i === 0 ? theme.gradient : 'none',
-                backgroundColor: i === 0 ? 'transparent' : 'white',
-                outline: i === 0 ? 'none' : '1px #E5E7EB solid',
-                outlineOffset: '-1px',
-                color: i === 0 ? theme.textColor : '#6B7280',
-                fontWeight: i === 0 ? 700 : 400,
-                whiteSpace: 'nowrap',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '2.5em',
+                height: '1.571em',
+                padding: 0,
+                color: '#374151'
               }}
             >
-              {label}
+              <img src={bellIcon} alt="" aria-hidden="true" draggable={false} style={{ width: '100%', height: '100%' }} />
             </div>
-          ))}
+            <img
+              draggable={false}
+              style={{ width: '1.571em', height: '1.571em', userSelect: 'none', WebkitUserSelect: 'none' }}
+              src={searchIcon}
+              alt=""
+            />
+          </div>
+        </div>
+
+        {/* フィルターボタン */}
+        <div className="no-scrollbar" style={{ padding: '0.571em 1.714em', display: 'flex', gap: '0.571em', overflowX: 'auto' }}>
+          {FILTERS.map((filter) => {
+            const isActive = filter.id === 'all';
+            return (
+              <div
+                key={filter.id}
+                style={{
+                  padding: '0.571em 1.143em',
+                  borderRadius: '0.857em',
+                  flexShrink: 0,
+                  backgroundImage: isActive ? 'linear-gradient(135deg, #FF4D4D 0%, #FF8A1B 100%)' : 'none',
+                  backgroundColor: isActive ? 'transparent' : 'white',
+                  outline: isActive ? 'none' : '1px #E5E7EB solid',
+                  outlineOffset: '-1px',
+                  color: isActive ? 'white' : '#6B7280',
+                  fontSize: '1em',
+                  fontWeight: isActive ? '700' : '400',
+                  whiteSpace: 'nowrap',
+                  boxSizing: 'border-box',
+                  userSelect: 'none',
+                  WebkitUserSelect: 'none',
+                  touchAction: 'manipulation'
+                }}
+              >
+                {filter.label}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* プルダウン: 授業・形式 */}
+        <div style={{ padding: '0 1.714em', display: 'flex', gap: '0.571em', marginTop: '-0.476em' }}>
+          <FilterSelectView allLabel="すべての授業" />
+          <FilterSelectView allLabel="すべての形式" />
+          {/* 一斉既読 */}
+          <div
+            style={{
+              marginLeft: 'auto', flexShrink: 0, width: '32px', height: '32px', padding: 0,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              border: '1px solid #E5E7EB', borderRadius: '10px', background: 'white',
+              color: '#6B7280', boxSizing: 'border-box'
+            }}
+          >
+            <svg width={18} height={18} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false" style={{ display: 'block', flexShrink: 0 }}>
+              <path d={DONE_ALL_PATH} />
+            </svg>
+          </div>
         </div>
       </header>
 
-      <main style={{ flex: 1, minHeight: 0, overflow: 'hidden', padding: '0.857em 1.714em', display: 'flex', flexDirection: 'column', gap: '0.857em' }}>
-        {CARD_COLORS.map((color, i) => (
-          <div
-            key={i}
-            style={{
-              padding: '1.143em',
-              background: 'white',
-              borderRadius: '1.714em',
-              outline: `1.5px ${color} solid`,
-              outlineOffset: '-1.5px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '0.857em',
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={bar('9em', '1.4em', i === 0 ? theme.gradient : '#F3F4F6')} />
-              <div style={bar('3.5em')} />
-            </div>
-            <div style={bar('85%', '1.1em', '#E5E7EB')} />
-            <div style={bar('60%')} />
-          </div>
-        ))}
+      {/* ===== メインコンテンツ部分 ===== */}
+      <main style={{
+        flex: 1,
+        minHeight: 0,
+        overflow: 'hidden',
+        padding: '0.857em 1.714em',
+        width: '100%',
+        boxSizing: 'border-box',
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+        gap: '0.857em',
+        alignContent: 'start'
+      }}>
+        {SAMPLE.map((ann) => {
+          const courseTheme = themeOf(ann.theme);
+          return (
+            <article
+              key={ann.id}
+              style={{
+                position: 'relative',
+                padding: ann.isUnread ? 'calc(1.143em - 1.5px)' : '1.143em',
+                border: ann.isUnread ? '1.5px solid transparent' : 'none',
+                background: ann.isUnread
+                  ? 'linear-gradient(white, white) padding-box, linear-gradient(135deg, #FF4D4D 0%, #FF8A1B 100%) border-box'
+                  : 'white',
+                borderRadius: '1.714em',
+                outline: ann.isUnread ? 'none' : '1px #E5E7EB solid',
+                outlineOffset: '-1px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.857em',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
+                userSelect: 'none',
+                WebkitUserSelect: 'none',
+                touchAction: 'manipulation'
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.571em' }}>
+                  <div style={{
+                    padding: '0.286em 0.571em',
+                    background: courseTheme.gradient,
+                    borderRadius: '0.429em'
+                  }}>
+                    <div style={{
+                      color: courseTheme.textColor,
+                      fontSize: '0.786em',
+                      fontWeight: '700'
+                    }}>
+                      {ann.subject}
+                    </div>
+                  </div>
+                  {KIND_LABELS[ann.kind] && (
+                    <div style={{
+                      padding: '0.286em 0.571em',
+                      borderRadius: '0.429em',
+                      background: themeOf(KIND_THEMES[ann.kind]).gradient,
+                      color: themeOf(KIND_THEMES[ann.kind]).textColor,
+                      fontSize: '0.786em',
+                      fontWeight: '700'
+                    }}>
+                      {KIND_LABELS[ann.kind]}
+                    </div>
+                  )}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.429em' }}>
+                  <div style={{ color: '#6B7280', fontSize: '0.857em', fontWeight: '400' }}>
+                    {ann.time}
+                  </div>
+                  {ann.isUnread && (
+                    <div style={{ width: '0.571em', height: '0.571em', background: 'linear-gradient(135deg, #FF4D4D 0%, #FF8A1B 100%)', borderRadius: '50%' }} />
+                  )}
+                </div>
+              </div>
+              <div style={{ color: '#111827', fontSize: '1em', lineHeight: 1.4286, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                {ann.content}
+              </div>
+            </article>
+          );
+        })}
       </main>
 
-      <nav style={{ flexShrink: 0, padding: '0 1.143em env(safe-area-inset-bottom)', height: 'calc(4.571em + env(safe-area-inset-bottom))', background: 'white', borderTop: '1px #E5E7EB solid', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxSizing: 'border-box' }}>
-        {TABS.map((tab) => (
-          <div key={tab.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.214em', justifyContent: 'center', width: '5.714em', padding: '0.4em 0' }}>
-            <img draggable={false} style={{ width: '1.5em', height: '1.5em', opacity: tab.active ? 1 : 0.45 }} src={tab.icon} alt="" />
-            <div style={{ color: tab.active ? '#111827' : '#6B7280', fontSize: '0.786em', fontWeight: 600 }}>{tab.label}</div>
-          </div>
-        ))}
-      </nav>
+      {/* ===== ボトムナビゲーション部分 ===== */}
+      <BottomNav activeTab="class" />
     </div>
   );
 }

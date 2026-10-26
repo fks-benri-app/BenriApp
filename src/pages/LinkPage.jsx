@@ -5,7 +5,8 @@ import { buildGasLoginUrl, isGasConfigured } from '../config';
 import { initOneSignal, subscribeAs } from '../lib/onesignal';
 import { usePushKey } from '../lib/pushStatus';
 import { isNotifyDone, markNotifyDone, KEYS, storage } from '../lib/storage';
-import ClassBackdrop from '../components/ClassBackdrop';
+import ClassBackdrop, { BottomNav, TitleHeader } from '../components/ClassBackdrop';
+import loginIllustration from '../assets/images/other_svgs/login.svg';
 import InstallGuide, { InstallSteps, isIos, isStandalone, needsInstall } from '../components/InstallGuide';
 
 const GOOGLE_FONT = "'Google Sans', Roboto, 'Hiragino Sans', 'Noto Sans JP', 'Yu Gothic UI', Arial, sans-serif";
@@ -158,43 +159,29 @@ export default function LinkPage() {
   // ================= step 1: ログイン画面 =================
   if (!identity) {
     return (
-      <div onCopy={(e) => e.preventDefault()} style={{ ...rootStyle, display: 'flex', flexDirection: 'column', alignItems: 'center', overflowY: 'auto' }}>
-        <div
+      <div onCopy={(e) => e.preventDefault()} style={{ ...rootStyle, display: 'flex', flexDirection: 'column' }}>
+        <TitleHeader title="ログイン" />
+
+        {/* 中身は、上下左右の中央に置く(内容が多いときはスクロールする) */}
+        <main
           style={{
+            flex: 1,
+            minHeight: 0,
+            overflowY: 'auto',
+            overscrollBehavior: 'contain',
+            padding: '0.857em 1.714em',
             width: '100%',
-            maxWidth: '26em',
-            minHeight: '100%',
             boxSizing: 'border-box',
-            padding: 'calc(3em + env(safe-area-inset-top)) 2.286em calc(2em + env(safe-area-inset-bottom))',
             display: 'flex',
             flexDirection: 'column',
-            justifyContent: 'space-between',
             alignItems: 'center',
-            gap: '2em',
-            margin: '0 auto',
           }}
         >
-          {guideOpen ? (
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center', width: '100%' }}>
+          <div style={{ width: '100%', maxWidth: '26em', margin: 'auto 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.143em' }}>
+            {guideOpen ? (
               <InstallGuide onSkip={() => setGuideOpen(false)} />
-            </div>
-          ) : (
-            <>
-              {/* 上: アプリ名と説明 */}
-              <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3.4em' }}>
-                <div style={{ textAlign: 'center', color: '#111827', fontSize: '2em', fontFamily: 'Inter', fontWeight: 800 }}>
-                  Classroom通知
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.143em' }}>
-                  <div style={{ textAlign: 'center', color: 'black', fontSize: '1.143em', fontWeight: 600, lineHeight: '1.5em' }}>ログイン</div>
-                  <div style={{ textAlign: 'center', color: 'black', fontSize: '1em', lineHeight: '1.5em' }}>
-                    学校のGoogleアカウントで<br />ログインしてください
-                  </div>
-                </div>
-              </div>
-
-              {/* 中央: Googleでログイン */}
-              <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '1.143em' }}>
+            ) : (
+              <>
                 {offline && notice('#FEF2F2', '#FECACA', '#DC2626', 'インターネットに接続されていません。接続してからもう一度お試しください。')}
                 {needsRelogin && notice('#FFFBEB', '#FCD34D', '#B45309', (
                   <>
@@ -202,6 +189,14 @@ export default function LinkPage() {
                     お手数ですが、下の「Googleでログイン」を押して、ログインし直してください。「連携済みです」と表示されたら、「再連携する」は押さず、左下の「←」で戻ると完了です。
                   </>
                 ))}
+
+                <img
+                  draggable={false}
+                  src={loginIllustration}
+                  alt=""
+                  style={{ display: 'block', width: '100%', maxWidth: '15em', height: 'auto', margin: '0 auto' }}
+                />
+
                 <button
                   type="button"
                   onClick={startLink}
@@ -229,14 +224,13 @@ export default function LinkPage() {
                   <GoogleG />
                   Googleでログイン
                 </button>
-                {message && notice('#FFFBEB', '#FCD34D', '#B45309', message)}
-              </div>
 
-              {/* 下: 補足 */}
-              <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.8em' }}>
+                {message && notice('#FFFBEB', '#FCD34D', '#B45309', message)}
+
                 <div style={{ color: '#6B7280', fontSize: '0.85em', lineHeight: '1.5em', textAlign: 'center' }}>
                   ※「このアプリは確認されていません」と表示された場合は、画面内の「詳細」→「(安全ではないページ)に移動」を選択してください。
                 </div>
+
                 {needsInstall && (
                   <button
                     type="button"
@@ -246,10 +240,13 @@ export default function LinkPage() {
                     ホーム画面への追加方法を見る
                   </button>
                 )}
-              </div>
-            </>
-          )}
-        </div>
+              </>
+            )}
+          </div>
+        </main>
+
+        {/* 下のアイコンバー: 設定を光らせる */}
+        <BottomNav activeTab="settings" />
       </div>
     );
   }
