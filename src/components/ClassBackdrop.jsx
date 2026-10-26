@@ -150,6 +150,7 @@ export function TitleHeader({ title }) {
       paddingTop: 'calc(2em + env(safe-area-inset-top))',
       paddingBottom: '1.143em',
       background: 'white',
+      borderBottom: '1px #E5E7EB solid',
       width: '100%'
     }}>
       <div style={{

@@ -106,10 +106,12 @@ export default function LinkPage() {
     setBusy(true);
     setMessage('');
     setSlow(false);
-    slowTimer.current = setTimeout(() => setSlow(true), 10000);
 
     try {
-      const result = await subscribeAs(pushKey);
+      // ブラウザの許可画面を押すまでの時間は数えない(許可が終わってから10秒たったら補足を出す)
+      const result = await subscribeAs(pushKey, () => {
+        slowTimer.current = setTimeout(() => setSlow(true), 10000);
+      });
       if (result.ok) {
         markNotifyDone(identity.id);
         storage.remove('relinking');
@@ -207,7 +209,6 @@ export default function LinkPage() {
                     borderRadius: '1.286em',
                     border: '1px solid #E5E7EB',
                     background: 'white',
-                    boxShadow: '0px 8px 16px rgba(0, 0, 0, 0.12)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
