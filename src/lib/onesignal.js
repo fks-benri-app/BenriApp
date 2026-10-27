@@ -53,9 +53,17 @@ export async function subscribeAs(externalId, onPermissionDone) {
     if (onPermissionDone) onPermissionDone();
 
     if (externalId) {
-      // 重複ユーザー防止: login の前に既存の匿名ひもづけを解除する
-      await OneSignal.logout();
-      await OneSignal.login(externalId);
+      // logout() は、新しい匿名ユーザーを作ってしまう(OneSignal の仕様)。
+      // キャッシュを消した直後などは、すでに匿名なので、logout せず login だけにして、空のユーザーを増やさない。
+      // login(externalId) だけで、この端末の購読は、その外部IDのユーザーに付け替わる。
+      // 別の外部ID(旧方式の生徒IDなど)で登録ずみの端末のときだけ、これまでどおり logout してから login する。
+      const current = OneSignal.User.externalId;
+      if (current && current !== externalId) {
+        await OneSignal.logout();
+      }
+      if (current !== externalId) {
+        await OneSignal.login(externalId);
+      }
     } else if (!OneSignal.User.PushSubscription.optedIn) {
       await OneSignal.User.PushSubscription.optIn();
     }
