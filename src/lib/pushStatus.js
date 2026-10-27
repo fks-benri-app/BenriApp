@@ -34,17 +34,46 @@ export function usePushKey(studentId) {
       setKey('');
       return undefined;
     }
-    return onSnapshot(
-      doc(db, 'users', studentId),
-      (snap) => {
-        const v = snap.exists() ? snap.data().pushKey : '';
-        setKey(typeof v === 'string' ? v : '');
-      },
-      (err) => {
-        console.warn('[usePushKey] pushKey を読めませんでした', err && err.code);
-        setKey('');
-      }
-    );
+    // 読み込みが一度失敗すると、onSnapshot の監視はそこで終わってしまい、キーが永遠に届かなくなる。
+    // 通信の不調や、ログイン直後の一時的な失敗のことがあるため、間隔をあけて監視をやり直す。
+    let stopped = false;
+    let timer = null;
+    let unsubscribe = () => {};
+    let attempt = 0;
+
+    const listen = () => {
+      unsubscribe = onSnapshot(
+        doc(db, 'users', studentId),
+        (snap) => {
+          attempt = 0;
+          const v = snap.exists() ? snap.data().pushKey : '';
+          if (typeof v === 'string' && v) {
+            setKey(v);
+            return;
+          }
+          setKey('');
+          // サーバーから読めているのにキーが無い = GAS が保存に失敗している(ログインし直すと再保存される)
+          if (!snap.metadata.fromCache) {
+            console.warn('[usePushKey] users/' + studentId + ' に pushKey がありません(GAS の保存失敗の可能性)');
+          }
+        },
+        (err) => {
+          console.warn('[usePushKey] pushKey を読めませんでした。やり直します', err && err.code);
+          // すでに届いているキーは、そのまま残す
+          if (stopped) return;
+          const wait = Math.min(30000, 2000 * 2 ** attempt);
+          attempt += 1;
+          timer = setTimeout(listen, wait);
+        }
+      );
+    };
+    listen();
+
+    return () => {
+      stopped = true;
+      clearTimeout(timer);
+      unsubscribe();
+    };
   }, [studentId]);
   return key;
 }
