@@ -1029,7 +1029,7 @@ export default function Class() {
           return (
             <div
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => (tab.id === 'settings' ? navigate('/settings') : setActiveTab(tab.id))}
               style={{
                 display: 'flex',
                 flexDirection: 'column',

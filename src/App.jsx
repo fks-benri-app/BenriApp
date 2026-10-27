@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { useIdentity } from './auth/identity';
 import LinkPage from './pages/LinkPage';
 import Class from './pages/Class';
+import Settings from './pages/Settings';
 
 // ログイン済み(連携済み)の人だけが入れるページを包む
 function RequireIdentity({ children }) {
@@ -21,6 +22,14 @@ export default function App() {
         element={
           <RequireIdentity>
             <Class />
+          </RequireIdentity>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <RequireIdentity>
+            <Settings />
           </RequireIdentity>
         }
       />
