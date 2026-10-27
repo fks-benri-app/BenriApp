@@ -7,6 +7,7 @@ import { ensureSubscription } from '../lib/onesignal';
 import { usePushBroken, usePushKey, goRepairNotifications, markPushFixed, isPushRecentlyFixed } from '../lib/pushStatus';
 import { useIdentity } from '../auth/identity';
 import { THEMES } from '../lib/themes';
+import { currentFontSize } from '../lib/fontSize';
 import { KIND_OPTIONS, buildCourseOptions, filterAnnouncements } from '../lib/filters';
 
 // ★ assets 内の通常アイコン
@@ -610,7 +611,7 @@ export default function Class() {
   const searchInputRef = useRef(null);
 
   // フォントサイズ基準値（プログラム制御対応）
-  const [baseFontSize] = useState(14);
+  const [baseFontSize] = useState(() => currentFontSize().px);
 
   // 授業の選択肢は、手元のお知らせから作る
   const courseOptions = useMemo(() => buildCourseOptions(items), [items]);

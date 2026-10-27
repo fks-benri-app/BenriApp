@@ -2,19 +2,32 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useIdentity } from '../auth/identity';
 import BottomNav from '../components/BottomNav';
+import { currentFontSize, nextFontSize } from '../lib/fontSize';
 import pkg from '../../package.json';
 
-const NO_SCROLLBAR_CSS = '.no-scrollbar{scrollbar-width:none;-ms-overflow-style:none}.no-scrollbar::-webkit-scrollbar{display:none}';
+// フィードバックのフォームのURL。ここに入れると押せるようになる(空の間は灰色で押せない)
+const FEEDBACK_FORM_URL = '';
 
-// ===== 部品 =====
-const Chevron = () => (
+const NO_SCROLLBAR_CSS = '.no-scrollbar{scrollbar-width:none;-ms-overflow-style:none}.no-scrollbar::-webkit-scrollbar{display:none}';
+const GREY = '#9CA3AF';
+
+// 生徒ID(6桁)から学年・組・番号を読み取る。例: 250710 → 2025年入学の7組10番 → 今年度は2年7組10番
+// 年度は4月に切り替わる。学年が 1〜3 の範囲に入らないときは表示しない
+function classOf(id) {
+  if (!/^\d{6}$/.test(id)) return null;
+  const entry = 2000 + Number(id.slice(0, 2));
+  const now = new Date();
+  const year = now.getMonth() + 1 >= 4 ? now.getFullYear() : now.getFullYear() - 1;
+  const grade = year - entry + 1;
+  if (grade < 1 || grade > 3) return null;
+  return `${grade}年${Number(id.slice(2, 4))}組${Number(id.slice(4, 6))}番`;
+}
+
+const Chevron = ({ dim }) => (
   <svg width="1.143em" height="1.143em" viewBox="0 0 20 20" fill="none" aria-hidden="true" style={{ flexShrink: 0 }}>
-    <path d="M7.5 5l5 5-5 5" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M7.5 5l5 5-5 5" stroke={dim ? GREY : '#6B7280'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
-
-// まだ機能がない項目に付ける目印(押しても何も起きないことを、見た目で分かるようにする)
-const Soon = () => <span style={{ color: '#9CA3AF', fontSize: '0.929em', fontWeight: 400 }}>準備中</span>;
 
 function Section({ title, children }) {
   return (
@@ -37,27 +50,53 @@ function Section({ title, children }) {
   );
 }
 
-const Divider = () => <div style={{ height: '1px', background: '#E5E7EB', margin: '0 0' }} />;
+const Divider = () => <div style={{ height: '1px', background: '#E5E7EB' }} />;
 
-function Row({ label, right, onClick, disabled }) {
+// disabled の行は、文字も見た目も灰色にして、押せないことを示す
+function Row({ label, value, onClick, disabled }) {
+  const active = !disabled && !!onClick;
   return (
     <div
-      onClick={disabled ? undefined : onClick}
+      onClick={active ? onClick : undefined}
+      aria-disabled={disabled || undefined}
       style={{
         padding: '0.857em 1.143em',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
         gap: '0.8em',
-        cursor: onClick && !disabled ? 'pointer' : 'default',
+        cursor: active ? 'pointer' : 'default',
         touchAction: 'manipulation',
         userSelect: 'none',
         WebkitUserSelect: 'none',
       }}
     >
-      <div style={{ color: '#111827', fontSize: '1.071em', fontWeight: 600 }}>{label}</div>
-      {right}
+      <div style={{ color: disabled ? GREY : '#111827', fontSize: '1.071em', fontWeight: 600 }}>{label}</div>
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4em', color: disabled ? GREY : '#6B7280', fontSize: '1.071em' }}>
+        {value}
+        {onClick && <Chevron dim={disabled} />}
+      </span>
     </div>
+  );
+}
+
+function Switch({ disabled }) {
+  return (
+    <span
+      style={{
+        width: '3.429em',
+        height: '2em',
+        padding: '0.143em',
+        background: '#E5E7EB',
+        borderRadius: '1em',
+        display: 'flex',
+        alignItems: 'center',
+        boxSizing: 'border-box',
+        opacity: disabled ? 0.5 : 1,
+      }}
+    >
+      <span style={{ width: '1.714em', height: '1.714em', background: 'white', borderRadius: '50%', boxShadow: '0 1px 2px rgba(0,0,0,0.06)' }} />
+    </span>
   );
 }
 
@@ -89,11 +128,17 @@ export default function Settings() {
   const navigate = useNavigate();
   const { identity } = useIdentity();
   const [note, setNote] = useState('');
-  const [baseFontSize] = useState(14);
+  // Class.jsx と同じ基準の文字サイズを使う。変更するとこの画面にもすぐ反映される
+  const [font, setFont] = useState(currentFontSize);
+  const studentClass = identity ? classOf(identity.id) : null;
 
-  // 下のバー: お知らせへは移動する。ホーム・カレンダーはまだ画面がないので、何もしない
+  // 下のバー: お知らせへ移動。ホーム・カレンダーはまだ画面がないので何もしない
   function onSelectTab(id) {
     if (id === 'class') navigate('/class');
+  }
+
+  function openFeedback() {
+    window.open(FEEDBACK_FORM_URL, '_blank', 'noopener');
   }
 
   return (
@@ -108,7 +153,7 @@ export default function Settings() {
         flexDirection: 'column',
         boxSizing: 'border-box',
         overflow: 'hidden',
-        fontSize: `${baseFontSize}px`,
+        fontSize: `${font.px}px`,
         WebkitTapHighlightColor: 'transparent',
         WebkitTouchCallout: 'none',
       }}
@@ -128,16 +173,7 @@ export default function Settings() {
           width: '100%',
         }}
       >
-        <div
-          style={{
-            padding: '0 1.714em',
-            height: '34px',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            gap: '0.857em',
-          }}
-        >
+        <div style={{ padding: '0 1.714em', height: '34px', display: 'flex', alignItems: 'center' }}>
           <div style={{ color: '#111827', fontSize: '1.871em', fontFamily: 'Inter', fontWeight: '800', userSelect: 'none' }}>
             設定
           </div>
@@ -184,68 +220,41 @@ export default function Settings() {
               }}
             >
               <svg width="1.8em" height="1.8em" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <circle cx="12" cy="8" r="4" stroke="#9CA3AF" strokeWidth="2" />
-                <path d="M4 20c1-4 4-6 8-6s7 2 8 6" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" />
+                <circle cx="12" cy="8" r="4" stroke={GREY} strokeWidth="2" />
+                <path d="M4 20c1-4 4-6 8-6s7 2 8 6" stroke={GREY} strokeWidth="2" strokeLinecap="round" />
               </svg>
             </div>
             <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '0.286em' }}>
               <div style={{ color: '#111827', fontSize: '1.286em', fontFamily: 'Inter', fontWeight: 700 }}>
                 ログイン中のアカウント
               </div>
-              <div style={{ color: '#6B7280', fontSize: '0.929em' }}>生徒ID {identity ? identity.id : '-'}</div>
+              <div style={{ color: '#6B7280', fontSize: '0.929em' }}>
+                {studentClass ? studentClass : `生徒ID ${identity ? identity.id : '-'}`}
+              </div>
             </div>
+            <Chevron />
           </div>
 
           <Section title="通知設定">
-            <Row label="クラスルーム通知" onClick={() => navigate('/?relink=1')} right={<Chevron />} />
+            <Row label="クラスルーム通知" disabled />
             <Divider />
-            <Row label="授業前通知" disabled right={<Soon />} />
+            <Row label="授業前通知" disabled />
           </Section>
 
           <Section title="画面表示">
-            <Row
-              label="ダークモード"
-              disabled
-              right={
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.7em' }}>
-                  <Soon />
-                  <span
-                    style={{
-                      width: '3.429em',
-                      height: '2em',
-                      padding: '0.143em',
-                      background: '#E5E7EB',
-                      borderRadius: '1em',
-                      display: 'flex',
-                      alignItems: 'center',
-                      boxSizing: 'border-box',
-                      opacity: 0.6,
-                    }}
-                  >
-                    <span style={{ width: '1.714em', height: '1.714em', background: 'white', borderRadius: '50%', boxShadow: '0 1px 2px rgba(0,0,0,0.06)' }} />
-                  </span>
-                </span>
-              }
-            />
+            <Row label="ダークモード" disabled value={<Switch disabled />} />
             <Divider />
             <Row
               label="文字サイズ"
-              disabled
-              right={
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4em', color: '#6B7280', fontSize: '1.071em' }}>
-                  標準 <Soon />
-                </span>
-              }
+              value={font.label}
+              onClick={() => setFont(nextFontSize())}
             />
           </Section>
 
           <Section title="サポート">
-            <Row label="フィードバックを送る" disabled right={<Soon />} />
+            <Row label="フィードバックを送る" disabled={!FEEDBACK_FORM_URL} onClick={FEEDBACK_FORM_URL ? openFeedback : undefined} />
             <Divider />
-            <Row
-              label="アプリのバージョン"
-              right={<span style={{ color: '#6B7280', fontSize: '1.071em' }}>v{pkg.version}</span>}
-            />
+            <Row label="アプリのバージョン" value={`v${pkg.version}`} />
           </Section>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.857em' }}>
