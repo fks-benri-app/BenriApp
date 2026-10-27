@@ -611,7 +611,7 @@ export default function Class() {
   const searchInputRef = useRef(null);
 
   // フォントサイズ基準値（プログラム制御対応）
-  const [baseFontSize] = useState(() => currentFontSize().px);
+  const [baseFontSize] = useState(currentFontSize);
 
   // 授業の選択肢は、手元のお知らせから作る
   const courseOptions = useMemo(() => buildCourseOptions(items), [items]);

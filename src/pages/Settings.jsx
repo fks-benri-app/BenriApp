@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useIdentity } from '../auth/identity';
 import BottomNav from '../components/BottomNav';
-import { currentFontSize, nextFontSize } from '../lib/fontSize';
+import { currentFontSize, setFontSize, FONT_SIZE_MIN, FONT_SIZE_MAX, FONT_SIZE_DEFAULT } from '../lib/fontSize';
 import pkg from '../../package.json';
 
 // フィードバックのフォームのURL。ここに入れると押せるようになる(空の間は灰色で押せない)
@@ -129,7 +129,8 @@ export default function Settings() {
   const { identity } = useIdentity();
   const [note, setNote] = useState('');
   // Class.jsx と同じ基準の文字サイズを使う。変更するとこの画面にもすぐ反映される
-  const [font, setFont] = useState(currentFontSize);
+  const [fontPx, setFontPx] = useState(currentFontSize);
+  const fontOptions = Array.from({ length: FONT_SIZE_MAX - FONT_SIZE_MIN + 1 }, (_, i) => FONT_SIZE_MIN + i);
   const studentClass = identity ? classOf(identity.id) : null;
 
   // 下のバー: お知らせへ移動。ホーム・カレンダーはまだ画面がないので何もしない
@@ -153,7 +154,7 @@ export default function Settings() {
         flexDirection: 'column',
         boxSizing: 'border-box',
         overflow: 'hidden',
-        fontSize: `${font.px}px`,
+        fontSize: `${fontPx}px`,
         WebkitTapHighlightColor: 'transparent',
         WebkitTouchCallout: 'none',
       }}
@@ -244,11 +245,52 @@ export default function Settings() {
           <Section title="画面表示">
             <Row label="ダークモード" disabled value={<Switch disabled />} />
             <Divider />
-            <Row
-              label="文字サイズ"
-              value={font.label}
-              onClick={() => setFont(nextFontSize())}
-            />
+            <div
+              style={{
+                padding: '0.857em 1.143em',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: '0.8em',
+              }}
+            >
+              <div style={{ color: '#111827', fontSize: '1.071em', fontWeight: 600 }}>文字サイズ</div>
+              <select
+                aria-label="文字サイズ"
+                value={fontPx}
+                onChange={(e) => {
+                  const px = Number(e.target.value);
+                  setFontSize(px);
+                  setFontPx(px);
+                }}
+                style={{
+                  height: '2.286em',
+                  padding: '0 1.714em 0 0.857em',
+                  border: '1px solid #E5E7EB',
+                  borderRadius: '0.714em',
+                  backgroundColor: 'white',
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 20 20'%3E%3Cpath d='M5 7.5l5 5 5-5' stroke='%236B7280' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'right 0.6em center',
+                  backgroundSize: '0.9em',
+                  color: '#111827',
+                  fontSize: '1em',
+                  fontFamily: 'inherit',
+                  fontWeight: 600,
+                  WebkitAppearance: 'none',
+                  appearance: 'none',
+                  outline: 'none',
+                  cursor: 'pointer',
+                  touchAction: 'manipulation',
+                }}
+              >
+                {fontOptions.map((px) => (
+                  <option key={px} value={px} style={{ color: '#111827', background: 'white' }}>
+                    {px === FONT_SIZE_DEFAULT ? `${px}px（デフォルト）` : `${px}px`}
+                  </option>
+                ))}
+              </select>
+            </div>
           </Section>
 
           <Section title="サポート">
