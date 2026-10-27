@@ -4,7 +4,7 @@ import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAnnouncements } from '../lib/announcements';
 import { ensureSubscription } from '../lib/onesignal';
-import { usePushBroken, usePushKey, goRepairNotifications, markPushFixed, isPushRecentlyFixed } from '../lib/pushStatus';
+import { usePushBroken, usePushKey, usePushSubs, useDeviceSubscriptionId, judgeDeviceBroken, goRepairNotifications, markPushFixed, isPushRecentlyFixed } from '../lib/pushStatus';
 import { useIdentity } from '../auth/identity';
 import { THEMES } from '../lib/themes';
 import { currentFontSize } from '../lib/fontSize';
@@ -566,7 +566,11 @@ export default function Class() {
     [real.items, real.readIds]
   );
   const schoolEmail = useSchoolEmail(identity?.id);
-  const pushBroken = usePushBroken(identity?.id);
+  // 通知が届いていない可能性: GAS が確認した購読の一覧があれば、この端末の購読で判断する(端末ごと)
+  const pushBrokenSend = usePushBroken(identity?.id);
+  const pushSubs = usePushSubs(identity?.id);
+  const ownSubId = useDeviceSubscriptionId(pushSubs);
+  const pushBroken = judgeDeviceBroken(pushSubs, ownSubId, pushBrokenSend);
   const pushKey = usePushKey(identity?.id);
 
   // 開くたびに、この端末の通知の購読が正しい状態か確認する(ずれていれば付け直す)

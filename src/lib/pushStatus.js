@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from './firebase';
+import { getSubscriptionId } from './onesignal';
 
 /**
  * 通知が端末に届いていない可能性があるか。
@@ -76,6 +77,56 @@ export function usePushKey(studentId) {
     };
   }, [studentId]);
   return key;
+}
+
+/**
+ * OneSignal 側の購読の一覧(users/{studentId}.pushSubs。GAS が30分に1回まで確認して保存する)。
+ * [{ id, enabled }] を返す。まだ確認データが無いときは null。
+ */
+export function usePushSubs(studentId) {
+  const [subs, setSubs] = useState(null);
+  useEffect(() => {
+    if (!studentId) {
+      setSubs(null);
+      return undefined;
+    }
+    return onSnapshot(
+      doc(db, 'users', studentId),
+      (snap) => {
+        const v = snap.exists() ? snap.data().pushSubs : null;
+        setSubs(Array.isArray(v) ? v.filter((s) => s && typeof s.id === 'string').map((s) => ({ id: s.id, enabled: s.enabled === true })) : null);
+      },
+      () => { /* 読めなかったときは、いまの値のまま */ }
+    );
+  }, [studentId]);
+  return subs;
+}
+
+/** この端末の購読ID。一覧が更新されたときにも読み直す(付け直しで変わることがあるため) */
+export function useDeviceSubscriptionId(subs) {
+  const [id, setId] = useState(null);
+  useEffect(() => {
+    let alive = true;
+    getSubscriptionId()
+      .then((v) => { if (alive) setId(v); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, [subs]);
+  return id;
+}
+
+/**
+ * この端末の通知が届いていない可能性があるか(端末ごとの判定)。
+ * - 確認データ(pushSubs)がまだ無い → 従来どおり、GAS の送信結果(pushBroken)で判断する。
+ * - この端末が購読していない(通知を許可していない)→ ここでは判断しない。
+ * - この端末の購読が、一覧に無い・無効 → 届いていない可能性がある。
+ * - 他の端末や、古い購読が無効でも、この端末には関係しない。
+ */
+export function judgeDeviceBroken(subs, ownId, sendBroken) {
+  if (!subs) return sendBroken;
+  if (!ownId) return false;
+  const mine = subs.find((s) => s.id === ownId);
+  return !mine || !mine.enabled;
 }
 
 // 通知を付け直した直後は「通知を直す」を出さない。

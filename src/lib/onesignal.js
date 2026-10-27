@@ -107,6 +107,12 @@ export async function ensureSubscription(externalId) {
   });
 }
 
+// この端末の購読ID(無ければ null)。GAS が保存した購読の一覧と見比べて、この端末が無効になっていないか確かめるのに使う
+export async function getSubscriptionId() {
+  await initOneSignal();
+  return withOneSignal((OneSignal) => OneSignal.User.PushSubscription.id || null);
+}
+
 // 将来ログアウト機能をつけたときに使う
 export async function unsubscribe() {
   await initOneSignal();
