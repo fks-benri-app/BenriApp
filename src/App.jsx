@@ -16,7 +16,7 @@ export default function App() {
   if (!ready) return null;
   return (
     <Routes>
-      <Route path="/" element={<LinkPage />} />
+      <Route path="/" element={<Settings />} />
       <Route
         path="/class"
         element={
