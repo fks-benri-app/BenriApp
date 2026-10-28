@@ -6,6 +6,7 @@
   --surface: #ffffff;        /* カードや一覧の背景 */
   --surface-2: #f3f4f6;      /* 一段へこんだ背景、入力欄など */
   --line: #e5e7eb;
+  --switch-off: #e5e7eb;
   --line-strong: #c4c7c5;
   --text-strong: #111827;    /* 見出し・強い文字 */
   --text-body: #374151;      /* 本文 */
@@ -125,13 +126,14 @@ img {
 html[data-theme="dark"] {
   color-scheme: dark;
   --bg: #121214;
-  --surface: #1c1c1f;
-  --surface-2: #2a2a2e;
-  --line: #3a3a3f;
+  --surface: #1f1f23;
+  --surface-2: #2b2b30;
+  --line: #3d3d44;
+  --switch-off: #6b6b74;
   --line-strong: #5a5a61;
   --text-strong: #f2f2f4;
   --text-body: #d6d6db;
-  --text-muted: #a1a1aa;
+  --text-muted: #b0b0b8;
   --text-faint: #71717a;
   --ink: #e5e7eb;
   --on-ink: #111827;
@@ -147,3 +149,6 @@ html[data-theme="dark"] {
   --muted: #a1a1aa;
   --blue: #3f6fd0;
 }
+
+/* 画像として読むアイコン(ベルなど)は、CSS の色を変えられない。ダークでは反転して明るくする */
+html[data-theme="dark"] img.icon-ink { filter: invert(1) hue-rotate(180deg); }
