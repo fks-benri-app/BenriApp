@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { useIdentity } from '../auth/identity';
 import BottomNav from '../components/BottomNav';
 import { currentFontSize, setFontSize, FONT_SIZE_MIN, FONT_SIZE_MAX, FONT_SIZE_DEFAULT } from '../lib/fontSize';
+import { isDarkMode, toggleDarkMode } from '../lib/themes';
+import { useAccountName } from '../lib/account';
 import pkg from '../../package.json';
 
 // フィードバックのフォームのURL。ここに入れると押せるようになる(空の間は灰色で押せない)
-const FEEDBACK_FORM_URL = '';
+const FEEDBACK_FORM_URL = 'https://forms.gle/pmiB1KdWofSkPgrd8';
 
 const NO_SCROLLBAR_CSS = '.no-scrollbar{scrollbar-width:none;-ms-overflow-style:none}.no-scrollbar::-webkit-scrollbar{display:none}';
 const GREY = '#9CA3AF';
@@ -53,7 +55,7 @@ function Section({ title, children }) {
 const Divider = () => <div style={{ height: '1px', background: '#E5E7EB' }} />;
 
 // disabled の行は、文字も見た目も灰色にして、押せないことを示す
-function Row({ label, value, onClick, disabled }) {
+function Row({ label, value, onClick, disabled, chevron = true }) {
   const active = !disabled && !!onClick;
   return (
     <div
@@ -74,25 +76,27 @@ function Row({ label, value, onClick, disabled }) {
       <div style={{ color: disabled ? GREY : '#111827', fontSize: '1.071em', fontWeight: 600 }}>{label}</div>
       <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4em', color: disabled ? GREY : '#6B7280', fontSize: '1.071em' }}>
         {value}
-        {onClick && <Chevron dim={disabled} />}
+        {onClick && chevron && <Chevron dim={disabled} />}
       </span>
     </div>
   );
 }
 
-function Switch({ disabled }) {
+function Switch({ on, disabled }) {
   return (
     <span
       style={{
         width: '3.429em',
         height: '2em',
         padding: '0.143em',
-        background: '#E5E7EB',
+        background: on ? '#111827' : '#E5E7EB',
         borderRadius: '1em',
         display: 'flex',
+        justifyContent: on ? 'flex-end' : 'flex-start',
         alignItems: 'center',
         boxSizing: 'border-box',
         opacity: disabled ? 0.5 : 1,
+        transition: 'background 0.15s',
       }}
     >
       <span style={{ width: '1.714em', height: '1.714em', background: 'white', borderRadius: '50%', boxShadow: '0 1px 2px rgba(0,0,0,0.06)' }} />
@@ -132,6 +136,8 @@ export default function Settings() {
   const [fontPx, setFontPx] = useState(currentFontSize);
   const fontOptions = Array.from({ length: FONT_SIZE_MAX - FONT_SIZE_MIN + 1 }, (_, i) => FONT_SIZE_MIN + i);
   const studentClass = identity ? classOf(identity.id) : null;
+  const accountName = useAccountName(identity ? identity.id : null);
+  const [dark, setDark] = useState(isDarkMode);
 
   // 下のバー: お知らせへ移動。ホーム・カレンダーはまだ画面がないので何もしない
   function onSelectTab(id) {
@@ -227,7 +233,7 @@ export default function Settings() {
             </div>
             <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '0.286em' }}>
               <div style={{ color: '#111827', fontSize: '1.286em', fontFamily: 'Inter', fontWeight: 700 }}>
-                ログイン中のアカウント
+                {accountName || 'ログイン中のアカウント'}
               </div>
               <div style={{ color: '#6B7280', fontSize: '0.929em' }}>
                 {studentClass ? studentClass : `生徒ID ${identity ? identity.id : '-'}`}
@@ -243,7 +249,7 @@ export default function Settings() {
           </Section>
 
           <Section title="画面表示">
-            <Row label="ダークモード" disabled value={<Switch disabled />} />
+            <Row label="ダークモード" chevron={false} onClick={() => setDark(toggleDarkMode())} value={<Switch on={dark} />} />
             <Divider />
             <div
               style={{
@@ -300,7 +306,7 @@ export default function Settings() {
           </Section>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.857em' }}>
-            <OutlineButton color="#111827" bg="white" border="#E5E7EB" onClick={() => navigate('/?relink=1')}>
+            <OutlineButton color="#111827" bg="white" border="#E5E7EB" onClick={() => navigate('/link?relink=1')}>
               再連携する
             </OutlineButton>
             <OutlineButton color="#DC2626" bg="#FFF5F5" border="#FECACA" onClick={() => setNote('アカウントの削除は準備中です。')}>

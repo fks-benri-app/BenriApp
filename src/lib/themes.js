@@ -1,3 +1,5 @@
+import { storage } from './storage';
+
 // 色のテーマ(グラデーション+その上の文字色)。LinkPage と Class で共通に使う
 // 新しい色を足すときは、ここに1行足すだけ
 export const THEMES = {
@@ -19,3 +21,28 @@ export const THEMES = {
   gray: { gradient: 'linear-gradient(110deg, #676767 0%, #797979 100%)', textColor: 'white' },
   //def: { gradient: 'glay', textColor: 'black' }
 };
+
+// ==================================================
+// ダークモード(画面の配色)
+// 設定画面で切り替え、html 要素の data-theme に反映する。styles.css がそれを見て配色を変える。
+// アクセント色(上の THEMES)とは別に、明るさだけを管理する。
+// ==================================================
+
+const DARK_MODE_KEY = 'darkMode';
+
+export function isDarkMode() {
+  return storage.get(DARK_MODE_KEY) === '1';
+}
+
+// 保存された設定を html 要素へ反映する(起動時に一度呼ぶ)
+export function applyTheme() {
+  document.documentElement.dataset.theme = isDarkMode() ? 'dark' : 'light';
+}
+
+// 切り替えて保存し、新しい状態(true = ダーク)を返す
+export function toggleDarkMode() {
+  const next = !isDarkMode();
+  storage.set(DARK_MODE_KEY, next ? '1' : '0');
+  applyTheme();
+  return next;
+}

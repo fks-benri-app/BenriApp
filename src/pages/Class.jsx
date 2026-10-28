@@ -186,7 +186,7 @@ const chevron = (color) =>
   `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='${color}' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`;
 
 // theme: 選んでいるときの色 { gradient, textColor }
-function FilterSelect({ value, onChange, allLabel, options, label, theme }) {
+function FilterSelect({ value, onChange, allLabel, options, label, theme, fontPx }) {
   const isActive = value !== '';
   const onColor = theme.textColor === 'white' ? '%23FFFFFF' : '%23111827';
   return (
@@ -210,7 +210,7 @@ function FilterSelect({ value, onChange, allLabel, options, label, theme }) {
         backgroundPosition: isActive ? 'right 9px center, 0 0' : 'right 9px center',
         backgroundSize: isActive ? '13px, 100% 100%' : '13px',
         color: isActive ? theme.textColor : '#6B7280',
-        fontSize: '16px',
+        fontSize: `${fontPx}px`,
         fontWeight: isActive ? 700 : 400,
         fontFamily: 'inherit',
         textOverflow: 'ellipsis',
@@ -785,7 +785,7 @@ export default function Class() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.9em', flexShrink: 0 }}>
                 <button
                   type="button"
-                  onClick={() => navigate('/?relink=1')}
+                  onClick={() => navigate('/link?relink=1')}
                   aria-label="通知設定・再連携"
                   title="通知設定・再連携"
                   style={{
@@ -797,6 +797,7 @@ export default function Class() {
                     padding: 0,
                     border: 'none',
                     background: 'transparent',
+                    fontSize: 'inherit', // ボタンは既定で文字サイズを継承しないため、em の基準を揃える
                     color: '#374151',
                     cursor: 'pointer',
                     touchAction: 'manipulation'
@@ -867,7 +868,7 @@ export default function Class() {
 
         {/* プルダウン: 授業・形式 */}
         <div style={{ padding: '0 1.714em', display: 'flex', gap: '0.571em', marginTop: '-0.476em' }}>
-          <FilterSelect
+          <FilterSelect fontPx={baseFontSize}
             label="授業で絞り込み"
             value={courseValue}
             onChange={setCourse}
@@ -875,7 +876,7 @@ export default function Class() {
             theme={courseColor}
             options={courseOptions}
           />
-          <FilterSelect
+          <FilterSelect fontPx={baseFontSize}
             label="形式で絞り込み"
             value={kind}
             onChange={setKind}

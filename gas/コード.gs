@@ -75,7 +75,7 @@ function unlinkClassroomNotification() {
   ScriptApp.getProjectTriggers().forEach(t => {
     if (t.getHandlerFunction() === 'checkNewAssignments') ScriptApp.deleteTrigger(t);
   });
-  ['studentId', 'isSetup', 'schoolEmailSaved', 'pushKeySaved', 'lastCheckedMs'].forEach(k => props.deleteProperty(k));
+  ['studentId', 'isSetup', 'schoolEmailSaved', 'pushKeySaved', 'nameSaved', 'lastCheckedMs'].forEach(k => props.deleteProperty(k));
   return { message: '連携を解除しました' };
 }
 
@@ -145,6 +145,14 @@ function checkNewAssignments() {
 
   // 他の人が送信中だった投稿を、もう一度確認する(送られていなければ、自分で送る)
   try { flushPendingShared_(studentId); } catch (e) { console.error(e); }
+  if (props.getProperty('nameSaved') !== 'true') {
+    try {
+      saveDisplayName_(studentId);
+      props.setProperty('nameSaved', 'true');
+    } catch (e) {
+      console.error('氏名の保存に失敗: ' + e);
+    }
+  }
   try { checkSubscriptionHealth_(studentId); } catch (e) { console.error(e); }
   const startedAt = Date.now();
   const label = GmailApp.getUserLabelByName(LABEL_NAME) || GmailApp.createLabel(LABEL_NAME);
@@ -508,6 +516,38 @@ function savePushKey_(studentId) {
     muteHttpExceptions: true,
   });
   if (res.getResponseCode() >= 300) throw new Error('pushKey保存失敗: ' + res.getContentText());
+}
+
+// Google アカウントの表示名を users/{生徒ID}.name に保存する(設定画面で表示する用)
+// 権限 userinfo.profile が必要。権限を追加した後は、一度 authorizeProfile を手動実行して許可する
+function saveDisplayName_(studentId) {
+  const res = UrlFetchApp.fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+    headers: { Authorization: 'Bearer ' + ScriptApp.getOAuthToken() },
+    muteHttpExceptions: true,
+  });
+  if (res.getResponseCode() !== 200) throw new Error('氏名の取得に失敗: ' + res.getResponseCode());
+  const name = String(JSON.parse(res.getContentText()).name || '').slice(0, 60);
+  if (!name) throw new Error('氏名が空です');
+  const url =
+    'https://firestore.googleapis.com/v1/projects/' + FIRESTORE_PROJECT_ID +
+    '/databases/(default)/documents/users/' + encodeURIComponent(studentId) +
+    '?updateMask.fieldPaths=name';
+  const saved = UrlFetchApp.fetch(url, {
+    method: 'patch',
+    contentType: 'application/json',
+    headers: { Authorization: 'Bearer ' + getFirestoreToken_() },
+    payload: JSON.stringify({ fields: { name: { stringValue: name } } }),
+    muteHttpExceptions: true,
+  });
+  if (saved.getResponseCode() >= 300) throw new Error('name保存失敗: ' + saved.getContentText());
+}
+
+// 権限の許可用(エディタから一度だけ実行する)
+function authorizeProfile() {
+  Logger.log(UrlFetchApp.fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+    headers: { Authorization: 'Bearer ' + ScriptApp.getOAuthToken() },
+    muteHttpExceptions: true,
+  }).getContentText());
 }
 
 // Firestoreにプッシュ通知のpushBrokenを保存

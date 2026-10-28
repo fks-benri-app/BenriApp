@@ -11,12 +11,15 @@ function RequireIdentity({ children }) {
 }
 
 export default function App() {
-  const { ready } = useIdentity();
+  const { ready, identity } = useIdentity();
   // ログイン状態の確認が終わるまでは何も出さない(連携画面が一瞬ちらつくのを防ぐ)
   if (!ready) return null;
+  // 起動時に開く画面: 連携済みならお知らせ、未連携なら連携画面
+  const home = identity ? <Class /> : <LinkPage />;
   return (
     <Routes>
-      <Route path="/" element={<Settings />} />
+      <Route path="/" element={home} />
+      <Route path="/link" element={<LinkPage />} />
       <Route
         path="/class"
         element={
