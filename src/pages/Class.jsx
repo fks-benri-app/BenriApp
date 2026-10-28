@@ -25,6 +25,7 @@ import settingsActiveIcon from '../assets/images/icons/settings-active.svg';
 // ★ ヘッダー用アイコン
 import searchIcon from '../assets/images/icons/search.svg';
 import bellIcon from '../assets/images/icons/bell.svg';
+import readAllIcon from '../assets/images/icons/read-all.svg';
 
 const TABS = [
   { id: 'home', label: 'ホーム', icon: homeIcon, activeIcon: homeActiveIcon },
@@ -209,8 +210,9 @@ function FilterSelect({ value, onChange, allLabel, options, label, theme, fontPx
           ? `${chevron(onColor)}, ${shaded(theme.gradient)}`
           : chevron('%236B7280'),
         backgroundRepeat: 'no-repeat',
-        backgroundPosition: isActive ? 'right 9px center, 0 0' : 'right 9px center',
-        backgroundSize: isActive ? '13px, 100% 100%' : '13px',
+        // 選択中の背景は3層(矢印 / 暗くする層 / グラデーション)。位置とサイズも3つ分そろえる
+        backgroundPosition: isActive ? 'right 9px center, 0 0, 0 0' : 'right 9px center',
+        backgroundSize: isActive ? '13px, 100% 100%, 100% 100%' : '13px',
         color: isActive ? theme.textColor : 'var(--text-muted)',
         fontSize: `${fontPx}px`,
         fontWeight: isActive ? 700 : 400,
@@ -491,7 +493,7 @@ function DetailView({ ann, onBack, onOpenClassroom, onOpenUrl }) {
     >
       <style>{SHEET_CSS}</style>
       {/* 後ろの暗い部分(押すと閉じる) */}
-      <div onClick={onBack} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)', animation: 'fadeIn .18s ease-out' }} />
+      <div onClick={onBack} style={{ position: 'absolute', inset: 0, background: 'var(--overlay)', animation: 'fadeIn .18s ease-out' }} />
       <div style={{
         position: 'relative', display: 'flex', flexDirection: 'column', background: 'var(--surface)',
         height: 'calc(100% - max(2.2rem, env(safe-area-inset-top)))', borderRadius: '16px 16px 0 0',
@@ -785,6 +787,22 @@ export default function Class() {
 
               {/* 右上アイコン */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.9em', flexShrink: 0 }}>
+                {/* 一斉既読(ベル・検索と同じ並び。未読がないときは薄くして押せなくする) */}
+                <button
+                  type="button"
+                  onClick={readAllShown}
+                  disabled={unreadShown.length === 0}
+                  aria-label="表示中の未読をすべて既読にする"
+                  title="表示中の未読をすべて既読にする"
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    width: '1.571em', height: '1.571em', padding: 0, border: 'none', background: 'transparent',
+                    fontSize: 'inherit', opacity: unreadShown.length === 0 ? 0.35 : 1,
+                    cursor: unreadShown.length === 0 ? 'default' : 'pointer', touchAction: 'manipulation'
+                  }}
+                >
+                  <img className="icon-ink" src={readAllIcon} alt="" aria-hidden="true" draggable={false} style={{ width: '100%', height: '100%' }} />
+                </button>
                 <button
                   type="button"
                   onClick={() => navigate('/link?relink=1')}
@@ -888,23 +906,6 @@ export default function Class() {
             theme={kindColor}
             options={KIND_OPTIONS}
           />
-          {/* 一斉既読(ヘッダー内なのでスクロールしても見える) */}
-          <button
-            type="button"
-            onClick={readAllShown}
-            disabled={unreadShown.length === 0}
-            aria-label="表示中の未読をすべて既読にする"
-            title="表示中の未読をすべて既読にする"
-            style={{
-              marginLeft: 'auto', flexShrink: 0, width: '32px', height: '32px', padding: 0,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              border: '1px solid var(--line)', borderRadius: '10px', background: 'var(--surface)',
-              color: unreadShown.length === 0 ? 'var(--text-faint)' : 'var(--text-muted)',
-              cursor: unreadShown.length === 0 ? 'default' : 'pointer', touchAction: 'manipulation'
-            }}
-          >
-            <Icon name="doneAll" size={18} />
-          </button>
         </div>
       </header>
 
@@ -1079,7 +1080,7 @@ export default function Class() {
 
       {readAllAsk && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', fontFamily: GOOGLE_FONT }}>
-          <div onClick={() => setReadAllAsk(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)' }} />
+          <div onClick={() => setReadAllAsk(false)} style={{ position: 'absolute', inset: 0, background: 'var(--overlay)' }} />
           <div role="dialog" aria-modal="true" style={{ position: 'relative', width: '100%', maxWidth: '320px', background: 'var(--surface)', borderRadius: '20px', padding: '24px', userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none', boxShadow: '0 8px 24px rgba(0,0,0,0.2)' }}>
             <div style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text-strong)', marginBottom: '8px' }}>すべて既読にしますか?</div>
             <div style={{ fontSize: '14px', lineHeight: '20px', color: 'var(--text-muted)', marginBottom: '20px' }}>表示中の未読 {unreadShown.length} 件を既読にします。</div>

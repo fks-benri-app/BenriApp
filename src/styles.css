@@ -18,6 +18,7 @@
   --warn-bg: #fffbeb;
   --warn-fg: #b45309;
   --warn-line: #fcd34d;
+  --overlay: rgba(0, 0, 0, 0.4);
   --tag-shade: transparent;      /* 授業タグのグラデーションを暗くする重ね塗り(ダークだけ濃くする) */
   --illust-bg: transparent;       /* ログイン画像の下地(ダークでは白いパネルにする) */
   --danger-bg: #fff5f5;
@@ -134,13 +135,14 @@ html[data-theme="dark"] {
   --text-strong: #f2f2f4;
   --text-body: #d6d6db;
   --text-muted: #b0b0b8;
-  --text-faint: #71717a;
+  --text-faint: #8a8a93;
   --ink: #e5e7eb;
   --on-ink: #111827;
   --link: #8ab4ff;
   --warn-bg: #3a2d10;
   --warn-fg: #fcd34d;
   --warn-line: #6b5a1e;
+  --overlay: rgba(0, 0, 0, 0.65);
   --tag-shade: rgba(0, 0, 0, 0.25);
   --illust-bg: #f2f2f4;
   --danger-bg: #3b1d1d;

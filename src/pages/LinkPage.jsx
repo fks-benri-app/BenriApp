@@ -264,7 +264,7 @@ export default function LinkPage() {
         {/* 暗幕: 連携済み(再連携の確認)のときだけ、押すとお知らせに戻る */}
         <div
           onClick={() => { if (notifyDone && !busy) navigate('/class'); }}
-          style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)' }}
+          style={{ position: 'absolute', inset: 0, background: 'var(--overlay)' }}
         />
 
         <div
