@@ -39,7 +39,7 @@ function Section({ title, children }) {
         style={{
           padding: '0.286em 0',
           background: 'var(--surface)',
-          borderRadius: '1.714em',
+          borderRadius: '1.143em',
           outline: '1px var(--line) solid',
           outlineOffset: '-1px',
           display: 'flex',
@@ -114,7 +114,7 @@ function OutlineButton({ children, color, bg, border, onClick }) {
         height: '3.429em',
         background: bg,
         border: border ? `1px ${border} solid` : 'none',
-        borderRadius: '1.286em',
+        borderRadius: '0.857em',
         color,
         fontFamily: 'inherit',
         fontSize: '1.071em',
@@ -206,7 +206,7 @@ export default function Settings() {
             style={{
               padding: '0.857em 1.429em',
               background: 'var(--surface)',
-              borderRadius: '1.714em',
+              borderRadius: '1.143em',
               outline: '1px var(--line) solid',
               outlineOffset: '-1px',
               display: 'flex',
