@@ -200,16 +200,16 @@ function FilterSelect({ value, onChange, allLabel, options, label, theme, fontPx
         maxWidth: '50%',
         height: '32px',
         padding: '0 28px 0 12px',
-        border: isActive ? '1px solid transparent' : '1px solid #E5E7EB',
+        border: isActive ? '1px solid transparent' : '1px solid var(--line)',
         borderRadius: '10px',
-        backgroundColor: isActive ? 'transparent' : 'white',
+        backgroundColor: isActive ? 'transparent' : 'var(--surface)',
         backgroundImage: isActive
           ? `${chevron(onColor)}, ${theme.gradient}`
           : chevron('%236B7280'),
         backgroundRepeat: 'no-repeat',
         backgroundPosition: isActive ? 'right 9px center, 0 0' : 'right 9px center',
         backgroundSize: isActive ? '13px, 100% 100%' : '13px',
-        color: isActive ? theme.textColor : '#6B7280',
+        color: isActive ? theme.textColor : 'var(--text-muted)',
         fontSize: `${fontPx}px`,
         fontWeight: isActive ? 700 : 400,
         fontFamily: 'inherit',
@@ -222,9 +222,9 @@ function FilterSelect({ value, onChange, allLabel, options, label, theme, fontPx
         touchAction: 'manipulation'
       }}
     >
-      <option value="" style={{ color: '#111827', background: 'white' }}>{allLabel}</option>
+      <option value="" style={{ color: 'var(--text-strong)', background: 'var(--surface)' }}>{allLabel}</option>
       {options.map((o) => (
-        <option key={o.id} value={o.id} style={{ color: '#111827', background: 'white' }}>{o.label}</option>
+        <option key={o.id} value={o.id} style={{ color: 'var(--text-strong)', background: 'var(--surface)' }}>{o.label}</option>
       ))}
     </select>
   );
@@ -382,7 +382,7 @@ function Linkified({ text, onOpenUrl }) {
         key={i}
         href={p}
         onClick={(e) => { e.preventDefault(); onOpenUrl(p); }}
-        style={{ color: '#0b57d0', textDecoration: 'underline' }}
+        style={{ color: 'var(--link)', textDecoration: 'underline' }}
       >
         {p}
       </a>
@@ -446,11 +446,11 @@ function AttachmentCard({ f, onOpenUrl }) {
       onClick={() => onOpenUrl(f.url)}
       style={{
         display: 'flex', alignItems: 'stretch', width: '100%', minHeight: '72px', padding: 0, textAlign: 'left',
-        background: 'white', border: '1px solid #c4c7c5', borderRadius: '8px', overflow: 'hidden',
+        background: 'var(--surface)', border: '1px solid var(--line-strong)', borderRadius: '8px', overflow: 'hidden',
         cursor: 'pointer', font: 'inherit', color: 'inherit', touchAction: 'manipulation'
       }}
     >
-      <span style={{ width: '88px', flexShrink: 0, background: '#f0f4f9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#444746', borderRight: '1px solid #c4c7c5', position: 'relative' }}>
+      <span style={{ width: '88px', flexShrink: 0, background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-body)', borderRight: '1px solid var(--line-strong)', position: 'relative' }}>
         {showThumb ? (
           <img
             src={f.thumb}
@@ -465,8 +465,8 @@ function AttachmentCard({ f, onOpenUrl }) {
         )}
       </span>
       <span style={{ flex: 1, minWidth: 0, padding: '12px 16px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '2px' }}>
-        <span style={{ fontSize: '14px', lineHeight: '20px', fontWeight: 500, color: '#1f1f1f', wordBreak: 'break-all' }}>{f.title || f.url}</span>
-        <span style={{ fontSize: '12px', lineHeight: '16px', color: '#444746' }}>{attachmentLabel(f)}</span>
+        <span style={{ fontSize: '14px', lineHeight: '20px', fontWeight: 500, color: 'var(--text-strong)', wordBreak: 'break-all' }}>{f.title || f.url}</span>
+        <span style={{ fontSize: '12px', lineHeight: '16px', color: 'var(--text-body)' }}>{attachmentLabel(f)}</span>
       </span>
     </button>
   );
@@ -491,18 +491,18 @@ function DetailView({ ann, onBack, onOpenClassroom, onOpenUrl }) {
       {/* 後ろの暗い部分(押すと閉じる) */}
       <div onClick={onBack} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)', animation: 'fadeIn .18s ease-out' }} />
       <div style={{
-        position: 'relative', display: 'flex', flexDirection: 'column', background: 'white',
+        position: 'relative', display: 'flex', flexDirection: 'column', background: 'var(--surface)',
         height: 'calc(100% - max(2.2rem, env(safe-area-inset-top)))', borderRadius: '16px 16px 0 0',
         boxShadow: '0 -2px 12px rgba(0,0,0,0.2)', overflow: 'hidden', animation: 'sheetUp .22s ease-out'
       }}>
         <header style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 8px 8px 8px', borderBottom: '1px solid #e3e3e3' }}>
-          <button type="button" onClick={onBack} aria-label="閉じる" style={{ width: '48px', height: '48px', border: 'none', background: 'transparent', borderRadius: '50%', color: '#444746', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', touchAction: 'manipulation' }}>
+          <button type="button" onClick={onBack} aria-label="閉じる" style={{ width: '48px', height: '48px', border: 'none', background: 'transparent', borderRadius: '50%', color: 'var(--text-body)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', touchAction: 'manipulation' }}>
             <Icon name="close" />
           </button>
-          <div style={{ flex: 1, minWidth: 0, fontSize: '14px', fontWeight: 500, color: '#444746', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          <div style={{ flex: 1, minWidth: 0, fontSize: '14px', fontWeight: 500, color: 'var(--text-body)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {ann.courseFull || ann.subject}
           </div>
-          <button type="button" onClick={onOpenClassroom} aria-label="Classroomで開く" style={{ width: '48px', height: '48px', border: 'none', background: 'transparent', borderRadius: '50%', color: '#444746', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', touchAction: 'manipulation' }}>
+          <button type="button" onClick={onOpenClassroom} aria-label="Classroomで開く" style={{ width: '48px', height: '48px', border: 'none', background: 'transparent', borderRadius: '50%', color: 'var(--text-body)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', touchAction: 'manipulation' }}>
             <Icon name="open" />
           </button>
         </header>
@@ -514,20 +514,20 @@ function DetailView({ ann, onBack, onOpenClassroom, onOpenUrl }) {
               <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: style.bg, color: style.fg, display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '16px', flexShrink: 0 }}>
                 <Icon name={style.icon} size={24} />
               </div>
-              <h1 style={{ margin: 0, fontSize: '28px', lineHeight: '36px', fontWeight: 400, color: '#1f1f1f', overflowWrap: 'anywhere' }}>{heading}</h1>
+              <h1 style={{ margin: 0, fontSize: '28px', lineHeight: '36px', fontWeight: 400, color: 'var(--text-strong)', overflowWrap: 'anywhere' }}>{heading}</h1>
             </div>
             {/* 投稿者 • 日付 (+ 期限) */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', columnGap: '8px', rowGap: '8px', marginBottom: '16px', fontSize: '14px', lineHeight: '20px', color: '#444746' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', columnGap: '8px', rowGap: '8px', marginBottom: '16px', fontSize: '14px', lineHeight: '20px', color: 'var(--text-body)' }}>
               {ann.teacher && <span>{ann.teacher}</span>}
               {ann.teacher && <span aria-hidden="true">•</span>}
               <span>{ann.time}</span>
-              {ann.due && <span style={{ marginLeft: 'auto', color: '#1f1f1f' }}>期限: {ann.due}</span>}
+              {ann.due && <span style={{ marginLeft: 'auto', color: 'var(--text-strong)' }}>期限: {ann.due}</span>}
             </div>
-            <div style={{ borderBottom: '1px solid #c4c7c5', marginBottom: '16px' }} />
+            <div style={{ borderBottom: '1px solid var(--line-strong)', marginBottom: '16px' }} />
 
             {/* 本文: 整形なし */}
             {text && (
-              <div style={{ marginBottom: '16px', fontSize: '14px', lineHeight: '20px', color: '#1f1f1f' }}>
+              <div style={{ marginBottom: '16px', fontSize: '14px', lineHeight: '20px', color: 'var(--text-strong)' }}>
                 <PostText text={text} onOpenUrl={onOpenUrl} />
               </div>
             )}
@@ -542,7 +542,7 @@ function DetailView({ ann, onBack, onOpenClassroom, onOpenUrl }) {
             <button
               type="button"
               onClick={onOpenClassroom}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginTop: '8px', padding: '10px 24px', borderRadius: '100px', border: '1px solid #747775', background: 'white', color: '#0b57d0', fontFamily: 'inherit', fontSize: '14px', fontWeight: 500, cursor: 'pointer', touchAction: 'manipulation' }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginTop: '8px', padding: '10px 24px', borderRadius: '100px', border: '1px solid #747775', background: 'var(--surface)', color: 'var(--link)', fontFamily: 'inherit', fontSize: '14px', fontWeight: 500, cursor: 'pointer', touchAction: 'manipulation' }}
             >
               <Icon name="open" size={18} />
               Classroomで開く
@@ -690,7 +690,7 @@ export default function Class() {
       inset: 0,
       margin: 0,
       padding: 0,
-      background: 'white',
+      background: 'var(--surface)',
       display: 'flex',
       flexDirection: 'column',
       boxSizing: 'border-box',
@@ -710,7 +710,7 @@ export default function Class() {
         gap: '0.857em',
         paddingTop: 'calc(2em + env(safe-area-inset-top))',
         paddingBottom: '1.143em',
-        background: 'white',
+        background: 'var(--surface)',
         width: '100%'
       }}>
         <div style={{
@@ -742,8 +742,8 @@ export default function Class() {
                   border: 'none',
                   outline: 'none',
                   borderRadius: '0.857em',
-                  background: '#F3F4F6',
-                  color: '#111827',
+                  background: 'var(--surface-2)',
+                  color: 'var(--text-strong)',
                   fontSize: '16px', // 16px未満だと iPhone でフォーカス時に画面が拡大される
                   fontFamily: 'inherit',
                   boxSizing: 'border-box',
@@ -757,7 +757,7 @@ export default function Class() {
                 onKeyDown={(e) => { if (e.key === 'Enter') closeSearch(); }}
                 style={{
                   flexShrink: 0,
-                  color: '#6B7280',
+                  color: 'var(--text-muted)',
                   fontSize: '1em',
                   fontWeight: '600',
                   cursor: 'pointer',
@@ -772,7 +772,7 @@ export default function Class() {
           ) : (
             <>
               <div style={{
-                color: '#111827',
+                color: 'var(--text-strong)',
                 fontSize: '1.871em',
                 fontFamily: 'Inter',
                 fontWeight: '800',
@@ -798,7 +798,7 @@ export default function Class() {
                     border: 'none',
                     background: 'transparent',
                     fontSize: 'inherit', // ボタンは既定で文字サイズを継承しないため、em の基準を揃える
-                    color: '#374151',
+                    color: 'var(--text-body)',
                     cursor: 'pointer',
                     touchAction: 'manipulation'
                   }}
@@ -847,10 +847,10 @@ export default function Class() {
                   flexShrink: 0,
                   cursor: 'pointer',
                   backgroundImage: isActive ? 'linear-gradient(135deg, #FF4D4D 0%, #FF8A1B 100%)' : 'none',
-                  backgroundColor: isActive ? 'transparent' : 'white',
-                  outline: isActive ? 'none' : '1px #E5E7EB solid',
+                  backgroundColor: isActive ? 'transparent' : 'var(--surface)',
+                  outline: isActive ? 'none' : '1px var(--line) solid',
                   outlineOffset: '-1px',
-                  color: isActive ? 'white' : '#6B7280',
+                  color: isActive ? 'white' : 'var(--text-muted)',
                   fontSize: '1em',
                   fontWeight: isActive ? '700' : '400',
                   whiteSpace: 'nowrap',
@@ -894,8 +894,8 @@ export default function Class() {
             style={{
               marginLeft: 'auto', flexShrink: 0, width: '32px', height: '32px', padding: 0,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              border: '1px solid #E5E7EB', borderRadius: '10px', background: 'white',
-              color: unreadShown.length === 0 ? '#D1D5DB' : '#6B7280',
+              border: '1px solid var(--line)', borderRadius: '10px', background: 'var(--surface)',
+              color: unreadShown.length === 0 ? 'var(--text-faint)' : 'var(--text-muted)',
               cursor: unreadShown.length === 0 ? 'default' : 'pointer', touchAction: 'manipulation'
             }}
           >
@@ -922,16 +922,16 @@ export default function Class() {
         {pushBroken && !isPushRecentlyFixed() && (
           <div style={{
             gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: '0.8em', flexWrap: 'wrap',
-            padding: '0.8em 1em', background: '#FFFBEB', border: '1px solid #FCD34D',
-            borderRadius: '0.6em', color: '#B45309', fontSize: '0.9em', lineHeight: '1.5em'
+            padding: '0.8em 1em', background: 'var(--warn-bg)', border: '1px solid var(--warn-line)',
+            borderRadius: '0.6em', color: 'var(--warn-fg)', fontSize: '0.9em', lineHeight: '1.5em'
           }}>
             <span style={{ flex: '1 1 14em' }}>この端末に通知が届いていない可能性があります。</span>
             <button
               type="button"
               onClick={goRepairNotifications}
               style={{
-                padding: '0.5em 1em', border: 'none', borderRadius: '999px', background: '#111827',
-                color: 'white', fontSize: '1em', fontWeight: 600, cursor: 'pointer', touchAction: 'manipulation'
+                padding: '0.5em 1em', border: 'none', borderRadius: '999px', background: 'var(--ink)',
+                color: 'var(--on-ink)', fontSize: '1em', fontWeight: 600, cursor: 'pointer', touchAction: 'manipulation'
               }}
             >
               通知を直す
@@ -952,10 +952,10 @@ export default function Class() {
                   padding: ann.isUnread ? 'calc(1.143em - 1.5px)' : '1.143em',
                   border: ann.isUnread ? '1.5px solid transparent' : 'none',
                   background: ann.isUnread
-                    ? 'linear-gradient(white, white) padding-box, linear-gradient(135deg, #FF4D4D 0%, #FF8A1B 100%) border-box'
-                    : 'white',
+                    ? 'linear-gradient(var(--surface), var(--surface)) padding-box, linear-gradient(135deg, #FF4D4D 0%, #FF8A1B 100%) border-box'
+                    : 'var(--surface)',
                   borderRadius: '1.714em',
-                  outline: ann.isUnread ? 'none' : '1px #E5E7EB solid',
+                  outline: ann.isUnread ? 'none' : '1px var(--line) solid',
                   outlineOffset: '-1px',
                   display: 'flex',
                   flexDirection: 'column',
@@ -971,11 +971,11 @@ export default function Class() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.571em' }}>
                     <div style={{
                       padding: '0.286em 0.571em',
-                      background: courseThemeOrNull(ann.subject)?.gradient || '#F3F4F6',
+                      background: courseThemeOrNull(ann.subject)?.gradient || 'var(--surface-2)',
                       borderRadius: '0.429em'
                     }}>
                       <div style={{
-                        color: courseThemeOrNull(ann.subject)?.textColor || '#111827',
+                        color: courseThemeOrNull(ann.subject)?.textColor || 'var(--text-strong)',
                         fontSize: '0.786em',
                         fontWeight: '700'
                       }}>
@@ -996,7 +996,7 @@ export default function Class() {
                     )}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.429em' }}>
-                    <div style={{ color: '#6B7280', fontSize: '0.857em', fontWeight: '400' }}>
+                    <div style={{ color: 'var(--text-muted)', fontSize: '0.857em', fontWeight: '400' }}>
                       {ann.time}
                     </div>
                     {ann.isUnread && (
@@ -1004,14 +1004,14 @@ export default function Class() {
                     )}
                   </div>
                 </div>
-                <div style={{ color: '#111827', fontSize: '1em', lineHeight: 1.4286, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                <div style={{ color: 'var(--text-strong)', fontSize: '1em', lineHeight: 1.4286, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                   {ann.content}
                 </div>
               </article>
             );
           })
         ) : (
-          <div style={{ padding: '3em 0', textAlign: 'center', color: '#9CA3AF', gridColumn: '1 / -1', userSelect: 'none' }}>
+          <div style={{ padding: '3em 0', textAlign: 'center', color: 'var(--text-faint)', gridColumn: '1 / -1', userSelect: 'none' }}>
             {emptyMessage}
           </div>
         )}
@@ -1022,8 +1022,8 @@ export default function Class() {
         flexShrink: 0,
         padding: '0 1.143em env(safe-area-inset-bottom)',
         height: 'calc(4.571em + env(safe-area-inset-bottom))',
-        background: 'white',
-        borderTop: '1px #E5E7EB solid',
+        background: 'var(--surface)',
+        borderTop: '1px var(--line) solid',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -1062,7 +1062,7 @@ export default function Class() {
                 alt={tab.id}
               />
               <div style={{
-                color: isActive ? '#111827' : '#6B7280',
+                color: isActive ? 'var(--text-strong)' : 'var(--text-muted)',
                 fontSize: '0.786em',
                 fontWeight: '600'
               }}>
@@ -1076,12 +1076,12 @@ export default function Class() {
       {readAllAsk && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', fontFamily: GOOGLE_FONT }}>
           <div onClick={() => setReadAllAsk(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)' }} />
-          <div role="dialog" aria-modal="true" style={{ position: 'relative', width: '100%', maxWidth: '320px', background: 'white', borderRadius: '20px', padding: '24px', userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none', boxShadow: '0 8px 24px rgba(0,0,0,0.2)' }}>
-            <div style={{ fontSize: '18px', fontWeight: 600, color: '#111827', marginBottom: '8px' }}>すべて既読にしますか?</div>
-            <div style={{ fontSize: '14px', lineHeight: '20px', color: '#6B7280', marginBottom: '20px' }}>表示中の未読 {unreadShown.length} 件を既読にします。</div>
+          <div role="dialog" aria-modal="true" style={{ position: 'relative', width: '100%', maxWidth: '320px', background: 'var(--surface)', borderRadius: '20px', padding: '24px', userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none', boxShadow: '0 8px 24px rgba(0,0,0,0.2)' }}>
+            <div style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text-strong)', marginBottom: '8px' }}>すべて既読にしますか?</div>
+            <div style={{ fontSize: '14px', lineHeight: '20px', color: 'var(--text-muted)', marginBottom: '20px' }}>表示中の未読 {unreadShown.length} 件を既読にします。</div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-              <button type="button" onClick={() => setReadAllAsk(false)} style={{ padding: '10px 16px', border: 'none', background: 'transparent', color: '#6B7280', borderRadius: '999px', fontFamily: 'inherit', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>キャンセル</button>
-              <button type="button" onClick={confirmReadAll} style={{ padding: '10px 16px', border: 'none', background: '#111827', color: 'white', borderRadius: '999px', fontFamily: 'inherit', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>既読にする</button>
+              <button type="button" onClick={() => setReadAllAsk(false)} style={{ padding: '10px 16px', border: 'none', background: 'transparent', color: 'var(--text-muted)', borderRadius: '999px', fontFamily: 'inherit', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>キャンセル</button>
+              <button type="button" onClick={confirmReadAll} style={{ padding: '10px 16px', border: 'none', background: 'var(--ink)', color: 'var(--on-ink)', borderRadius: '999px', fontFamily: 'inherit', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>既読にする</button>
             </div>
           </div>
         </div>
