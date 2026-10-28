@@ -1,4 +1,5 @@
 import React from 'react';
+import { currentFontSize } from '../lib/fontSize';
 
 // ★ assets 内の通常アイコン(Class.jsx と同じ)
 import homeIcon from '../assets/images/icons/home.svg';
@@ -13,6 +14,7 @@ import settingsActiveIcon from '../assets/images/icons/settings-active.svg';
 // ★ ヘッダー用アイコン
 import searchIcon from '../assets/images/icons/search.svg';
 import bellIcon from '../assets/images/icons/bell.svg';
+import readAllIcon from '../assets/images/icons/read-all.svg';
 
 // このファイルは、Class.jsx の見た目の部分(ヘッダー・フィルター・カード・ボトムナビ)を、
 // スタイルそのままで写したもの。通知や検索・既読などの「機能」は付けていない(表示だけ)。
@@ -36,7 +38,6 @@ const FILTERS = [
 const NO_SCROLLBAR_CSS = '.no-scrollbar{scrollbar-width:none;-ms-overflow-style:none}.no-scrollbar::-webkit-scrollbar{display:none}';
 
 
-const DONE_ALL_PATH = 'M18 7l-1.41-1.41-6.34 6.34 1.41 1.41L18 7zm4.24-1.41L11.66 16.17 7.48 12l-1.41 1.41L11.66 19l12-12-1.42-1.41zM.41 13.41L6 19l1.41-1.41L1.83 12 .41 13.41z';
 
 // ===== プルダウンの見た目(Class.jsx の FilterSelect と同じ。選べない) =====
 const chevron = (color) =>
@@ -63,7 +64,7 @@ function FilterSelectView({ allLabel }) {
         backgroundPosition: 'right 9px center',
         backgroundSize: '13px',
         color: 'var(--text-muted)',
-        fontSize: '16px',
+        fontSize: 'inherit',
         fontWeight: 400,
         fontFamily: 'inherit',
         textOverflow: 'ellipsis',
@@ -177,12 +178,14 @@ export function TitleHeader({ title }) {
 
 // ===== お知らせ画面(Class.jsx)の見た目。ダイアログの背景に使う(カードは出さず「読み込み中…」) =====
 export default function ClassBackdrop() {
+  const baseFontSize = currentFontSize(); // Class.jsx と同じ基準の文字サイズ(設定画面の値)
   return (
     <div
       aria-hidden="true"
       style={{
         position: 'absolute',
         inset: 0,
+        fontSize: `${baseFontSize}px`,
         background: 'var(--surface)',
         display: 'flex',
         flexDirection: 'column',
@@ -226,6 +229,7 @@ export default function ClassBackdrop() {
 
           {/* 右上アイコン */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.9em', flexShrink: 0 }}>
+            <img className="icon-ink" src={readAllIcon} alt="" aria-hidden="true" draggable={false} style={{ width: '1.571em', height: '1.571em', userSelect: 'none', WebkitUserSelect: 'none' }} />
             <div
               style={{
                 display: 'inline-flex',
@@ -284,19 +288,6 @@ export default function ClassBackdrop() {
         <div style={{ padding: '0 1.714em', display: 'flex', gap: '0.571em', marginTop: '-0.476em' }}>
           <FilterSelectView allLabel="すべての授業" />
           <FilterSelectView allLabel="すべての形式" />
-          {/* 一斉既読 */}
-          <div
-            style={{
-              marginLeft: 'auto', flexShrink: 0, width: '32px', height: '32px', padding: 0,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              border: '1px solid var(--line)', borderRadius: '10px', background: 'var(--surface)',
-              color: 'var(--text-muted)', boxSizing: 'border-box'
-            }}
-          >
-            <svg width={18} height={18} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false" style={{ display: 'block', flexShrink: 0 }}>
-              <path d={DONE_ALL_PATH} />
-            </svg>
-          </div>
         </div>
       </header>
 
