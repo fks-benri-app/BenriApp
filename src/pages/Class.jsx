@@ -957,8 +957,8 @@ export default function Class() {
                   padding: ann.isUnread ? 'calc(1.143em - 1.5px)' : '1.143em',
                   border: ann.isUnread ? '1.5px solid transparent' : 'none',
                   background: ann.isUnread
-                    ? 'linear-gradient(var(--line), var(--line)) padding-box, linear-gradient(135deg, #FF4D4D 0%, #FF8A1B 100%) border-box'
-                    : 'var(--line)', // 枠線の色で塗る
+                    ? 'linear-gradient(var(--surface-2), var(--surface-2)) padding-box, linear-gradient(135deg, #FF4D4D 0%, #FF8A1B 100%) border-box'
+                    : 'var(--surface-2)', // 背景より一段だけ濃い面(枠線の色よりなじませる)
                   borderRadius: '1.143em',
                   display: 'flex',
                   flexDirection: 'column',
@@ -974,7 +974,7 @@ export default function Class() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.571em' }}>
                     <div style={{
                       padding: '0.286em 0.571em',
-                      background: shaded(courseThemeOrNull(ann.subject)?.gradient || 'var(--surface-2)'),
+                      background: shaded(courseThemeOrNull(ann.subject)?.gradient || 'var(--line)'),
                       borderRadius: '0.429em'
                     }}>
                       <div style={{
