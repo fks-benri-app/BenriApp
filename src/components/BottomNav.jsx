@@ -24,8 +24,8 @@ export default function BottomNav({ active, onSelect }) {
         flexShrink: 0,
         padding: '0 1.143em env(safe-area-inset-bottom)',
         height: 'calc(4.571em + env(safe-area-inset-bottom))',
-        background: 'white',
-        borderTop: '1px #E5E7EB solid',
+        background: 'var(--surface)',
+        borderTop: '1px var(--line) solid',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -59,7 +59,7 @@ export default function BottomNav({ active, onSelect }) {
               src={isActive ? tab.activeIcon : tab.icon}
               alt={tab.id}
             />
-            <div style={{ color: isActive ? '#111827' : '#6B7280', fontSize: '0.786em', fontWeight: '600' }}>
+            <div style={{ color: isActive ? 'var(--text-strong)' : 'var(--text-muted)', fontSize: '0.786em', fontWeight: '600' }}>
               {tab.label}
             </div>
           </div>

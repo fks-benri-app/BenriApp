@@ -46,9 +46,9 @@ const primaryBtn = {
   padding: '0.9em 1.2em',
   borderRadius: '1.286em',
   border: 'none',
-  background: 'black',
+  background: 'var(--ink)',
   boxShadow: '0px 8px 16px rgba(0, 0, 0, 0.20)',
-  color: 'white',
+  color: 'var(--on-ink)',
   fontSize: '1.143em',
   fontWeight: 700,
   cursor: 'pointer',
@@ -85,8 +85,8 @@ export function InstallSteps() {
                 width: '1.8em',
                 height: '1.8em',
                 borderRadius: '50%',
-                background: '#111827',
-                color: 'white',
+                background: 'var(--ink)',
+                color: 'var(--on-ink)',
                 fontSize: '0.9em',
                 fontWeight: 700,
                 display: 'flex',
@@ -96,7 +96,7 @@ export function InstallSteps() {
             >
               {i + 1}
             </span>
-            <span style={{ color: '#374151', fontSize: '0.95em', lineHeight: '1.6em' }}>{text}</span>
+            <span style={{ color: 'var(--text-body)', fontSize: '0.95em', lineHeight: '1.6em' }}>{text}</span>
           </li>
         ))}
       </ol>
@@ -109,10 +109,10 @@ export default function InstallGuide({ onSkip }) {
   return (
     <div style={{ width: '100%', maxWidth: '26em', display: 'flex', flexDirection: 'column', gap: '2em' }}>
       <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '0.3em' }}>
-        <div style={{ color: '#111827', fontSize: '1.4em', fontFamily: 'Inter', fontWeight: 800 }}>
+        <div style={{ color: 'var(--text-strong)', fontSize: '1.4em', fontFamily: 'Inter', fontWeight: 800 }}>
           ホーム画面に追加してください
         </div>
-        <div style={{ color: '#6B7280', fontSize: '1em', lineHeight: '1.5em' }}>
+        <div style={{ color: 'var(--text-muted)', fontSize: '1em', lineHeight: '1.5em' }}>
           {isIos
             ? 'iPhone では、ホーム画面に追加したアイコンから開かないと、通知を受け取れません。'
             : 'ホーム画面に追加すると、アプリのように開けて、通知も安定して届きます。'}
@@ -125,11 +125,11 @@ export default function InstallGuide({ onSkip }) {
         <button
           type="button"
           onClick={onSkip}
-          style={{ padding: '0.7em 1.2em', border: 'none', background: 'transparent', color: '#6B7280', fontFamily: 'inherit', fontSize: '0.95em', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
+          style={{ padding: '0.7em 1.2em', border: 'none', background: 'transparent', color: 'var(--text-muted)', fontFamily: 'inherit', fontSize: '0.95em', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
         >
           追加せずに、ログイン画面へ進む
         </button>
-        <div style={{ color: '#9CA3AF', fontSize: '0.8em', lineHeight: '1.5em', textAlign: 'center' }}>
+        <div style={{ color: 'var(--text-faint)', fontSize: '0.8em', lineHeight: '1.5em', textAlign: 'center' }}>
           ブラウザでログインしても、ホーム画面のアイコンからは、もう一度ログインが必要です。
         </div>
       </div>

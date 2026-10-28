@@ -1,7 +1,22 @@
+/* ===== 色のトークン =====
+   ライト: 下の :root。ダーク: html[data-theme="dark"] で、同じ名前の値だけを差し替える。
+   画面の部品は色を直書きせず、この変数を使う。アクセント色(赤→橙のグラデーションやコース色)は共通。 */
 :root {
   --bg: #f5f5f7;
-  --card: #ffffff;
-  --line: #e3e3e6;
+  --surface: #ffffff;        /* カードや一覧の背景 */
+  --surface-2: #f3f4f6;      /* 一段へこんだ背景、入力欄など */
+  --line: #e5e7eb;
+  --line-strong: #c4c7c5;
+  --text-strong: #111827;    /* 見出し・強い文字 */
+  --text-body: #374151;      /* 本文 */
+  --text-muted: #6b7280;     /* 補足 */
+  --text-faint: #9ca3af;     /* 無効・ほとんど目立たない文字 */
+  --ink: #111827;            /* 黒いボタンの背景 */
+  --on-ink: #ffffff;         /* 黒いボタンの文字 */
+  --link: #0b57d0;
+  --warn-bg: #fffbeb;
+  --warn-fg: #b45309;
+  --warn-line: #fcd34d;
   --text: #333;
   --muted: #8a8a8e;
   --blue: #5b8def;
@@ -34,7 +49,7 @@ body {
 .card {
   width: 100%;
   max-width: 400px;
-  background: var(--card);
+  background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 16px;
   padding: 32px 24px;
@@ -97,11 +112,30 @@ img {
 .steps li.done { color: var(--green); border-color: var(--green); }
 
 
-/* ===== ダークモード ===== */
-/* アプリの多くの色は画面内に直接書かれているため、画面全体を反転して暗くする。
-   画像は反転を戻して元の色に近づける。 */
-html[data-theme="dark"] { color-scheme: dark; }
-/* filter を付けると、中の position: fixed は #root 基準になる。#root を全画面に固定して、
-   各画面が高さ0に潰れないようにする */
-html[data-theme="dark"] #root { position: fixed; inset: 0; filter: invert(0.92) hue-rotate(180deg); }
-html[data-theme="dark"] #root img { filter: invert(1) hue-rotate(180deg); }
+/* ===== ダークモード =====
+   色を反転せず、黒系の背景に合わせて色の値を選び直す。
+   ・背景は真っ黒(#000)にせず、ごく暗いグレー。明るい面ほど少し明るくして、奥行きを出す。
+   ・文字は真っ白(#fff)にせず、少し落ち着いた白。コントラストは 4.5:1 以上を保つ。
+   ・彩度の高い色(ボタンの青など)は少し抑え、白い文字が読める明るさにする。
+   ・影は暗い背景では見えにくいので、影より境界線と面の明るさで区別する。 */
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #121214;
+  --surface: #1c1c1f;
+  --surface-2: #2a2a2e;
+  --line: #3a3a3f;
+  --line-strong: #5a5a61;
+  --text-strong: #f2f2f4;
+  --text-body: #d6d6db;
+  --text-muted: #a1a1aa;
+  --text-faint: #71717a;
+  --ink: #e5e7eb;
+  --on-ink: #111827;
+  --link: #8ab4ff;
+  --warn-bg: #3a2d10;
+  --warn-fg: #fcd34d;
+  --warn-line: #6b5a1e;
+  --text: #e6e6e8;
+  --muted: #a1a1aa;
+  --blue: #3f6fd0;
+}

@@ -11,7 +11,7 @@ import pkg from '../../package.json';
 const FEEDBACK_FORM_URL = 'https://forms.gle/pmiB1KdWofSkPgrd8';
 
 const NO_SCROLLBAR_CSS = '.no-scrollbar{scrollbar-width:none;-ms-overflow-style:none}.no-scrollbar::-webkit-scrollbar{display:none}';
-const GREY = '#9CA3AF';
+const GREY = 'var(--text-faint)';
 
 // 生徒ID(6桁)から学年・組・番号を読み取る。例: 250710 → 2025年入学の7組10番 → 今年度は2年7組10番
 // 年度は4月に切り替わる。学年が 1〜3 の範囲に入らないときは表示しない
@@ -27,20 +27,20 @@ function classOf(id) {
 
 const Chevron = ({ dim }) => (
   <svg width="1.143em" height="1.143em" viewBox="0 0 20 20" fill="none" aria-hidden="true" style={{ flexShrink: 0 }}>
-    <path d="M7.5 5l5 5-5 5" stroke={dim ? GREY : '#6B7280'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M7.5 5l5 5-5 5" style={{ stroke: dim ? GREY : 'var(--text-muted)' }} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
 function Section({ title, children }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.571em' }}>
-      <div style={{ color: '#6B7280', fontSize: '0.929em', fontWeight: 600, padding: '0 0.286em' }}>{title}</div>
+      <div style={{ color: 'var(--text-muted)', fontSize: '0.929em', fontWeight: 600, padding: '0 0.286em' }}>{title}</div>
       <div
         style={{
           padding: '0.286em 0',
-          background: 'white',
+          background: 'var(--surface)',
           borderRadius: '1.714em',
-          outline: '1px #E5E7EB solid',
+          outline: '1px var(--line) solid',
           outlineOffset: '-1px',
           display: 'flex',
           flexDirection: 'column',
@@ -52,7 +52,7 @@ function Section({ title, children }) {
   );
 }
 
-const Divider = () => <div style={{ height: '1px', background: '#E5E7EB' }} />;
+const Divider = () => <div style={{ height: '1px', background: 'var(--line)' }} />;
 
 // disabled の行は、文字も見た目も灰色にして、押せないことを示す
 function Row({ label, value, onClick, disabled, chevron = true }) {
@@ -73,8 +73,8 @@ function Row({ label, value, onClick, disabled, chevron = true }) {
         WebkitUserSelect: 'none',
       }}
     >
-      <div style={{ color: disabled ? GREY : '#111827', fontSize: '1.071em', fontWeight: 600 }}>{label}</div>
-      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4em', color: disabled ? GREY : '#6B7280', fontSize: '1.071em' }}>
+      <div style={{ color: disabled ? GREY : 'var(--text-strong)', fontSize: '1.071em', fontWeight: 600 }}>{label}</div>
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4em', color: disabled ? GREY : 'var(--text-muted)', fontSize: '1.071em' }}>
         {value}
         {onClick && chevron && <Chevron dim={disabled} />}
       </span>
@@ -89,7 +89,7 @@ function Switch({ on, disabled }) {
         width: '3.429em',
         height: '2em',
         padding: '0.143em',
-        background: on ? '#111827' : '#E5E7EB',
+        background: on ? 'var(--text-strong)' : 'var(--line)',
         borderRadius: '1em',
         display: 'flex',
         justifyContent: on ? 'flex-end' : 'flex-start',
@@ -99,7 +99,7 @@ function Switch({ on, disabled }) {
         transition: 'background 0.15s',
       }}
     >
-      <span style={{ width: '1.714em', height: '1.714em', background: 'white', borderRadius: '50%', boxShadow: '0 1px 2px rgba(0,0,0,0.06)' }} />
+      <span style={{ width: '1.714em', height: '1.714em', background: 'var(--surface)', borderRadius: '50%', boxShadow: '0 1px 2px rgba(0,0,0,0.06)' }} />
     </span>
   );
 }
@@ -155,7 +155,7 @@ export default function Settings() {
         inset: 0,
         margin: 0,
         padding: 0,
-        background: 'white',
+        background: 'var(--surface)',
         display: 'flex',
         flexDirection: 'column',
         boxSizing: 'border-box',
@@ -176,12 +176,12 @@ export default function Settings() {
           gap: '0.857em',
           paddingTop: 'calc(2em + env(safe-area-inset-top))',
           paddingBottom: '1.143em',
-          background: 'white',
+          background: 'var(--surface)',
           width: '100%',
         }}
       >
         <div style={{ padding: '0 1.714em', height: '34px', display: 'flex', alignItems: 'center' }}>
-          <div style={{ color: '#111827', fontSize: '1.871em', fontFamily: 'Inter', fontWeight: '800', userSelect: 'none' }}>
+          <div style={{ color: 'var(--text-strong)', fontSize: '1.871em', fontFamily: 'Inter', fontWeight: '800', userSelect: 'none' }}>
             設定
           </div>
         </div>
@@ -205,9 +205,9 @@ export default function Settings() {
           <div
             style={{
               padding: '0.857em 1.429em',
-              background: 'white',
+              background: 'var(--surface)',
               borderRadius: '1.714em',
-              outline: '1px #E5E7EB solid',
+              outline: '1px var(--line) solid',
               outlineOffset: '-1px',
               display: 'flex',
               alignItems: 'center',
@@ -219,7 +219,7 @@ export default function Settings() {
                 width: '4em',
                 height: '4em',
                 borderRadius: '50%',
-                background: '#F3F4F6',
+                background: 'var(--surface-2)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -227,15 +227,15 @@ export default function Settings() {
               }}
             >
               <svg width="1.8em" height="1.8em" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <circle cx="12" cy="8" r="4" stroke={GREY} strokeWidth="2" />
-                <path d="M4 20c1-4 4-6 8-6s7 2 8 6" stroke={GREY} strokeWidth="2" strokeLinecap="round" />
+                <circle cx="12" cy="8" r="4" style={{ stroke: GREY }} strokeWidth="2" />
+                <path d="M4 20c1-4 4-6 8-6s7 2 8 6" style={{ stroke: GREY }} strokeWidth="2" strokeLinecap="round" />
               </svg>
             </div>
             <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '0.286em' }}>
-              <div style={{ color: '#111827', fontSize: '1.286em', fontFamily: 'Inter', fontWeight: 700 }}>
+              <div style={{ color: 'var(--text-strong)', fontSize: '1.286em', fontFamily: 'Inter', fontWeight: 700 }}>
                 {accountName || 'ログイン中のアカウント'}
               </div>
-              <div style={{ color: '#6B7280', fontSize: '0.929em' }}>
+              <div style={{ color: 'var(--text-muted)', fontSize: '0.929em' }}>
                 {studentClass ? studentClass : `生徒ID ${identity ? identity.id : '-'}`}
               </div>
             </div>
@@ -260,7 +260,7 @@ export default function Settings() {
                 gap: '0.8em',
               }}
             >
-              <div style={{ color: '#111827', fontSize: '1.071em', fontWeight: 600 }}>文字サイズ</div>
+              <div style={{ color: 'var(--text-strong)', fontSize: '1.071em', fontWeight: 600 }}>文字サイズ</div>
               <select
                 aria-label="文字サイズ"
                 value={fontPx}
@@ -272,14 +272,14 @@ export default function Settings() {
                 style={{
                   height: '2.286em',
                   padding: '0 1.714em 0 0.857em',
-                  border: '1px solid #E5E7EB',
+                  border: '1px solid var(--line)',
                   borderRadius: '0.714em',
-                  backgroundColor: 'white',
+                  backgroundColor: 'var(--surface)',
                   backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 20 20'%3E%3Cpath d='M5 7.5l5 5 5-5' stroke='%236B7280' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
                   backgroundRepeat: 'no-repeat',
                   backgroundPosition: 'right 0.6em center',
                   backgroundSize: '0.9em',
-                  color: '#111827',
+                  color: 'var(--text-strong)',
                   fontSize: '1em',
                   fontFamily: 'inherit',
                   fontWeight: 600,
@@ -291,7 +291,7 @@ export default function Settings() {
                 }}
               >
                 {fontOptions.map((px) => (
-                  <option key={px} value={px} style={{ color: '#111827', background: 'white' }}>
+                  <option key={px} value={px} style={{ color: 'var(--text-strong)', background: 'var(--surface)' }}>
                     {px === FONT_SIZE_DEFAULT ? `${px}px（デフォルト）` : `${px}px`}
                   </option>
                 ))}
@@ -306,14 +306,14 @@ export default function Settings() {
           </Section>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.857em' }}>
-            <OutlineButton color="#111827" bg="white" border="#E5E7EB" onClick={() => navigate('/link?relink=1')}>
+            <OutlineButton color="var(--text-strong)" bg="white" border="var(--line)" onClick={() => navigate('/link?relink=1')}>
               再連携する
             </OutlineButton>
             <OutlineButton color="#DC2626" bg="#FFF5F5" border="#FECACA" onClick={() => setNote('アカウントの削除は準備中です。')}>
               アカウントを削除する
             </OutlineButton>
             {note && (
-              <div role="status" style={{ color: '#6B7280', fontSize: '0.929em', textAlign: 'center' }}>
+              <div role="status" style={{ color: 'var(--text-muted)', fontSize: '0.929em', textAlign: 'center' }}>
                 {note}
               </div>
             )}

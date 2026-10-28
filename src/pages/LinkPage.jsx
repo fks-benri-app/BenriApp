@@ -12,11 +12,11 @@ import InstallGuide, { InstallSteps, isIos, isStandalone, needsInstall } from '.
 const GOOGLE_FONT = "'Google Sans', Roboto, 'Hiragino Sans', 'Noto Sans JP', 'Yu Gothic UI', Arial, sans-serif";
 
 // Class.jsx の一斉既読ダイアログと同じ見た目
-const dialogTitle = { fontSize: '18px', fontWeight: 600, color: '#111827', marginBottom: '8px' };
-const dialogBody = { fontSize: '14px', lineHeight: '20px', color: '#6B7280', marginBottom: '20px' };
+const dialogTitle = { fontSize: '18px', fontWeight: 600, color: 'var(--text-strong)', marginBottom: '8px' };
+const dialogBody = { fontSize: '14px', lineHeight: '20px', color: 'var(--text-muted)', marginBottom: '20px' };
 const dialogActions = { display: 'flex', justifyContent: 'flex-end', gap: '8px', flexWrap: 'wrap' };
-const textBtn = (busy) => ({ padding: '10px 16px', border: 'none', background: 'transparent', color: '#6B7280', borderRadius: '999px', fontFamily: 'inherit', fontSize: '14px', fontWeight: 600, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.5 : 1 });
-const darkBtn = (busy) => ({ padding: '10px 16px', border: 'none', background: '#111827', color: 'white', borderRadius: '999px', fontFamily: 'inherit', fontSize: '14px', fontWeight: 600, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.85 : 1, display: 'inline-flex', alignItems: 'center', gap: '8px' });
+const textBtn = (busy) => ({ padding: '10px 16px', border: 'none', background: 'transparent', color: 'var(--text-muted)', borderRadius: '999px', fontFamily: 'inherit', fontSize: '14px', fontWeight: 600, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.5 : 1 });
+const darkBtn = (busy) => ({ padding: '10px 16px', border: 'none', background: 'var(--ink)', color: 'var(--on-ink)', borderRadius: '999px', fontFamily: 'inherit', fontSize: '14px', fontWeight: 600, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.85 : 1, display: 'inline-flex', alignItems: 'center', gap: '8px' });
 
 function GoogleG() {
   return (
@@ -139,7 +139,7 @@ export default function LinkPage() {
     inset: 0,
     margin: 0,
     padding: 0,
-    background: 'white',
+    background: 'var(--surface)',
     boxSizing: 'border-box',
     overflow: 'hidden',
     fontSize: `${baseFontSize}px`,
@@ -183,7 +183,7 @@ export default function LinkPage() {
             ) : (
               <>
                 {offline && notice('#FEF2F2', '#FECACA', '#DC2626', 'インターネットに接続されていません。接続してからもう一度お試しください。')}
-                {needsRelogin && notice('#FFFBEB', '#FCD34D', '#B45309', (
+                {needsRelogin && notice('var(--warn-bg)', 'var(--warn-line)', 'var(--warn-fg)', (
                   <>
                     <div style={{ fontWeight: 700, marginBottom: '0.3em' }}>ログイン方法が変わりました</div>
                     お手数ですが、下の「Googleでログイン」を押して、ログインし直してください。「連携済みです」と表示されたら、「再連携する」は押さず、左下の「←」(押せないときは右上の「×」)で戻ると完了です。
@@ -205,13 +205,13 @@ export default function LinkPage() {
                     width: '100%',
                     height: '3.857em',
                     borderRadius: '1.286em',
-                    border: '1px solid #E5E7EB',
-                    background: 'white',
+                    border: '1px solid var(--line)',
+                    background: 'var(--surface)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '0.8em',
-                    color: '#111827',
+                    color: 'var(--text-strong)',
                     fontFamily: 'inherit',
                     fontSize: '1.143em',
                     fontWeight: 700,
@@ -224,9 +224,9 @@ export default function LinkPage() {
                   Googleでログイン
                 </button>
 
-                {message && notice('#FFFBEB', '#FCD34D', '#B45309', message)}
+                {message && notice('var(--warn-bg)', 'var(--warn-line)', 'var(--warn-fg)', message)}
 
-                <div style={{ color: '#6B7280', fontSize: '0.85em', lineHeight: '1.5em', textAlign: 'center' }}>
+                <div style={{ color: 'var(--text-muted)', fontSize: '0.85em', lineHeight: '1.5em', textAlign: 'center' }}>
                   ※「このアプリは確認されていません」と表示された場合は、画面内の「詳細」→「(安全ではないページ)に移動」を選択してください。
                 </div>
 
@@ -234,7 +234,7 @@ export default function LinkPage() {
                   <button
                     type="button"
                     onClick={() => setGuideOpen(true)}
-                    style={{ padding: '0.5em 1em', border: 'none', background: 'transparent', color: '#6B7280', fontFamily: 'inherit', fontSize: '0.85em', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
+                    style={{ padding: '0.5em 1em', border: 'none', background: 'transparent', color: 'var(--text-muted)', fontFamily: 'inherit', fontSize: '0.85em', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
                   >
                     ホーム画面への追加方法を見る
                   </button>
@@ -268,7 +268,7 @@ export default function LinkPage() {
           role="dialog"
           aria-modal="true"
           aria-labelledby="link-dialog-title"
-          style={{ position: 'relative', width: '100%', maxWidth: '320px', maxHeight: '100%', overflowY: 'auto', background: 'white', borderRadius: '20px', padding: '24px', userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none', boxShadow: '0 8px 24px rgba(0,0,0,0.2)', boxSizing: 'border-box' }}
+          style={{ position: 'relative', width: '100%', maxWidth: '320px', maxHeight: '100%', overflowY: 'auto', background: 'var(--surface)', borderRadius: '20px', padding: '24px', userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none', boxShadow: '0 8px 24px rgba(0,0,0,0.2)', boxSizing: 'border-box' }}
         >
           {offline ? (
             <>
@@ -282,7 +282,7 @@ export default function LinkPage() {
               <div style={dialogBody}>
                 Classroomとの連携をやり直しますか?ログインし直したあと、通知の許可をもう一度行います。
               </div>
-              {message && <div style={{ ...dialogBody, color: '#B45309' }}>{message}</div>}
+              {message && <div style={{ ...dialogBody, color: 'var(--warn-fg)' }}>{message}</div>}
               <div style={dialogActions}>
                 <button type="button" onClick={() => navigate('/class')} disabled={busy} style={textBtn(busy)}>戻る</button>
                 <button type="button" onClick={confirmRestartLink} disabled={busy} style={darkBtn(busy)}>
@@ -307,7 +307,7 @@ export default function LinkPage() {
                 {storage.get('relinking') === '1' ? '通知を許可すると再連携が完了します' : '連携が完了しました'}
               </div>
               <div style={dialogBody}>最後に、通知を許可してください。</div>
-              {message && <div style={{ ...dialogBody, color: '#B45309' }}>{message}</div>}
+              {message && <div style={{ ...dialogBody, color: 'var(--warn-fg)' }}>{message}</div>}
               {slow && <div style={{ ...dialogBody, fontSize: '13px' }}>反応がないときは、しばらくして再度お試しください</div>}
               <div style={dialogActions}>
                 <button type="button" onClick={() => navigate('/class')} disabled={busy} style={textBtn(busy)}>あとで設定する</button>

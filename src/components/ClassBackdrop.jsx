@@ -55,14 +55,14 @@ function FilterSelectView({ allLabel }) {
         maxWidth: '50%',
         height: '32px',
         padding: '0 28px 0 12px',
-        border: '1px solid #E5E7EB',
+        border: '1px solid var(--line)',
         borderRadius: '10px',
-        backgroundColor: 'white',
+        backgroundColor: 'var(--surface)',
         backgroundImage: chevron('%236B7280'),
         backgroundRepeat: 'no-repeat',
         backgroundPosition: 'right 9px center',
         backgroundSize: '13px',
-        color: '#6B7280',
+        color: 'var(--text-muted)',
         fontSize: '16px',
         fontWeight: 400,
         fontFamily: 'inherit',
@@ -86,8 +86,8 @@ export function BottomNav({ activeTab, onSelect }) {
       flexShrink: 0,
       padding: '0 1.143em env(safe-area-inset-bottom)',
       height: 'calc(4.571em + env(safe-area-inset-bottom))',
-      background: 'white',
-      borderTop: '1px #E5E7EB solid',
+      background: 'var(--surface)',
+      borderTop: '1px var(--line) solid',
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
@@ -126,7 +126,7 @@ export function BottomNav({ activeTab, onSelect }) {
               alt={tab.id}
             />
             <div style={{
-              color: isActive ? '#111827' : '#6B7280',
+              color: isActive ? 'var(--text-strong)' : 'var(--text-muted)',
               fontSize: '0.786em',
               fontWeight: '600'
             }}>
@@ -149,8 +149,8 @@ export function TitleHeader({ title }) {
       gap: '0.857em',
       paddingTop: 'calc(2em + env(safe-area-inset-top))',
       paddingBottom: '1.143em',
-      background: 'white',
-      borderBottom: '1px #E5E7EB solid',
+      background: 'var(--surface)',
+      borderBottom: '1px var(--line) solid',
       width: '100%'
     }}>
       <div style={{
@@ -162,7 +162,7 @@ export function TitleHeader({ title }) {
         gap: '0.857em'
       }}>
         <div style={{
-          color: '#111827',
+          color: 'var(--text-strong)',
           fontSize: '1.871em',
           fontFamily: 'Inter',
           fontWeight: '800',
@@ -183,7 +183,7 @@ export default function ClassBackdrop() {
       style={{
         position: 'absolute',
         inset: 0,
-        background: 'white',
+        background: 'var(--surface)',
         display: 'flex',
         flexDirection: 'column',
         boxSizing: 'border-box',
@@ -203,7 +203,7 @@ export default function ClassBackdrop() {
         gap: '0.857em',
         paddingTop: 'calc(2em + env(safe-area-inset-top))',
         paddingBottom: '1.143em',
-        background: 'white',
+        background: 'var(--surface)',
         width: '100%'
       }}>
         <div style={{
@@ -215,7 +215,7 @@ export default function ClassBackdrop() {
           gap: '0.857em'
         }}>
           <div style={{
-            color: '#111827',
+            color: 'var(--text-strong)',
             fontSize: '1.871em',
             fontFamily: 'Inter',
             fontWeight: '800',
@@ -234,7 +234,7 @@ export default function ClassBackdrop() {
                 width: '2.5em',
                 height: '1.571em',
                 padding: 0,
-                color: '#374151'
+                color: 'var(--text-body)'
               }}
             >
               <img src={bellIcon} alt="" aria-hidden="true" draggable={false} style={{ width: '100%', height: '100%' }} />
@@ -260,10 +260,10 @@ export default function ClassBackdrop() {
                   borderRadius: '0.857em',
                   flexShrink: 0,
                   backgroundImage: isActive ? 'linear-gradient(135deg, #FF4D4D 0%, #FF8A1B 100%)' : 'none',
-                  backgroundColor: isActive ? 'transparent' : 'white',
-                  outline: isActive ? 'none' : '1px #E5E7EB solid',
+                  backgroundColor: isActive ? 'transparent' : 'var(--surface)',
+                  outline: isActive ? 'none' : '1px var(--line) solid',
                   outlineOffset: '-1px',
-                  color: isActive ? 'white' : '#6B7280',
+                  color: isActive ? 'white' : 'var(--text-muted)',
                   fontSize: '1em',
                   fontWeight: isActive ? '700' : '400',
                   whiteSpace: 'nowrap',
@@ -288,8 +288,8 @@ export default function ClassBackdrop() {
             style={{
               marginLeft: 'auto', flexShrink: 0, width: '32px', height: '32px', padding: 0,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              border: '1px solid #E5E7EB', borderRadius: '10px', background: 'white',
-              color: '#6B7280', boxSizing: 'border-box'
+              border: '1px solid var(--line)', borderRadius: '10px', background: 'var(--surface)',
+              color: 'var(--text-muted)', boxSizing: 'border-box'
             }}
           >
             <svg width={18} height={18} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false" style={{ display: 'block', flexShrink: 0 }}>
@@ -312,7 +312,7 @@ export default function ClassBackdrop() {
         gap: '0.857em',
         alignContent: 'start'
       }}>
-        <div style={{ padding: '3em 0', textAlign: 'center', color: '#9CA3AF', gridColumn: '1 / -1', userSelect: 'none' }}>
+        <div style={{ padding: '3em 0', textAlign: 'center', color: 'var(--text-faint)', gridColumn: '1 / -1', userSelect: 'none' }}>
           読み込み中…
         </div>
       </main>
