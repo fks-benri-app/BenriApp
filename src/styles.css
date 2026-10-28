@@ -101,5 +101,7 @@ img {
 /* アプリの多くの色は画面内に直接書かれているため、画面全体を反転して暗くする。
    画像は反転を戻して元の色に近づける。 */
 html[data-theme="dark"] { color-scheme: dark; }
-html[data-theme="dark"] #root { filter: invert(0.92) hue-rotate(180deg); }
+/* filter を付けると、中の position: fixed は #root 基準になる。#root を全画面に固定して、
+   各画面が高さ0に潰れないようにする */
+html[data-theme="dark"] #root { position: fixed; inset: 0; filter: invert(0.92) hue-rotate(180deg); }
 html[data-theme="dark"] #root img { filter: invert(1) hue-rotate(180deg); }
