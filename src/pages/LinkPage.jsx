@@ -190,12 +190,15 @@ export default function LinkPage() {
                   </>
                 ))}
 
-                <img
-                  draggable={false}
-                  src={loginIllustration}
-                  alt=""
-                  style={{ display: 'block', width: '100%', maxWidth: '15em', height: 'auto', margin: '0 auto' }}
-                />
+                {/* ダークでは、イラストの下地を白い角丸パネルにして、白基調の見た目を保つ */}
+                <div style={{ width: 'fit-content', margin: '0 auto', padding: '0.6em', borderRadius: '1.2em', background: 'var(--illust-bg)' }}>
+                  <img
+                    draggable={false}
+                    src={loginIllustration}
+                    alt=""
+                    style={{ display: 'block', width: '15em', maxWidth: '100%', height: 'auto', margin: '0 auto' }}
+                  />
+                </div>
 
                 <button
                   type="button"
