@@ -12,11 +12,11 @@ import InstallGuide, { InstallSteps, isIos, isStandalone, needsInstall } from '.
 const GOOGLE_FONT = "'Google Sans', Roboto, 'Hiragino Sans', 'Noto Sans JP', 'Yu Gothic UI', Arial, sans-serif";
 
 // Class.jsx の一斉既読ダイアログと同じ見た目
-const dialogTitle = { fontSize: '18px', fontWeight: 600, color: 'var(--text-strong)', marginBottom: '8px' };
-const dialogBody = { fontSize: '14px', lineHeight: '20px', color: 'var(--text-muted)', marginBottom: '20px' };
+const dialogTitle = { fontSize: '1.286em', fontWeight: 600, color: 'var(--text-strong)', marginBottom: '0.444em' };
+const dialogBody = { fontSize: '1em', lineHeight: '1.43em', color: 'var(--text-muted)', marginBottom: '1.43em' };
 const dialogActions = { display: 'flex', justifyContent: 'flex-end', gap: '8px', flexWrap: 'wrap' };
-const textBtn = (busy) => ({ padding: '10px 16px', border: 'none', background: 'transparent', color: 'var(--text-muted)', borderRadius: '999px', fontFamily: 'inherit', fontSize: '14px', fontWeight: 600, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.5 : 1 });
-const darkBtn = (busy) => ({ padding: '10px 16px', border: 'none', background: 'var(--ink)', color: 'var(--on-ink)', borderRadius: '999px', fontFamily: 'inherit', fontSize: '14px', fontWeight: 600, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.85 : 1, display: 'inline-flex', alignItems: 'center', gap: '8px' });
+const textBtn = (busy) => ({ padding: '0.714em 1.143em', border: 'none', background: 'transparent', color: 'var(--text-muted)', borderRadius: '999px', fontFamily: 'inherit', fontSize: '1em', fontWeight: 600, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.5 : 1 });
+const darkBtn = (busy) => ({ padding: '0.714em 1.143em', border: 'none', background: 'var(--ink)', color: 'var(--on-ink)', borderRadius: '999px', fontFamily: 'inherit', fontSize: '1em', fontWeight: 600, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.85 : 1, display: 'inline-flex', alignItems: 'center', gap: '8px' });
 
 function GoogleG() {
   return (
@@ -271,7 +271,7 @@ export default function LinkPage() {
           role="dialog"
           aria-modal="true"
           aria-labelledby="link-dialog-title"
-          style={{ position: 'relative', width: '100%', maxWidth: '320px', maxHeight: '100%', overflowY: 'auto', background: 'var(--surface)', borderRadius: '20px', padding: '24px', userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none', boxShadow: '0 8px 24px rgba(0,0,0,0.2)', boxSizing: 'border-box' }}
+          style={{ position: 'relative', width: '100%', maxWidth: '22.857em', maxHeight: '100%', overflowY: 'auto', background: 'var(--surface)', borderRadius: '1.143em', padding: '1.714em', userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none', boxShadow: '0 8px 24px rgba(0,0,0,0.2)', boxSizing: 'border-box' }}
         >
           {offline ? (
             <>
@@ -311,7 +311,7 @@ export default function LinkPage() {
               </div>
               <div style={dialogBody}>最後に、通知を許可してください。</div>
               {message && <div style={{ ...dialogBody, color: 'var(--warn-fg)' }}>{message}</div>}
-              {slow && <div style={{ ...dialogBody, fontSize: '13px' }}>反応がないときは、しばらくして再度お試しください</div>}
+              {slow && <div style={{ ...dialogBody, fontSize: '0.929em' }}>反応がないときは、しばらくして再度お試しください</div>}
               <div style={dialogActions}>
                 <button type="button" onClick={() => navigate('/class')} disabled={busy} style={textBtn(busy)}>あとで設定する</button>
                 <button type="button" onClick={enableNotifications} disabled={busy} aria-busy={busy} style={darkBtn(busy)}>

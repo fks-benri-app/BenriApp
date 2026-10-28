@@ -21,8 +21,8 @@
   --overlay: rgba(0, 0, 0, 0.4);
   --tag-shade: transparent;      /* 授業タグのグラデーションを暗くする重ね塗り(ダークだけ濃くする) */
   --illust-bg: transparent;       /* ログイン画像の下地(ダークでは白いパネルにする) */
-  --danger-bg: #fff5f5;
-  --danger-fg: #dc2626;
+  --danger-bg: #dc2626;
+  --danger-fg: #ffffff;
   --text: #333;
   --muted: #8a8a8e;
   --blue: #5b8def;
@@ -145,8 +145,8 @@ html[data-theme="dark"] {
   --overlay: rgba(0, 0, 0, 0.65);
   --tag-shade: rgba(0, 0, 0, 0.25);
   --illust-bg: #f2f2f4;
-  --danger-bg: #3b1d1d;
-  --danger-fg: #fca5a5;
+  --danger-bg: #b91c1c;
+  --danger-fg: #ffffff;
   --text: #e6e6e8;
   --muted: #a1a1aa;
   --blue: #3f6fd0;
