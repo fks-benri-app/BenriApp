@@ -806,6 +806,7 @@ export default function Class() {
                   }}
                 >
                   <img
+                    className="icon-ink"
                     src={bellIcon}
                     alt=""
                     aria-hidden="true"
@@ -827,6 +828,7 @@ export default function Class() {
                     WebkitUserSelect: 'none',
                     touchAction: 'manipulation'
                   }}
+                  className="icon-ink"
                   src={searchIcon}
                   alt="検索"
                 />

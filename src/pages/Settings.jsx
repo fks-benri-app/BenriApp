@@ -89,7 +89,7 @@ function Switch({ on, disabled }) {
         width: '3.429em',
         height: '2em',
         padding: '0.143em',
-        background: on ? 'var(--text-strong)' : 'var(--line)',
+        background: on ? 'var(--text-strong)' : 'var(--switch-off)',
         borderRadius: '1em',
         display: 'flex',
         justifyContent: on ? 'flex-end' : 'flex-start',

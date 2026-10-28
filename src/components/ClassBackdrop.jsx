@@ -237,11 +237,12 @@ export default function ClassBackdrop() {
                 color: 'var(--text-body)'
               }}
             >
-              <img src={bellIcon} alt="" aria-hidden="true" draggable={false} style={{ width: '100%', height: '100%' }} />
+              <img className="icon-ink" src={bellIcon} alt="" aria-hidden="true" draggable={false} style={{ width: '100%', height: '100%' }} />
             </div>
             <img
               draggable={false}
               style={{ width: '1.571em', height: '1.571em', userSelect: 'none', WebkitUserSelect: 'none' }}
+              className="icon-ink"
               src={searchIcon}
               alt=""
             />
