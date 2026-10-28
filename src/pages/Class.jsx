@@ -185,6 +185,8 @@ const courseTheme = (label) => courseThemeOrNull(label) || themeOf(DEFAULT_THEME
 const chevron = (color) =>
   `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='${color}' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`;
 
+// 授業の色の上に、ダークのときだけ薄く暗くする層を重ねる(色は変えず、明度だけ下げる)
+const shaded = (gradient) => `linear-gradient(var(--tag-shade), var(--tag-shade)), ${gradient}`;
 // theme: 選んでいるときの色 { gradient, textColor }
 function FilterSelect({ value, onChange, allLabel, options, label, theme, fontPx }) {
   const isActive = value !== '';
@@ -204,7 +206,7 @@ function FilterSelect({ value, onChange, allLabel, options, label, theme, fontPx
         borderRadius: '10px',
         backgroundColor: isActive ? 'transparent' : 'var(--surface)',
         backgroundImage: isActive
-          ? `${chevron(onColor)}, ${theme.gradient}`
+          ? `${chevron(onColor)}, ${shaded(theme.gradient)}`
           : chevron('%236B7280'),
         backgroundRepeat: 'no-repeat',
         backgroundPosition: isActive ? 'right 9px center, 0 0' : 'right 9px center',
@@ -971,7 +973,7 @@ export default function Class() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.571em' }}>
                     <div style={{
                       padding: '0.286em 0.571em',
-                      background: courseThemeOrNull(ann.subject)?.gradient || 'var(--surface-2)',
+                      background: shaded(courseThemeOrNull(ann.subject)?.gradient || 'var(--surface-2)'),
                       borderRadius: '0.429em'
                     }}>
                       <div style={{
@@ -986,7 +988,7 @@ export default function Class() {
                       <div style={{
                         padding: '0.286em 0.571em',
                         borderRadius: '0.429em',
-                        background: themeOf(KIND_THEMES[ann.kind]).gradient,
+                        background: shaded(themeOf(KIND_THEMES[ann.kind]).gradient),
                         color: themeOf(KIND_THEMES[ann.kind]).textColor,
                         fontSize: '0.786em',
                         fontWeight: '700'

@@ -113,7 +113,7 @@ function OutlineButton({ children, color, bg, border, onClick }) {
         width: '100%',
         height: '3.429em',
         background: bg,
-        border: `1px ${border} solid`,
+        border: border ? `1px ${border} solid` : 'none',
         borderRadius: '1.286em',
         color,
         fontFamily: 'inherit',
@@ -306,10 +306,10 @@ export default function Settings() {
           </Section>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.857em' }}>
-            <OutlineButton color="var(--text-strong)" bg="white" border="var(--line)" onClick={() => navigate('/link?relink=1')}>
+            <OutlineButton color="var(--text-strong)" bg="var(--surface)" border="var(--line)" onClick={() => navigate('/link?relink=1')}>
               再連携する
             </OutlineButton>
-            <OutlineButton color="#DC2626" bg="#FFF5F5" border="#FECACA" onClick={() => setNote('アカウントの削除は準備中です。')}>
+            <OutlineButton color="var(--danger-fg)" bg="var(--danger-bg)" border={null} onClick={() => setNote('アカウントの削除は準備中です。')}>
               アカウントを削除する
             </OutlineButton>
             {note && (
