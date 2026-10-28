@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; }
+      body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+        -webkit-tap-highlight-color: transparent;
+        -webkit-text-size-adjust: 100%;
+      }
+
+      /* アプリ(React側)と同じ: 画面に固定し、ヘッダーは動かず、中央のカードだけがスクロールする */
+      .app {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        background: white;
+        font-size: 14px;
+        overflow: hidden;
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
+      }
+
+      main {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        padding: 0.857em 1.714em;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+      }
+
+      .card {
+        position: relative;
+        width: 100%;
+        max-width: 500px;
+        padding: 2.5em 1.8em 4em;
+        background: white;
+        border-radius: 1.2em;
+        outline: 1px #E5E7EB solid;
+        outline-offset: -1px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+        display: flex;
+        flex-direction: column;
+        gap: 1.2em;
+        margin: auto 0; /* 内容が少ないときは縦の中央、多いときは上からスクロール */
+        text-align: center;
+      }
+
+      h1 {
+        margin: 0;
+        color: #111827;
+        font-size: 1.4em;
+        font-weight: 800;
+      }
+      .sub {
+        margin: 0.4em 0 0;
+        color: #6B7280;
+        font-size: 0.95em;
+        line-height: 1.6em;
+      }
+      .ill { display: block; }
+      .illustration {
+        display: block;
+        width: 100%;
+        max-width: 15em;
+        height: auto;
+        margin: 0 auto;
+        pointer-events: none;
+        -webkit-user-drag: none;
+      }
+
+      .btn {
+        position: relative;
+        overflow: hidden;
+        width: 100%;
+        padding: 0.9em 1.2em;
+        border: none;
+        border-radius: 0.5em;
+        background: #111827;
+        color: white;
+        font-family: inherit;
+        font-size: 1.05em;
+        font-weight: 700;
+        cursor: pointer;
+        touch-action: manipulation;
+      }
+      .btn:disabled { cursor: default; opacity: 0.9; }
+      .btn.secondary { background: white; color: #374151; border: 1px solid #D1D5DB; }
+      .btn.loading, .btn:disabled.loading { background: #6B7280; color: white; opacity: 1; }
+      .btn.loading .fill { background: #111827; }
+      .btn:focus-visible { outline: 3px solid #2d5fc9; outline-offset: 2px; }
+      /* 設定中の進み具合(押してから少しずつ白く塗られる) */
+      .btn .fill {
+        position: absolute;
+        top: 0; left: 0; bottom: 0;
+        width: 0%;
+        background: rgba(255, 255, 255, 0.28);
+        z-index: 0;
+      }
+      .btn .label {
+        position: relative;
+        z-index: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.6em;
+      }
+      .spinner { width: 1.1em; height: 1.1em; }
+
+      .hint {
+        margin: 0;
+        color: #6B7280;
+        font-size: 0.85em;
+        line-height: 1.5em;
+      }
+      .hint a { color: #2563eb; text-decoration: underline; }
+
+      /* エラー表示(アプリ側のお知らせボックスと同じ) */
+      .status {
+        display: none;
+        padding: 0.8em 1em;
+        background: #FFFBEB;
+        border: 1px solid #FCD34D;
+        border-radius: 0.6em;
+        color: #B45309;
+        font-size: 0.9em;
+        line-height: 1.5em;
+        white-space: pre-wrap;
+      }
+      .status.visible { display: block; }
+
+      .back-btn {
+        position: absolute;
+        bottom: 1.3em;
+        left: 1.4em;
+        width: 1.5em;
+        height: 1.5em;
+        padding: 0;
+        border: none;
+        background: transparent;
+        color: #434343;
+        cursor: pointer;
+        touch-action: manipulation;
+      }
+      .settings-link {
+        color: #2563eb;
+        text-decoration: underline;
+      }
+      .back-btn svg { display: block; width: 100%; height: 100%; }
+      .hidden { display: none !important; }
+
+      /* モーダル用CSS */
+      .confirm-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+
+      .confirm-overlay.visible {
+        display: flex;
+      }
+
+      .confirm-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+      }
+
+      .confirm-dialog {
+        position: relative;
+        width: 100%;
+        max-width: 320px;
+        padding: 24px;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        text-align: left;
+      }
+
+      .confirm-title {
+        margin-bottom: 8px;
+        color: #111827;
+        font-size: 18px;
+        font-weight: 600;
+      }
+
+      .confirm-description {
+        margin-bottom: 20px;
+        color: #6B7280;
+        font-size: 14px;
+        line-height: 20px;
+      }
+
+      .confirm-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      .confirm-cancel,
+      .confirm-submit {
+        padding: 10px 16px;
+        border: none;
+        border-radius: 999px;
+        font: inherit;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      .confirm-cancel {
+        background: transparent;
+        color: #6B7280;
+      }
+
+      .confirm-submit {
+        background: #111827;
+        color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <main>
+        <div class="card">
+          <div>
+            <? if (isAlreadySet) { ?>
+              <h1 id="title">連携済みです</h1>
+              <p id="sub" class="sub">新着課題は自動で通知されます</p>
+            <? } else { ?>
+              <h1 id="title">あともう少しです</h1>
+              <p id="sub" class="sub hidden"></p>
+            <? } ?>
+          </div>
+
+          <!-- 連携前のイラスト(ベル) -->
+          <div id="illNotify" class="ill <?= isAlreadySet ? 'hidden' : '' ?>"><svg class="illustration" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 200" fill="none" role="img" aria-label="お知らせが通知で届くイメージ">
+            <defs><linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF4D4D"/><stop offset="1" stop-color="#FF8A1B"/></linearGradient></defs>
+            <circle cx="120" cy="104" r="86" fill="#FFF3EC"/>
+            <rect x="48" y="52" width="144" height="108" rx="20" fill="#fff" stroke="#E5E7EB" stroke-width="2"/>
+            <rect x="66" y="70" width="36" height="14" rx="7" fill="#F3F4F6"/>
+            <rect x="108" y="73" width="46" height="8" rx="4" fill="#E5E7EB"/>
+            <rect x="66" y="98" width="108" height="8" rx="4" fill="#E5E7EB"/>
+            <rect x="66" y="114" width="88" height="8" rx="4" fill="#E5E7EB"/>
+            <rect x="66" y="130" width="58" height="8" rx="4" fill="#F3F4F6"/>
+            <circle cx="176" cy="56" r="28" fill="url(#g1)"/>
+            <path d="M176 42c-6.5 0-11 4.8-11 11v6.5l-3.5 5.5h29l-3.5-5.5V53c0-6.2-4.5-11-11-11z" fill="#fff"/>
+            <path d="M172.3 68.5a3.7 3.7 0 0 0 7.4 0z" fill="#fff"/>
+            <circle cx="176" cy="40.5" r="2" fill="#fff"/>
+          </svg></div>
+
+          <!-- 連携後のイラスト(チェック) -->
+          <div id="illDone" class="ill <?= isAlreadySet ? '' : 'hidden' ?>"><svg class="illustration" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 200" fill="none" role="img" aria-label="Classroomとの連携が完了したイメージ">
+            <defs><linearGradient id="g2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF4D4D"/><stop offset="1" stop-color="#FF8A1B"/></linearGradient></defs>
+            <circle cx="120" cy="104" r="86" fill="#FFF3EC"/>
+            <rect x="48" y="52" width="144" height="108" rx="20" fill="#fff" stroke="#E5E7EB" stroke-width="2"/>
+            <rect x="66" y="70" width="36" height="14" rx="7" fill="#F3F4F6"/>
+            <rect x="108" y="73" width="46" height="8" rx="4" fill="#E5E7EB"/>
+            <rect x="66" y="98" width="108" height="8" rx="4" fill="#E5E7EB"/>
+            <rect x="66" y="114" width="88" height="8" rx="4" fill="#E5E7EB"/>
+            <rect x="66" y="130" width="58" height="8" rx="4" fill="#F3F4F6"/>
+            <circle cx="176" cy="56" r="28" fill="url(#g2)"/>
+            <path d="M164.5 56.5l8 8 15-16" stroke="#fff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg></div>
+
+          <div style="display:flex; flex-direction:column; gap:1.2em;">
+            <div id="linkedArea" class="<?= isAlreadySet ? '' : 'hidden' ?>">
+              <button id="unlinkBtn" class="btn secondary" onclick="unlinkAndRestart()">
+                再連携する
+              </button>
+            </div>
+
+            <div id="setupArea" class="<?= isAlreadySet ? 'hidden' : '' ?>">
+              <button id="setupBtn" class="btn" onclick="startSetup()">
+                <div id="fill" class="fill"></div>
+                <span id="btnLabel" class="label">連携を開始する</span>
+              </button>
+
+              <p id="hint" class="hint">
+                事前に<a href="https://accounts.google.com/AccountChooser?Email=<?= schoolEmail ?>&amp;continue=https://classroom.google.com/u/0/s" target="_blank">Classroomの通知設定</a>でメール通知をオンにしてください
+              </p>
+            </div>
+
+            <div id="status" class="status"></div>
+          </div>
+
+          <button id="backArrow" class="back-btn" type="button" onclick="returnToApp()" aria-label="アプリに戻る"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true"><path d="m313-440 224 224-57 56-320-320 320-320 57 56-224 224h487v80H313Z"/></svg></button>
+        </div>
+      </main>
+    </div>
+
+    <!-- 確認モーダル -->
+    <div id="unlinkConfirm" class="confirm-overlay">
+      <div class="confirm-backdrop" onclick="closeUnlinkConfirm()"></div>
+
+      <div class="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="unlinkConfirmTitle">
+        <div id="unlinkConfirmTitle" class="confirm-title">
+          Classroomとの連携を解除しますか？
+        </div>
+
+        <div class="confirm-description">
+          連携を解除して、もう一度連携します。
+        </div>
+
+        <div class="confirm-actions">
+          <button type="button" class="confirm-cancel" onclick="closeUnlinkConfirm()">
+            キャンセル
+          </button>
+          <button type="button" class="confirm-submit" onclick="performUnlinkAndRestart()">
+            再連携する
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // ===== 画像の指定 =====
+      // 使いたい画像のURL(GitHub Pages などに置いた .svg / .png)を入れると、その画像に差し替わります。
+      // 空のまま、または読み込めなかったときは、内蔵のイラストを使います。
+      const IMAGE_URLS = {
+        notify: 'https://fks-benri-app.github.io/BenriApp/p1.svg', // 連携前に出す画像
+        done: 'https://fks-benri-app.github.io/BenriApp/p3.svg'    // 連携が完了したあとに出す画像
+      };
+
+      function applyImages() {
+        Object.keys(IMAGE_URLS).forEach(function(key) {
+          const url = IMAGE_URLS[key];
+          const holder = document.getElementById(key === 'notify' ? 'illNotify' : 'illDone');
+          if (!url || !holder) return;
+          const fallback = holder.innerHTML;
+          const img = new Image();
+          img.className = 'illustration';
+          img.alt = '';
+          img.draggable = false;
+          img.onerror = function() { holder.innerHTML = fallback; };
+          img.src = url;
+          holder.innerHTML = '';
+          holder.appendChild(img);
+        });
+      }
+      applyImages();
+
+      const initialStudentId = "<?= studentId ?>";
+      window.__studentId = initialStudentId || null;
+
+      // ===== アプリに戻るためのトークンを、先に取っておく =====
+      // iPhone(Safari)は、ボタンを押してから約1秒たつと「押した操作」とみなさなくなり、
+      // その後の window.top.location の書き換えを無言でブロックする。
+      // 押してからトークンを取りに行くと間に合わないため、画面を開いたとき(と連携が終わったとき)に取っておく。
+      // トークンは5分で切れるので、4分たったものは使わない。
+      const APP_URL = 'https://fks-benri-app.github.io/BenriApp/';
+      const TOKEN_FRESH_MS = 4 * 60 * 1000;
+      let loginToken = null;
+      let loginTokenAt = 0;
+      let tokenFetching = false;
+
+      function tokenIsFresh() {
+        return !!loginToken && Date.now() - loginTokenAt < TOKEN_FRESH_MS;
+      }
+
+      function fetchLoginToken(onDone, onFail) {
+        if (!window.__studentId || tokenFetching) return;
+        tokenFetching = true;
+        google.script.run
+          .withSuccessHandler(function(token) {
+            tokenFetching = false;
+            loginToken = token;
+            loginTokenAt = Date.now();
+            if (onDone) onDone();
+          })
+          .withFailureHandler(function(err) {
+            tokenFetching = false;
+            if (onFail) onFail(err);
+          })
+          .getLoginToken();
+      }
+
+      if (window.__studentId) fetchLoginToken();
+
+      const SPINNER =
+        '<svg class="spinner" viewBox="0 0 24 24" fill="none" aria-hidden="true">' +
+        '<circle cx="12" cy="12" r="9" stroke="currentColor" stroke-opacity="0.25" stroke-width="3"/>' +
+        '<path d="M12 3a9 9 0 0 1 9 9" stroke="currentColor" stroke-width="3" stroke-linecap="round">' +
+        '<animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="0.9s" repeatCount="indefinite"/>' +
+        '</path></svg>';
+
+      function unlinkAndRestart() {
+        openUnlinkConfirm();
+      }
+
+      function openUnlinkConfirm() {
+        document.getElementById('unlinkConfirm').classList.add('visible');
+      }
+
+      function closeUnlinkConfirm() {
+        document.getElementById('unlinkConfirm').classList.remove('visible');
+      }
+
+      function performUnlinkAndRestart() {
+        closeUnlinkConfirm();
+
+        const unlinkBtn = document.getElementById('unlinkBtn');
+        const status = document.getElementById('status');
+
+        unlinkBtn.disabled = true;
+        unlinkBtn.textContent = '解除しています...';
+        status.classList.remove('visible');
+
+        google.script.run
+          .withSuccessHandler(function() {
+            window.__studentId = null;
+
+            // 連携解除後、同じ画面から通常のセットアップを開始する
+            document.getElementById('title').textContent = 'あともう少しです';
+            const sub = document.getElementById('sub');
+            sub.textContent = '';
+            sub.classList.add('hidden');
+            document.getElementById('illDone').classList.add('hidden');
+            document.getElementById('illNotify').classList.remove('hidden');
+            document.getElementById('linkedArea').classList.add('hidden');
+            document.getElementById('setupArea').classList.remove('hidden');
+            document.getElementById('backArrow').style.display = '';
+            startSetup();
+          })
+          .withFailureHandler(function(err) {
+            unlinkBtn.disabled = false;
+            unlinkBtn.textContent = '再連携する';
+            status.textContent = '解除に失敗しました: ' + (err && err.message ? err.message : err);
+            status.classList.add('visible');
+          })
+          .unlinkClassroomNotification();
+      }
+
+      function startSetup() {
+        const setupBtn = document.getElementById('setupBtn');
+        const fill = document.getElementById('fill');
+        const label = document.getElementById('btnLabel');
+        const status = document.getElementById('status');
+
+        setupBtn.disabled = true;
+        setupBtn.classList.add('loading');
+        status.classList.remove('visible');
+        label.innerHTML = SPINNER + '<span>設定中...</span>';
+
+        fill.style.transition = 'width 9s linear';
+        requestAnimationFrame(function() {
+          fill.style.width = '90%';
+        });
+
+        google.script.run
+          .withSuccessHandler(function(result) {
+            fill.style.transition = 'width 0.3s linear';
+            fill.style.width = '100%';
+            label.textContent = '完了!';
+            window.__studentId = result.studentId;
+            fetchLoginToken();
+
+            // 見た目を「連携完了」に切り替える(次は、アプリで通知を許可する)
+            document.getElementById('title').textContent = '連携が完了しました';
+            const sub = document.getElementById('sub');
+            sub.textContent = 'アプリに戻って、通知を許可してください';
+            sub.classList.remove('hidden');
+            document.getElementById('illNotify').classList.add('hidden');
+            document.getElementById('illDone').classList.remove('hidden');
+            document.getElementById('hint').classList.add('hidden');
+
+            setTimeout(function() {
+              fill.style.transition = 'none';
+              fill.style.width = '0%';
+              setupBtn.classList.remove('loading');
+              label.textContent = 'アプリに戻る';
+              setupBtn.disabled = false;
+              setupBtn.onclick = returnToApp;
+              document.getElementById('backArrow').style.display = 'none';
+            }, 800);
+          })
+          .withFailureHandler(function(err) {
+            fill.style.transition = 'width 0.2s linear';
+            fill.style.width = '0%';
+            label.textContent = '連携を開始する';
+            setupBtn.classList.remove('loading');
+            setupBtn.disabled = false;
+
+            status.textContent = 'エラーが発生しました: ' + err.message;
+            status.classList.add('visible');
+          })
+          .setupClassroomNotification();
+      }
+
+      function showReturnStatus(text) {
+        const status = document.getElementById('status');
+        status.textContent = text;
+        status.classList.add('visible');
+      }
+
+      function returnToApp() {
+        if (!window.__studentId) {
+          if (window.history.length > 1) window.history.back(); else window.close();
+          return;
+        }
+
+        // 取っておいたトークンがあれば、押した操作のうちに、その場で移動する(iPhone でも止められない)
+        if (tokenIsFresh()) {
+          try {
+            // 移行期間: 古いアプリ向けに studentId も付ける(新しいアプリは #token だけを使う)
+            window.top.location.href = APP_URL + '?studentId=' + window.__studentId + '#token=' + loginToken;
+          } catch (e) {
+            showReturnStatus('アプリに戻れませんでした。右上の「×」で閉じて、ホーム画面のアプリを開き直してください。');
+          }
+          return;
+        }
+
+        // まだ取れていない/古いときは、取り直して、もう一度押してもらう
+        // (取れたあとに自動で移動すると、iPhone ではブロックされるため)
+        showReturnStatus('ログインの準備をしています…');
+        fetchLoginToken(
+          function() { showReturnStatus('準備ができました。もう一度押してください。'); },
+          function(err) {
+            showReturnStatus('ログインの準備に失敗しました: ' + (err && err.message ? err.message : err));
+          }
+        );
+      }
+    </script>
+  </body>
+</html>
