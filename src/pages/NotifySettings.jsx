@@ -30,13 +30,20 @@ export default function NotifySettings() {
   }, []);
 
   // お知らせに出てくる授業の一覧(授業ID → 表示名)。届いたことがない授業は出ない
+  // 表示名は授業名の全体(例「２-CF② 公共」)。「公共」だけだと別クラスの同じ教科と見分けがつかないため。
+  // それでも同じ名前の授業が複数あるときは、授業IDの末尾4文字を添えて区別する。
   const courses = useMemo(() => {
     const map = new Map();
     items.forEach((a) => {
       const id = courseIdOf(a.link);
-      if (id && !map.has(id)) map.set(id, a.courseLabel || a.subject || '授業');
+      if (id && !map.has(id)) map.set(id, a.courseFull || a.courseLabel || a.subject || '授業');
     });
-    return Array.from(map, ([id, label]) => ({ id, label })).sort((x, y) => x.label.localeCompare(y.label, 'ja'));
+    const counts = new Map();
+    map.forEach((label) => counts.set(label, (counts.get(label) || 0) + 1));
+    return Array.from(map, ([id, name]) => ({
+      id,
+      label: counts.get(name) > 1 ? `${name}(ID …${id.slice(-4)})` : name,
+    })).sort((x, y) => x.label.localeCompare(y.label, 'ja'));
   }, [items]);
 
   async function toggleDevice() {

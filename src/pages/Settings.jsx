@@ -122,9 +122,10 @@ export default function Settings() {
   const [dark, setDark] = useState(isDarkMode);
   const notifyPrefs = useNotifyPrefs(identity ? identity.id : null).prefs;
 
-  // 下のバー: お知らせへ移動。ホーム・カレンダーはまだ画面がないので何もしない
+  // 下のバー: ホーム・お知らせへ移動。カレンダーはまだ画面がないので何もしない
   function onSelectTab(id) {
-    if (id === 'class') navigate('/class');
+    if (id === 'home') navigate('/');
+    else if (id === 'class') navigate('/class');
   }
 
   function openFeedback() {

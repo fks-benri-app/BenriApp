@@ -52,6 +52,9 @@ let BOOT_OPEN = (() => {
   try { return new URLSearchParams(window.location.search).get('open') || null; } catch { return null; }
 })();
 
+// 通知から開く途中(まだ詳細を開いていない)かどうか。起動画面をホームにしても、通知の詳細を開けるようにする
+export const bootOpenPending = () => BOOT_OPEN !== null;
+
 const SCHOOL_KEY = 'schoolEmail';
 const CLASSROOM_HOME = 'https://classroom.google.com/';
 
@@ -176,7 +179,7 @@ const KIND_LABELS = Object.fromEntries(KIND_OPTIONS.map((k) => [k.id, k.label]))
 
 const themeOf = (name) => THEMES[name] || THEMES[DEFAULT_THEME];
 // 当てはまる色がなければ null
-const courseThemeOrNull = (label) => {
+export const courseThemeOrNull = (label) => {
   const hit = COURSE_THEMES.find((c) => String(label).includes(c.match));
   return hit ? themeOf(hit.theme) : null;
 };
@@ -188,7 +191,7 @@ const chevron = (color) =>
   `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='${color}' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`;
 
 // 授業の色の上に、ダークのときだけ薄く暗くする層を重ねる(色は変えず、明度だけ下げる)
-const shaded = (gradient) => `linear-gradient(var(--tag-shade), var(--tag-shade)), ${gradient}`;
+export const shaded = (gradient) => `linear-gradient(var(--tag-shade), var(--tag-shade)), ${gradient}`;
 // theme: 選んでいるときの色 { gradient, textColor }
 function FilterSelect({ value, onChange, allLabel, options, label, theme, fontPx }) {
   const isActive = value !== '';
@@ -1046,7 +1049,7 @@ export default function Class() {
           return (
             <div
               key={tab.id}
-              onClick={() => (tab.id === 'settings' ? navigate('/settings') : setActiveTab(tab.id))}
+              onClick={() => (tab.id === 'settings' ? navigate('/settings') : tab.id === 'home' ? navigate('/') : setActiveTab(tab.id))}
               style={{
                 display: 'flex',
                 flexDirection: 'column',
