@@ -1000,7 +1000,7 @@ export default function Class() {
                     )}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.429em' }}>
-                    <div style={{ color: 'var(--text-muted)', fontSize: '0.857em', fontWeight: '400' }}>
+                    <div style={{ color: 'var(--text-muted)', fontSize: '0.786em', fontWeight: '400' }}>
                       {ann.time}
                     </div>
                     {ann.isUnread && (
@@ -1008,7 +1008,7 @@ export default function Class() {
                     )}
                   </div>
                 </div>
-                <div style={{ color: 'var(--text-strong)', fontSize: '1em', lineHeight: 1.4286, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                <div style={{ color: 'var(--text-body)', fontSize: '1em', fontWeight: 400, lineHeight: 1.4286, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                   {ann.content}
                 </div>
               </article>
@@ -1062,6 +1062,7 @@ export default function Class() {
                   height: '1.5em',
                   opacity: isActive ? 1 : 0.45
                 }}
+                className={isActive ? undefined : 'icon-ink'}
                 src={isActive ? tab.activeIcon : tab.icon}
                 alt={tab.id}
               />
