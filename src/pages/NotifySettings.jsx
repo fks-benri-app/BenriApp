@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useIdentity } from '../auth/identity';
 import Switch from '../components/Switch';
 import { currentFontSize } from '../lib/fontSize';
@@ -10,6 +10,8 @@ import { getDevicePushEnabled, setDevicePushEnabled } from '../lib/onesignal';
 // 通知の詳細設定。ベル・設定の「クラスルーム通知」から開く
 export default function NotifySettings() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const backTo = (location.state && location.state.from) || '/settings';
   const { identity } = useIdentity();
   const studentId = identity ? identity.id : null;
   const fontPx = currentFontSize();
@@ -17,6 +19,9 @@ export default function NotifySettings() {
   const { items } = useAnnouncements(studentId);
   const [deviceOn, setDeviceOn] = useState(null); // null = 読み込み中
   const [note, setNote] = useState('');
+  // 押した直後に、すぐ切り替わるように一時的に持つ(保存が終わって読み直したら消す)
+  const [offOverride, setOffOverride] = useState(null);
+  useEffect(() => { setOffOverride(null); }, [prefs]);
 
   useEffect(() => {
     let alive = true;
@@ -45,15 +50,19 @@ export default function NotifySettings() {
   }
 
   async function toggleCourse(id) {
-    const off = prefs.offCourses.includes(id);
-    const offCourses = off ? prefs.offCourses.filter((x) => x !== id) : [...prefs.offCourses, id];
+    const current = offOverride || prefs.offCourses;
+    const offCourses = current.includes(id) ? current.filter((x) => x !== id) : [...current, id];
     setNote('');
+    setOffOverride(offCourses);
     try {
       await saveNotifyPrefs(studentId, { offCourses });
-    } catch {
-      setNote('保存できませんでした。通信を確かめて、もう一度押してください。');
+    } catch (e) {
+      console.error('通知設定の保存に失敗', e);
+      setOffOverride(null);
+      setNote('保存できませんでした(' + (e && e.code ? e.code : '不明なエラー') + ')。もう一度押してください。');
     }
   }
+  const offCourses = offOverride || prefs.offCourses;
 
   const rowStyle = { padding: '0.857em 1.143em', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.857em' };
   const sectionTitle = { color: 'var(--text-muted)', fontSize: '0.929em', fontWeight: 600, padding: '0 0.286em', marginBottom: '0.571em' };
@@ -65,6 +74,7 @@ export default function NotifySettings() {
       style={{
         position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column', background: 'var(--surface)',
         boxSizing: 'border-box', overflow: 'hidden', fontSize: `${fontPx}px`,
+        userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none',
         fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Noto Sans JP', sans-serif",
       }}
     >
@@ -72,11 +82,14 @@ export default function NotifySettings() {
         <div style={{ padding: '0 1.714em', height: '34px', display: 'flex', alignItems: 'center', gap: '0.857em' }}>
           <button
             type="button"
-            onClick={() => navigate('/settings')}
-            aria-label="設定に戻る"
-            style={{ border: 'none', background: 'transparent', color: 'var(--text-strong)', fontSize: '1.4em', padding: '0 0.286em', cursor: 'pointer' }}
+            onClick={() => navigate(backTo)}
+            aria-label="戻る"
+            style={{ width: '48px', height: '48px', margin: '0 -12px 0 -12px', border: 'none', background: 'transparent', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', touchAction: 'manipulation', flexShrink: 0 }}
           >
-            ‹
+            {/* 設定画面の矢印(Chevron)と同じ線の太さ・形を、向きだけ反転させる */}
+            <svg width="1.143em" height="1.143em" viewBox="0 0 20 20" fill="none" aria-hidden="true" style={{ transform: 'scaleX(-1)' }}>
+              <path d="M7.5 5l5 5-5 5" style={{ stroke: 'var(--text-strong)' }} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
           </button>
           <div style={{ color: 'var(--text-strong)', fontSize: '1.571em', fontFamily: 'Inter', fontWeight: 800 }}>通知設定</div>
         </div>
@@ -113,7 +126,7 @@ export default function NotifySettings() {
             </div>
           ) : (
             courses.map((c, i) => {
-              const on = !prefs.offCourses.includes(c.id);
+              const on = !offCourses.includes(c.id);
               return (
                 <React.Fragment key={c.id}>
                   {i > 0 && <div style={divider} />}
