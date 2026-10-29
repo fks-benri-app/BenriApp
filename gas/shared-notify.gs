@@ -217,9 +217,10 @@ function sendToCourse_(studentId, item, ref) {
 
   // 自分の分は保存ずみ。ほかの人の分を保存し、書けた人だけを送り先にする
   const saved = saveAnnouncementsFor_(members.filter(function (m) { return m !== studentId; }), item.docId, item.rec);
-  // 授業をオフにしている仲間は、保存はするが、送り先からは外す
+  // 授業をオフにしている仲間は、保存はするが、送り先からは外す(設定は1回の通信でまとめて読む)
+  const prefsById = getNotifyPrefsMany_(saved);
   const recipients = [studentId].concat(saved.filter(function (id) {
-    return notifyAllowed_(getNotifyPrefs_(id), ref.courseId);
+    return notifyAllowed_(prefsById[id] || NOTIFY_PREFS_DEFAULT, ref.courseId);
   }));
 
   const targets = [];
@@ -289,24 +290,24 @@ function flushPendingShared_(studentId) {
   else props.deleteProperty('sharePending');
 }
 
-// ----- 通知の設定(アプリの「通知設定」で決める。users/{生徒ID}.notifyPrefs) -----
-// 全体のオン/オフ(enabled)と、授業ごとのオフ(offCourses)。未設定ならすべてオン(これまでどおり)
-const NOTIFY_PREFS_DEFAULT = { enabled: true, offCourses: [] };
+// ----- 通知の設定(アプリの「通知設定」で、授業ごとにオフにしたもの) -----
+// users/{生徒ID}.notifyPrefs.offCourses に、オフの授業IDが入る。未設定なら、すべてオン。
+// 全体のオン/オフは、アプリが端末の購読で行う(GAS は見ない)。
+const NOTIFY_PREFS_DEFAULT = { offCourses: [] };
 
 // Firestore の値(fields)から設定を取り出す。読めなければ、すべてオン
 function notifyPrefsFrom_(fields) {
   try {
     const m = fields && fields.notifyPrefs && fields.notifyPrefs.mapValue && fields.notifyPrefs.mapValue.fields;
     if (!m) return NOTIFY_PREFS_DEFAULT;
-    const enabled = !(m.enabled && m.enabled.booleanValue === false);
     const list = (m.offCourses && m.offCourses.arrayValue && m.offCourses.arrayValue.values) || [];
-    return { enabled: enabled, offCourses: list.map(function (v) { return v.stringValue; }).filter(Boolean) };
+    return { offCourses: list.map(function (v) { return v.stringValue; }).filter(Boolean) };
   } catch (e) {
     return NOTIFY_PREFS_DEFAULT;
   }
 }
 
-// 生徒の設定を読む。読めないとき(通信エラー・ドキュメントなし)は、すべてオン
+// 生徒1人の設定を読む(新しい投稿が見つかったときの、本人の分)
 function getNotifyPrefs_(studentId) {
   try {
     const res = fsRequest_(fsDocUrl_('/users/' + encodeURIComponent(studentId)) + '?mask.fieldPaths=notifyPrefs', 'get');
@@ -318,9 +319,36 @@ function getNotifyPrefs_(studentId) {
   }
 }
 
-// この授業の通知を送ってよいか(全体がオン、かつこの授業がオフでない)
+// 複数の生徒の設定を、batchGet で(最大100人ずつ)まとめて読む。生徒ID → 設定 の対応を返す。
+// 読めなかった人は、対応に入らない(呼び出し側が NOTIFY_PREFS_DEFAULT として扱う)
+function getNotifyPrefsMany_(ids) {
+  const out = {};
+  const unique = ids.filter(function (id, i) { return ids.indexOf(id) === i; });
+  const base = 'projects/' + FIRESTORE_PROJECT_ID + '/databases/(default)/documents';
+  for (let i = 0; i < unique.length; i += 100) {
+    const chunk = unique.slice(i, i + 100);
+    try {
+      const res = fsRequest_(
+        'https://firestore.googleapis.com/v1/projects/' + FIRESTORE_PROJECT_ID + '/databases/(default)/documents:batchGet',
+        'POST',
+        { documents: chunk.map(function (id) { return base + '/users/' + id; }), mask: { fieldPaths: ['notifyPrefs'] } }
+      );
+      if (res.getResponseCode() !== 200) throw new Error('batchGet ' + res.getResponseCode());
+      JSON.parse(res.getContentText()).forEach(function (row) {
+        if (!row.found) return;
+        const id = row.found.name.split('/').pop();
+        out[id] = notifyPrefsFrom_(row.found.fields);
+      });
+    } catch (e) {
+      console.error('通知設定のまとめ読み取りに失敗: ' + e);
+    }
+  }
+  return out;
+}
+
+// この授業の通知を送ってよいか(この授業がオフでない)
 function notifyAllowed_(prefs, courseId) {
-  return !!prefs && prefs.enabled && prefs.offCourses.indexOf(courseId || '') < 0;
+  return !!prefs && prefs.offCourses.indexOf(courseId || '') < 0;
 }
 
 // 投稿のリンクから授業IDだけを取る。取れなければ null
