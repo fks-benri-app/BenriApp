@@ -101,9 +101,6 @@ export default function NotifySettings() {
           <div style={rowStyle}>
             <div>
               <div style={{ color: 'var(--text-strong)', fontWeight: 600 }}>この端末で通知を受け取る</div>
-              <div style={{ color: 'var(--text-muted)', fontSize: '0.857em', marginTop: '0.286em' }}>
-                オフにすると、この端末には通知が届きません。
-              </div>
             </div>
             <button
               type="button"
@@ -130,17 +127,17 @@ export default function NotifySettings() {
               return (
                 <React.Fragment key={c.id}>
                   {i > 0 && <div style={divider} />}
-                  <div style={rowStyle}>
+                  <div style={{ ...rowStyle, opacity: deviceOn ? 1 : 0.45 }}>
                     <div style={{ color: 'var(--text-strong)', fontWeight: 600, minWidth: 0, overflowWrap: 'anywhere' }}>{c.label}</div>
                     <button
                       type="button"
                       onClick={() => toggleCourse(c.id)}
-                      disabled={!loaded}
+                      disabled={!loaded || !deviceOn}
                       aria-pressed={on}
                       aria-label={`${c.label}の通知`}
                       style={{ border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', flexShrink: 0 }}
                     >
-                      <Switch on={on} disabled={!loaded} />
+                      <Switch on={on} disabled={!loaded || !deviceOn} />
                     </button>
                   </div>
                 </React.Fragment>
