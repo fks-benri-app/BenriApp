@@ -1,31 +1,51 @@
-// ホーム画面のガジェットの並び順を、この端末に保存する。
-// 保存するのは「ガジェットIDの並び」だけ。中身(部品)は src/gadgets/index.js の登録簿にある。
+// ホーム画面の配置。画面を COLS 列 × ROWS 行に等分し、ガジェットは整数のマス単位で置く。
+// 保存するのは「ガジェットIDごとの x / y / w / h(マス)」だけ。中身は src/gadgets/index.js にある。
 import { storage } from './storage';
 
 const KEY = 'homeLayout';
-export const DEFAULT_LAYOUT = ['classNotices'];
+export const COLS = 4;   // 横は4分割
+export const ROWS = 10;  // 縦は画面の高さを10分割(これより下は、スクロールで続く)
 
-// validIds: 登録簿にあるID。保存された並びから、存在しないIDと重複を取り除いて返す。
-export function loadLayout(validIds) {
-  const valid = new Set(validIds);
+const num = (v, d) => (Number.isFinite(v) ? Math.round(v) : d);
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+
+// 大きさと位置を、そのガジェットの最小・最大の範囲と画面の中に収める
+function clampItem(it, g) {
+  const w = clamp(num(it.w, g.defaultPos.w), g.minW, Math.min(g.maxW, COLS));
+  const h = clamp(num(it.h, g.defaultPos.h), g.minH, g.maxH);
+  const x = clamp(num(it.x, 0), 0, COLS - w);
+  const y = Math.max(0, num(it.y, 0));
+  return { id: g.id, x, y, w, h };
+}
+
+const overlaps = (a, b) =>
+  a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+
+// 重なりを解消する。動かしたガジェットを先に置き、残りは上から順に、重ならない所まで下へ押し下げる
+export function resolveLayout(items, movedId) {
+  const moved = items.filter((i) => i.id === movedId);
+  const rest = items.filter((i) => i.id !== movedId).sort((a, b) => a.y - b.y || a.x - b.x);
+  const placed = [];
+  [...moved, ...rest].forEach((it) => {
+    const cur = { ...it };
+    while (placed.some((p) => overlaps(p, cur))) cur.y += 1;
+    placed.push(cur);
+  });
+  return placed;
+}
+
+// 保存された配置を読む。足りないガジェットは初期位置、おかしい値は範囲内に直す
+export function loadLayout(gadgets) {
+  let saved = {};
   try {
-    const saved = JSON.parse(storage.get(KEY) || 'null');
-    if (Array.isArray(saved)) {
-      const seen = new Set();
-      return saved.filter((id) => valid.has(id) && !seen.has(id) && seen.add(id));
-    }
-  } catch { /* 壊れていたら初期の並びに戻す */ }
-  return DEFAULT_LAYOUT.filter((id) => valid.has(id));
+    const v = JSON.parse(storage.get(KEY) || 'null');
+    if (v && typeof v === 'object' && !Array.isArray(v)) saved = v;
+  } catch { /* 壊れていたら初期配置 */ }
+  const items = gadgets.map((g) => clampItem({ ...g.defaultPos, ...(saved[g.id] || {}), id: g.id }, g));
+  return resolveLayout(items, null);
 }
 
-export function saveLayout(ids) {
-  storage.set(KEY, JSON.stringify(ids));
-}
-
-// ガジェットを末尾に足す / 外す(追加・削除の画面ができたら、ここを呼ぶ)
-export function addGadget(ids, id) {
-  return ids.includes(id) ? ids : [...ids, id];
-}
-export function removeGadget(ids, id) {
-  return ids.filter((x) => x !== id);
+export function saveLayout(items) {
+  const obj = Object.fromEntries(items.map((i) => [i.id, { x: i.x, y: i.y, w: i.w, h: i.h }]));
+  storage.set(KEY, JSON.stringify(obj));
 }
