@@ -123,6 +123,7 @@ export function BottomNav({ activeTab, onSelect }) {
                 height: '1.5em',
                 opacity: isActive ? 1 : 0.45
               }}
+              className={isActive ? undefined : 'icon-ink'}
               src={isActive ? tab.activeIcon : tab.icon}
               alt={tab.id}
             />
