@@ -989,8 +989,8 @@ export default function Class() {
                       <div style={{
                         padding: '0.286em 0.571em',
                         borderRadius: '0.429em',
-                        background: shaded(themeOf(KIND_THEMES[ann.kind]).gradient),
-                        color: themeOf(KIND_THEMES[ann.kind]).textColor,
+                        background: 'var(--line)', // 種別は無彩色にして、授業の色だけを目立たせる
+                        color: 'var(--text-body)',
                         fontSize: '0.786em',
                         fontWeight: '700'
                       }}>
