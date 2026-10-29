@@ -6,9 +6,11 @@ import Class, { bootOpenPending } from './pages/Class';
 // 連携画面と設定画面は、開いたときに読み込む(最初の表示に必要な JS を減らす)
 const LinkPage = lazy(() => import('./pages/LinkPage'));
 const Settings = lazy(() => import('./pages/Settings'));
-const NotifySettings = lazy(() => import('./pages/NotifySettings'));
+// 通知の詳細設定は、ベルから開く大事な画面。オフラインでも開けるよう、遅延読み込みにしない
+// (遅延読み込みだと、読み込んだことがない部品がオフラインで取れず、真っ白になる)
 // ホームは起動直後に使うので、遅延読み込みにしない(切り替え時の白い点滅を防ぐ)
 import Home from './pages/Home';
+import NotifySettings from './pages/NotifySettings';
 
 // ログイン済み(連携済み)の人だけが入れるページを包む
 function RequireIdentity({ children }) {
