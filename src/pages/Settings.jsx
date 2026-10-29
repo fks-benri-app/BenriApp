@@ -143,6 +143,8 @@ export default function Settings() {
         boxSizing: 'border-box',
         overflow: 'hidden',
         fontSize: `${fontPx}px`,
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
         WebkitTapHighlightColor: 'transparent',
         WebkitTouchCallout: 'none',
       }}
@@ -225,7 +227,7 @@ export default function Settings() {
           </div>
 
           <Section title="通知設定">
-            <Row label="クラスルーム通知" value={notifyPrefs.offCourses.length ? `${notifyPrefs.offCourses.length}件の授業がオフ` : 'すべてオン'} onClick={() => navigate('/settings/notify')} />
+            <Row label="クラスルーム通知" value={notifyPrefs.offCourses.length ? `${notifyPrefs.offCourses.length}件の授業がオフ` : 'すべてオン'} onClick={() => navigate('/settings/notify', { state: { from: '/settings' } })} />
             <Divider />
             <Row label="授業前通知" disabled />
           </Section>

@@ -806,7 +806,7 @@ export default function Class() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => navigate('/settings/notify')}
+                  onClick={() => navigate('/settings/notify', { state: { from: '/class' } })}
                   aria-label="通知設定"
                   title="通知設定"
                   style={{
