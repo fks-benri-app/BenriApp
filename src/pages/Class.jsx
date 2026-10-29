@@ -692,7 +692,7 @@ export default function Class() {
 
   const emptyMessage =
     status === 'loading'
-      ? '読み込み中…'
+      ? ''
       : status === 'error'
         ? '読み込みに失敗しました'
         : query.trim()

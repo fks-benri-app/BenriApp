@@ -11,7 +11,7 @@ const muted = { color: 'var(--text-faint)', fontSize: '0.929em', padding: '0.5em
 // クラスルーム通知の最新3件(お知らせ画面と同じ並び・同じ色)
 export default function ClassNoticesGadget({ identity }) {
   const { status, items } = useAnnouncements(identity?.id);
-  if (status === 'loading') return <div style={muted}>読み込み中…</div>;
+  if (status === 'loading') return null; // 読み込み中は何も出さない(前回の内容があれば、すぐ表示される)
   if (status === 'error') return <div style={muted}>読み込めませんでした</div>;
   const latest = items.slice(0, COUNT);
   if (latest.length === 0) return <div style={muted}>まだお知らせはありません</div>;

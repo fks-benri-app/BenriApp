@@ -6,6 +6,33 @@ import { cleanTeacher, cleanText, courseKey, courseLabel, joinTitleAndBody, kind
 
 const READ_KEY = 'readIds';
 
+// 前回取得したお知らせを覚えておき、開いた瞬間に表示する(あとで最新に差し替える)。
+// 端末ごとの保存なので、他の人には出ない。保存は新しい順に30件まで(本文の全文は保存しない)。
+const CACHE_KEY = 'announcementsCache';
+const CACHE_SAVE_MAX = 30;
+const memoryCache = new Map(); // studentId → 直近のお知らせ(この画面の中で再利用)
+
+function loadCache(studentId) {
+  if (!studentId) return null;
+  if (memoryCache.has(studentId)) return memoryCache.get(studentId);
+  try {
+    const raw = JSON.parse(storage.get(CACHE_KEY) || 'null');
+    if (raw && raw.studentId === studentId && Array.isArray(raw.items)) {
+      memoryCache.set(studentId, raw.items);
+      return raw.items;
+    }
+  } catch { /* 壊れていたら無視して読み直す */ }
+  return null;
+}
+
+function saveCache(studentId, items) {
+  memoryCache.set(studentId, items);
+  try {
+    const light = items.slice(0, CACHE_SAVE_MAX).map(({ body, rawBody, ...rest }) => rest);
+    storage.set(CACHE_KEY, JSON.stringify({ studentId, items: light }));
+  } catch { /* 保存できなくても表示は続ける */ }
+}
+
 function loadReadIds() {
   try {
     return new Set(JSON.parse(storage.get(READ_KEY) || '[]'));
@@ -72,12 +99,16 @@ function toAnnouncement(doc) {
  * @returns {{ status: 'loading'|'ready'|'error', items: Array, markRead: (id: string) => void, markAllRead: (ids: string[]) => void }}
  */
 export function useAnnouncements(studentId) {
-  const [state, setState] = useState({ status: 'loading', items: [] });
+  const [state, setState] = useState(() => {
+    const cached = loadCache(studentId);
+    return cached ? { status: 'ready', items: cached } : { status: 'loading', items: [] };
+  });
   const [readIds, setReadIds] = useState(loadReadIds);
 
   useEffect(() => {
     if (!studentId) return undefined;
-    setState({ status: 'loading', items: [] });
+    const cached = loadCache(studentId);
+    setState(cached ? { status: 'ready', items: cached } : { status: 'loading', items: [] });
     const q = query(
       collection(db, 'users', studentId, 'announcements'),
       orderBy('receivedAt', 'desc'),
@@ -86,7 +117,11 @@ export function useAnnouncements(studentId) {
     // onSnapshot なので、新しい通知が保存されると画面が自動で更新される
     return onSnapshot(
       q,
-      (snap) => setState({ status: 'ready', items: snap.docs.map(toAnnouncement).filter((a) => !a.deleted) }),
+      (snap) => {
+        const items = snap.docs.map(toAnnouncement).filter((a) => !a.deleted);
+        saveCache(studentId, items);
+        setState({ status: 'ready', items });
+      },
       (error) => {
         console.error(error);
         setState({ status: 'error', items: [] });
