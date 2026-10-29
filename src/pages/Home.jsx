@@ -24,6 +24,7 @@ export default function Home() {
   const [layout, setLayout] = useState(() => loadLayout(GADGETS));
   const [preview, setPreview] = useState(null);   // 動かし中の配置(離したら保存する)
   const [activeId, setActiveId] = useState(null); // 動かしている、または大きさを変えているガジェット
+  const [activeType, setActiveType] = useState(null); // 'move' | 'resize'
   const [editing, setEditing] = useState(false);
   const [size, setSize] = useState({ w: 0, h: 0 }); // マス目全体の大きさ(px)
 
@@ -71,6 +72,7 @@ export default function Home() {
     }
     showPreview(null);
     setActiveId(null);
+    setActiveType(null);
   }, [showPreview]);
 
   // 動かす(move)か大きさを変える(resize)かを、指の動きから決める
@@ -103,6 +105,7 @@ export default function Home() {
     g.onEnd = () => finishGesture();
     gesture.current = g;
     setActiveId(id);
+    setActiveType(type);
     window.addEventListener('pointermove', g.onMove);
     window.addEventListener('pointerup', g.onEnd);
     window.addEventListener('pointercancel', g.onEnd);
@@ -177,7 +180,6 @@ export default function Home() {
   const rows = Math.max(ROWS, ...shown.map((i) => i.y + i.h));
   const cw = size.w / COLS;
   const ch = size.h / ROWS;
-  const busy = activeId !== null;
 
   return (
     <div
@@ -260,6 +262,15 @@ export default function Home() {
             if (!g) return null;
             const { Component } = g;
             const isActive = activeId === it.id;
+            const isMoving = isActive && activeType === 'move';
+            const isResizing = isActive && activeType === 'resize';
+            // 動かしている間は、指にぴったり付いて(位置は即時)、少し持ち上がって見える。
+            // 他の枠は、押し下げられたときに滑らかに移る。
+            const transition = isActive
+              ? (isResizing
+                ? 'transform 0.18s ease, width 0.12s ease, height 0.12s ease'
+                : 'transform 0.18s ease, box-shadow 0.18s ease')
+              : 'left 0.18s ease, top 0.18s ease, width 0.18s ease, height 0.18s ease, transform 0.18s ease';
             return (
               <div
                 key={it.id}
@@ -270,7 +281,9 @@ export default function Home() {
                   width: it.w * cw - GAP,
                   height: it.h * ch - GAP,
                   zIndex: isActive ? 3 : 1,
-                  transition: busy ? 'none' : 'left 0.18s ease, top 0.18s ease, width 0.18s ease, height 0.18s ease',
+                  transform: isMoving ? 'scale(1.06)' : 'scale(1)',
+                  transformOrigin: 'center center',
+                  transition,
                 }}
               >
                 <section
@@ -294,7 +307,7 @@ export default function Home() {
                     overflow: 'hidden',
                     display: 'flex',
                     flexDirection: 'column',
-                    boxShadow: isActive ? '0 10px 28px rgba(0,0,0,0.22)' : '0 2px 8px rgba(0,0,0,0.02)',
+                    boxShadow: isActive ? '0 16px 36px rgba(0,0,0,0.28)' : '0 2px 8px rgba(0,0,0,0.02)',
                     outline: editing ? '2px dashed var(--line-strong)' : 'none',
                     outlineOffset: '2px',
                     cursor: editing ? 'grab' : 'pointer',
@@ -311,6 +324,28 @@ export default function Home() {
                     <Component identity={identity} />
                   </div>
                 </section>
+
+                {isResizing && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: -12,
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      background: 'var(--ink)',
+                      color: 'var(--on-ink)',
+                      borderRadius: '999px',
+                      padding: '2px 10px',
+                      fontSize: '0.786em',
+                      fontWeight: 700,
+                      whiteSpace: 'nowrap',
+                      pointerEvents: 'none',
+                      zIndex: 5,
+                    }}
+                  >
+                    {it.w} × {it.h}
+                  </div>
+                )}
 
                 {editing && (
                   <div
