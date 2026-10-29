@@ -225,7 +225,7 @@ export default function Settings() {
           </div>
 
           <Section title="通知設定">
-            <Row label="クラスルーム通知" value={notifyPrefs.enabled ? 'オン' : 'オフ'} onClick={() => navigate('/settings/notify')} />
+            <Row label="クラスルーム通知" value={notifyPrefs.offCourses.length ? `${notifyPrefs.offCourses.length}件の授業がオフ` : 'すべてオン'} onClick={() => navigate('/settings/notify')} />
             <Divider />
             <Row label="授業前通知" disabled />
           </Section>

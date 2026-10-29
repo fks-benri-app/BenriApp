@@ -126,3 +126,19 @@ export async function unsubscribe() {
   await initOneSignal();
   return withOneSignal((OneSignal) => OneSignal.logout());
 }
+
+// この端末の通知をオン/オフする。オフにすると、サーバーが送ってもこの端末には届かない(OneSignal 側で止まる)
+export async function setDevicePushEnabled(on) {
+  await initOneSignal();
+  return withOneSignal(async (OneSignal) => {
+    if (on) await OneSignal.User.PushSubscription.optIn();
+    else await OneSignal.User.PushSubscription.optOut();
+    return !!OneSignal.User.PushSubscription.optedIn;
+  });
+}
+
+// この端末の通知が、今オンかどうか
+export async function getDevicePushEnabled() {
+  await initOneSignal();
+  return withOneSignal((OneSignal) => !!OneSignal.User.PushSubscription.optedIn);
+}
