@@ -17,7 +17,7 @@ export default function ClassNoticesGadget({ identity }) {
   if (latest.length === 0) return <div style={muted}>まだお知らせはありません</div>;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
       {latest.map((a, i) => {
         const theme = courseThemeOrNull(a.subject);
         return (

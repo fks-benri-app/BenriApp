@@ -4,162 +4,168 @@ import { useIdentity } from '../auth/identity';
 import BottomNav from '../components/BottomNav';
 import { GADGETS, gadgetById } from '../gadgets';
 import { currentFontSize } from '../lib/fontSize';
-import { loadLayout, saveLayout } from '../lib/homeLayout';
+import { COLS, ROWS, loadLayout, resolveLayout, saveLayout } from '../lib/homeLayout';
 
 const NO_SCROLLBAR_CSS = '.no-scrollbar{scrollbar-width:none;-ms-overflow-style:none}.no-scrollbar::-webkit-scrollbar{display:none}';
-const HOLD_MS = 420;      // この時間さわり続けると、移動モードになる
-const MOVE_SLOP = 10;     // 長押しの前にこれ以上動いたら、スクロールとみなして長押しをやめる
-const EDGE = 56;          // 移動中に画面の上下の端がこの距離に近づくと、自動でスクロールする
+const HOLD_MS = 420;  // この時間さわり続けると、編集モードに入る
+const SLOP = 10;      // 長押しの前にこれ以上動いたら、スクロールとみなす
+const GAP = 10;       // 枠と枠のあいだ(px)
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 
-// ホーム画面: 上のバーと下のバーは他の画面と同じ。本体はガジェットを並べる白紙の場所。
-// ガジェットは、枠をタップすると画面を開き、長押しすると上下に動かせる。
+// ホーム画面: 画面を COLS×ROWS に等分したマス目に、ガジェットを置く。
+// ・タップ: ガジェットの画面を開く
+// ・長押し: 編集モード。ドラッグで整数マス単位に動かせる。右下の角をドラッグで大きさを変えられる(最小・最大の範囲内)
+// ・重なったときは、他のガジェットが下へ押し下げられる
 export default function Home() {
   const navigate = useNavigate();
   const { identity } = useIdentity();
   const fontPx = currentFontSize();
-  const [order, setOrder] = useState(() => loadLayout(GADGETS.map((g) => g.id)));
-  const [dragId, setDragId] = useState(null);
+
+  const [layout, setLayout] = useState(() => loadLayout(GADGETS));
+  const [preview, setPreview] = useState(null);   // 動かし中の配置(離したら保存する)
+  const [activeId, setActiveId] = useState(null); // 動かしている、または大きさを変えているガジェット
+  const [editing, setEditing] = useState(false);
+  const [size, setSize] = useState({ w: 0, h: 0 }); // マス目全体の大きさ(px)
 
   const mainRef = useRef(null);
-  const wrapRefs = useRef(new Map());   // id → 場所を取る外側の箱(動かない)
-  const cardRefs = useRef(new Map());   // id → 実際に見える枠(指に付いて動く)
-  const orderRef = useRef(order);
-  orderRef.current = order;
-  const press = useRef(null);           // 長押し待ちの状態
-  const drag = useRef(null);            // 移動中の状態 { id, grab, pointerY }
-  const suppressClick = useRef(false);  // 移動したあとの「タップ」でうっかり画面を開かない
+  const gridRef = useRef(null);
+  const layoutRef = useRef(layout);
+  layoutRef.current = layout;
+  const previewRef = useRef(null);
+  const sizeRef = useRef(size);
+  sizeRef.current = size;
+  const editingRef = useRef(false);
+  editingRef.current = editing;
+  const gesture = useRef(null);       // 動かしている最中の情報
+  const press = useRef(null);         // 長押しを待っている最中の情報
+  const justLongPressed = useRef(false);
 
-  // 移動中の枠を、指の位置に合わせて動かす(外側の箱は自分の場所のまま)
-  const placeDragged = useCallback(() => {
-    const d = drag.current;
-    if (!d) return;
-    const wrap = wrapRefs.current.get(d.id);
-    const card = cardRefs.current.get(d.id);
-    if (!wrap || !card) return;
-    const dy = d.pointerY - d.grab - wrap.getBoundingClientRect().top;
-    card.style.transform = `translateY(${dy}px) scale(1.02)`;
+  const showPreview = useCallback((v) => {
+    previewRef.current = v;
+    setPreview(v);
   }, []);
 
-  // 並びが変わったら、移動中の枠の位置をもう一度合わせる
-  useLayoutEffect(() => { placeDragged(); }, [order, placeDragged]);
+  // 画面の大きさを測って、マス目の大きさを決める(回転や画面の変化にも合わせる)
+  useLayoutEffect(() => {
+    const el = mainRef.current;
+    if (!el) return undefined;
+    const measure = () => setSize({ w: gridRef.current ? gridRef.current.clientWidth : 0, h: el.clientHeight });
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
-  // 指の位置から、並べ替えが必要か調べる(他の枠の中心を越えたら入れ替える)
-  const reorderIfNeeded = useCallback(() => {
-    const d = drag.current;
-    if (!d) return;
-    const wrap = wrapRefs.current.get(d.id);
-    if (!wrap) return;
-    const height = wrap.getBoundingClientRect().height;
-    const center = d.pointerY - d.grab + height / 2;
-    const cur = orderRef.current;
-    const others = cur.filter((id) => id !== d.id);
-    let target = 0;
-    others.forEach((id) => {
-      const r = wrapRefs.current.get(id)?.getBoundingClientRect();
-      if (r && r.top + r.height / 2 < center) target += 1;
-    });
-    if (cur.indexOf(d.id) !== target) {
-      const next = [...others];
-      next.splice(target, 0, d.id);
-      setOrder(next);
+  // 動かし終わったら、結果を確定して保存する
+  const finishGesture = useCallback(() => {
+    const g = gesture.current;
+    if (!g) return;
+    gesture.current = null;
+    window.removeEventListener('pointermove', g.onMove);
+    window.removeEventListener('pointerup', g.onEnd);
+    window.removeEventListener('pointercancel', g.onEnd);
+    const next = previewRef.current;
+    if (next) {
+      setLayout(next);
+      saveLayout(next);
     }
-  }, []);
+    showPreview(null);
+    setActiveId(null);
+  }, [showPreview]);
 
-  const endDrag = useCallback((commit) => {
-    const d = drag.current;
-    if (!d) return;
-    drag.current = null;
-    window.removeEventListener('pointermove', d.onMove);
-    window.removeEventListener('pointerup', d.onUp);
-    window.removeEventListener('pointercancel', d.onUp);
-    window.removeEventListener('touchmove', d.onTouchMove);
-    cancelAnimationFrame(d.raf);
-    const card = cardRefs.current.get(d.id);
-    if (card) card.style.transform = '';
-    setDragId(null);
-    if (commit) saveLayout(orderRef.current);
-    setTimeout(() => { suppressClick.current = false; }, 60);
-  }, []);
-
-  const beginDrag = useCallback((id, pointerY) => {
-    const wrap = wrapRefs.current.get(id);
-    if (!wrap) return;
-    suppressClick.current = true;
-    try { navigator.vibrate?.(15); } catch { /* 振動できない端末は無視 */ }
-    const d = {
-      id,
-      grab: pointerY - wrap.getBoundingClientRect().top,
-      pointerY,
-      onMove: (e) => {
-        d.pointerY = e.clientY;
-        placeDragged();
-        reorderIfNeeded();
-      },
-      onUp: () => endDrag(true),
-      // 移動中は、指で画面がスクロールしないようにする
-      onTouchMove: (e) => { if (e.cancelable) e.preventDefault(); },
-      raf: 0,
-    };
-    // 画面の上下の端に近いときは、ゆっくり自動でスクロールする
-    const loop = () => {
-      const main = mainRef.current;
-      if (main && drag.current === d) {
-        const r = main.getBoundingClientRect();
-        let step = 0;
-        if (d.pointerY < r.top + EDGE) step = -8;
-        else if (d.pointerY > r.bottom - EDGE) step = 8;
-        if (step) {
-          main.scrollTop += step;
-          placeDragged();
-          reorderIfNeeded();
-        }
-        d.raf = requestAnimationFrame(loop);
+  // 動かす(move)か大きさを変える(resize)かを、指の動きから決める
+  function startGesture(type, id, clientX, clientY) {
+    const origin = layoutRef.current.find((i) => i.id === id);
+    if (!origin) return;
+    const def = gadgetById(id);
+    const g = { type, id, sx: clientX, sy: clientY };
+    g.onMove = (e) => {
+      const cw = sizeRef.current.w / COLS;
+      const ch = sizeRef.current.h / ROWS;
+      if (!cw || !ch) return;
+      const dx = Math.round((e.clientX - g.sx) / cw);
+      const dy = Math.round((e.clientY - g.sy) / ch);
+      let next;
+      if (type === 'move') {
+        next = { ...origin, x: clamp(origin.x + dx, 0, COLS - origin.w), y: Math.max(0, origin.y + dy) };
+      } else {
+        next = {
+          ...origin,
+          w: clamp(origin.w + dx, def.minW, Math.min(def.maxW, COLS - origin.x)),
+          h: clamp(origin.h + dy, def.minH, def.maxH),
+        };
       }
+      const cur = previewRef.current;
+      const same = cur && cur.find((i) => i.id === id);
+      if (same && same.x === next.x && same.y === next.y && same.w === next.w && same.h === next.h) return;
+      showPreview(resolveLayout(layoutRef.current.map((i) => (i.id === id ? next : i)), id));
     };
-    drag.current = d;
-    window.addEventListener('pointermove', d.onMove);
-    window.addEventListener('pointerup', d.onUp);
-    window.addEventListener('pointercancel', d.onUp);
-    window.addEventListener('touchmove', d.onTouchMove, { passive: false });
-    d.raf = requestAnimationFrame(loop);
-    setDragId(id);
-    requestAnimationFrame(placeDragged);
-  }, [endDrag, placeDragged, reorderIfNeeded]);
+    g.onEnd = () => finishGesture();
+    gesture.current = g;
+    setActiveId(id);
+    window.addEventListener('pointermove', g.onMove);
+    window.addEventListener('pointerup', g.onEnd);
+    window.addEventListener('pointercancel', g.onEnd);
+  }
 
-  const clearPress = useCallback(() => {
-    if (press.current) {
-      clearTimeout(press.current.timer);
-      press.current = null;
+  // 画面を離れるときは、動かしかけの処理と長押しの待ちを止める
+  useEffect(() => () => {
+    const g = gesture.current;
+    if (g) {
+      window.removeEventListener('pointermove', g.onMove);
+      window.removeEventListener('pointerup', g.onEnd);
+      window.removeEventListener('pointercancel', g.onEnd);
     }
+    if (press.current) clearTimeout(press.current.timer);
   }, []);
 
-  function onPointerDown(e, id) {
-    if (drag.current || (e.pointerType === 'mouse' && e.button !== 0)) return;
-    clearPress();
-    const startX = e.clientX;
-    const startY = e.clientY;
+  function enterEditing() {
+    setEditing(true);
+    justLongPressed.current = true;
+    setTimeout(() => { justLongPressed.current = false; }, 350);
+    try { navigator.vibrate?.(15); } catch { /* 振動できない端末は無視 */ }
+  }
+
+  function onGadgetPointerDown(e, id) {
+    if (gesture.current) return;
+    if (editingRef.current) {
+      startGesture('move', id, e.clientX, e.clientY);
+      return;
+    }
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    if (press.current) clearTimeout(press.current.timer);
+    const sx = e.clientX;
+    const sy = e.clientY;
     press.current = {
-      id,
-      startX,
-      startY,
-      lastY: startY,
+      sx,
+      sy,
       timer: setTimeout(() => {
-        const p = press.current;
         press.current = null;
-        if (p) beginDrag(p.id, p.lastY);
+        enterEditing();
+        startGesture('move', id, sx, sy);
       }, HOLD_MS),
     };
   }
 
-  function onPointerMove(e) {
+  function onGadgetPointerMove(e) {
     const p = press.current;
-    if (!p) return;
-    p.lastY = e.clientY;
-    if (Math.abs(e.clientX - p.startX) > MOVE_SLOP || Math.abs(e.clientY - p.startY) > MOVE_SLOP) clearPress();
+    if (p && (Math.abs(e.clientX - p.sx) > SLOP || Math.abs(e.clientY - p.sy) > SLOP)) {
+      clearTimeout(p.timer);
+      press.current = null;
+    }
   }
 
-  // 画面を離れるときの後始末
-  useEffect(() => () => { clearPress(); endDrag(false); }, [clearPress, endDrag]);
+  function onGadgetPointerUp() {
+    if (press.current) {
+      clearTimeout(press.current.timer);
+      press.current = null;
+    }
+  }
+
+  function onGadgetClick(g) {
+    if (editingRef.current || justLongPressed.current || !g.path) return;
+    navigate(g.path);
+  }
 
   function onSelectTab(id) {
     if (id === 'class') navigate('/class');
@@ -167,7 +173,11 @@ export default function Home() {
     // ホームは今いる画面。カレンダーはまだ画面がない
   }
 
-  const gadgets = order.map(gadgetById).filter(Boolean);
+  const shown = preview || layout;
+  const rows = Math.max(ROWS, ...shown.map((i) => i.y + i.h));
+  const cw = size.w / COLS;
+  const ch = size.h / ROWS;
+  const busy = activeId !== null;
 
   return (
     <div
@@ -190,7 +200,7 @@ export default function Home() {
     >
       <style>{NO_SCROLLBAR_CSS}</style>
 
-      {/* ===== ヘッダー(他の画面と同じ形式) ===== */}
+      {/* ===== ヘッダー(他の画面と同じ形式。編集中は「完了」を出す) ===== */}
       <header
         style={{
           flexShrink: 0,
@@ -203,14 +213,32 @@ export default function Home() {
           width: '100%',
         }}
       >
-        <div style={{ padding: '0 1.714em', height: '34px', display: 'flex', alignItems: 'center' }}>
+        <div style={{ padding: '0 1.714em', height: '34px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ color: 'var(--text-strong)', fontSize: '1.871em', fontFamily: 'Inter', fontWeight: '800', userSelect: 'none' }}>
-            ホーム
+            {editing ? '編集' : 'ホーム'}
           </div>
+          {editing && (
+            <button
+              type="button"
+              onClick={() => setEditing(false)}
+              style={{
+                border: 'none',
+                borderRadius: '999px',
+                padding: '0.5em 1.2em',
+                background: 'var(--ink)',
+                color: 'var(--on-ink)',
+                fontWeight: 700,
+                fontSize: '0.857em',
+                cursor: 'pointer',
+              }}
+            >
+              完了
+            </button>
+          )}
         </div>
       </header>
 
-      {/* ===== 本体: ガジェットを並べる白紙の場所 ===== */}
+      {/* ===== 本体: マス目にガジェットを置く。編集中は背景をタップすると完了 ===== */}
       <main
         ref={mainRef}
         className="no-scrollbar"
@@ -220,54 +248,102 @@ export default function Home() {
           overflowY: 'auto',
           overscrollBehavior: 'contain',
           WebkitOverflowScrolling: 'touch',
-          padding: '0 1.714em 1.143em',
-          boxSizing: 'border-box',
         }}
       >
-        <div style={{ width: '100%', maxWidth: '500px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.143em' }}>
-          {gadgets.map((g) => {
-            const dragging = dragId === g.id;
+        <div
+          ref={gridRef}
+          onClick={(e) => { if (editingRef.current && e.target === e.currentTarget) setEditing(false); }}
+          style={{ position: 'relative', margin: '0 1.714em', height: rows * ch }}
+        >
+          {shown.map((it) => {
+            const g = gadgetById(it.id);
+            if (!g) return null;
             const { Component } = g;
+            const isActive = activeId === it.id;
             return (
               <div
-                key={g.id}
-                ref={(el) => { if (el) wrapRefs.current.set(g.id, el); else wrapRefs.current.delete(g.id); }}
+                key={it.id}
+                style={{
+                  position: 'absolute',
+                  left: it.x * cw + GAP / 2,
+                  top: it.y * ch + GAP / 2,
+                  width: it.w * cw - GAP,
+                  height: it.h * ch - GAP,
+                  zIndex: isActive ? 3 : 1,
+                  transition: busy ? 'none' : 'left 0.18s ease, top 0.18s ease, width 0.18s ease, height 0.18s ease',
+                }}
               >
                 <section
-                  ref={(el) => { if (el) cardRefs.current.set(g.id, el); else cardRefs.current.delete(g.id); }}
-                  role="link"
-                  tabIndex={0}
+                  role={editing ? undefined : 'link'}
+                  tabIndex={editing ? -1 : 0}
                   aria-label={g.title}
-                  onPointerDown={(e) => onPointerDown(e, g.id)}
-                  onPointerMove={onPointerMove}
-                  onPointerUp={clearPress}
-                  onPointerCancel={clearPress}
+                  onPointerDown={(e) => onGadgetPointerDown(e, it.id)}
+                  onPointerMove={onGadgetPointerMove}
+                  onPointerUp={onGadgetPointerUp}
+                  onPointerCancel={onGadgetPointerUp}
                   onContextMenu={(e) => e.preventDefault()}
-                  onClick={() => {
-                    if (suppressClick.current || !g.path) return;
-                    navigate(g.path);
-                  }}
-                  onKeyDown={(e) => { if (e.key === 'Enter' && g.path) navigate(g.path); }}
+                  onClick={() => onGadgetClick(g)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') onGadgetClick(g); }}
                   style={{
-                    position: 'relative',
-                    zIndex: dragging ? 2 : 'auto',
-                    padding: '1.143em',
+                    width: '100%',
+                    height: '100%',
+                    boxSizing: 'border-box',
+                    padding: '0.9em',
                     background: 'var(--surface-2)',
                     borderRadius: '1.143em',
-                    boxShadow: dragging ? '0 10px 28px rgba(0,0,0,0.22)' : '0 2px 8px rgba(0,0,0,0.02)',
-                    cursor: 'pointer',
+                    overflow: 'hidden',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    boxShadow: isActive ? '0 10px 28px rgba(0,0,0,0.22)' : '0 2px 8px rgba(0,0,0,0.02)',
+                    outline: editing ? '2px dashed var(--line-strong)' : 'none',
+                    outlineOffset: '2px',
+                    cursor: editing ? 'grab' : 'pointer',
+                    touchAction: editing ? 'none' : 'manipulation',
                     userSelect: 'none',
                     WebkitUserSelect: 'none',
                     WebkitTouchCallout: 'none',
-                    touchAction: 'manipulation',
-                    transition: dragging ? 'box-shadow 0.15s ease' : 'box-shadow 0.15s ease, transform 0.15s ease',
                   }}
                 >
-                  <div style={{ color: 'var(--text-strong)', fontSize: '1.071em', fontWeight: 700, marginBottom: '0.571em' }}>
+                  <div style={{ color: 'var(--text-strong)', fontSize: '1.071em', fontWeight: 700, marginBottom: '0.571em', flexShrink: 0 }}>
                     {g.title}
                   </div>
-                  <Component identity={identity} />
+                  <div className="no-scrollbar" style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
+                    <Component identity={identity} />
+                  </div>
                 </section>
+
+                {editing && (
+                  <div
+                    role="button"
+                    aria-label={`${g.title}の大きさを変える`}
+                    onPointerDown={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      startGesture('resize', it.id, e.clientX, e.clientY);
+                    }}
+                    style={{
+                      position: 'absolute',
+                      right: -8,
+                      bottom: -8,
+                      width: 32,
+                      height: 32,
+                      borderRadius: '50%',
+                      background: 'var(--ink)',
+                      color: 'var(--on-ink)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      touchAction: 'none',
+                      cursor: 'nwse-resize',
+                      zIndex: 4,
+                      boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
+                      <path d="M12 2L2 12M12 7L7 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" fill="none" />
+                    </svg>
+                  </div>
+                )}
               </div>
             );
           })}
