@@ -154,3 +154,18 @@ html[data-theme="dark"] {
 
 /* 画像として読むアイコン(ベルなど)は、CSS の色を変えられない。ダークでは反転して明るくする */
 html[data-theme="dark"] img.icon-ink { filter: invert(1) hue-rotate(180deg); }
+
+/* ===== 押したときの反応 =====
+   押している間だけ、少し縮めて薄くする。離すと戻る。無効なボタンには出さない。
+   動きを減らす設定(prefers-reduced-motion)のときは、縮めず色の変化だけにする。 */
+button:not(:disabled), [role="link"], [role="button"], .pressable {
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+button:not(:disabled):active, [role="link"]:active, [role="button"]:active, .pressable:active {
+  transform: scale(0.97);
+  opacity: 0.8;
+}
+@media (prefers-reduced-motion: reduce) {
+  button:not(:disabled), [role="link"], [role="button"], .pressable { transition: opacity 0.15s ease; }
+  button:not(:disabled):active, [role="link"]:active, [role="button"]:active, .pressable:active { transform: none; }
+}

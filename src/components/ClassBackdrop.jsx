@@ -109,7 +109,7 @@ export function BottomNav({ activeTab, onSelect }) {
               gap: '0.214em',
               width: '5.714em',
               cursor: 'pointer',
-              padding: '0.4em 0',
+              padding: '0.286em 0',
               userSelect: 'none',
               WebkitUserSelect: 'none',
               touchAction: 'manipulation'

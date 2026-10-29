@@ -66,7 +66,7 @@ function Row({ label, value, onClick, disabled, chevron = true }) {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        gap: '0.8em',
+        gap: '0.857em',
         cursor: active ? 'pointer' : 'default',
         touchAction: 'manipulation',
         userSelect: 'none',
@@ -257,7 +257,7 @@ export default function Settings() {
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                gap: '0.8em',
+                gap: '0.857em',
               }}
             >
               <div style={{ color: 'var(--text-strong)', fontSize: '1.071em', fontWeight: 600 }}>文字サイズ</div>
