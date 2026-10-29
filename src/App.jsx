@@ -1,8 +1,11 @@
+import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useIdentity } from './auth/identity';
-import LinkPage from './pages/LinkPage';
 import Class from './pages/Class';
-import Settings from './pages/Settings';
+
+// 連携画面と設定画面は、開いたときに読み込む(最初の表示に必要な JS を減らす)
+const LinkPage = lazy(() => import('./pages/LinkPage'));
+const Settings = lazy(() => import('./pages/Settings'));
 
 // ログイン済み(連携済み)の人だけが入れるページを包む
 function RequireIdentity({ children }) {
@@ -17,6 +20,7 @@ export default function App() {
   // 起動時に開く画面: 連携済みならお知らせ、未連携なら連携画面
   const home = identity ? <Class /> : <LinkPage />;
   return (
+    <Suspense fallback={null}>
     <Routes>
       <Route path="/" element={home} />
       <Route path="/link" element={<LinkPage />} />
@@ -38,5 +42,6 @@ export default function App() {
       />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </Suspense>
   );
 }
