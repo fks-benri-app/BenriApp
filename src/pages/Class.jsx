@@ -830,7 +830,7 @@ export default function Class() {
                     alt=""
                     aria-hidden="true"
                     draggable={false}
-                    style={{ width: '100%', height: '100%' }}
+                    style={{ width: '1.571em', height: '1.571em', objectFit: 'contain', display: 'block' }}
                   />
                 </button>
                 <img
