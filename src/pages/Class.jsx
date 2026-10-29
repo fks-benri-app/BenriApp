@@ -191,7 +191,7 @@ const shaded = (gradient) => `linear-gradient(var(--tag-shade), var(--tag-shade)
 // theme: 選んでいるときの色 { gradient, textColor }
 function FilterSelect({ value, onChange, allLabel, options, label, theme, fontPx }) {
   const isActive = value !== '';
-  const onColor = theme.textColor === 'white' ? '%23FFFFFF' : '%23111827';
+  const onColor = theme.chevron || (theme.textColor === 'white' ? '%23FFFFFF' : '%23111827');
   return (
     <select
       aria-label={label}
@@ -628,7 +628,8 @@ export default function Class() {
 
   // 選んでいる項目の色(プルダウンの背景)
   const courseColor = courseTheme(courseOptions.find((o) => o.id === courseValue)?.label);
-  const kindColor = themeOf(KIND_THEMES[kind]);
+  // 形式は無彩色(灰)で表す。選択中でも色を付けない
+  const kindColor = { gradient: 'linear-gradient(var(--line), var(--line))', textColor: 'var(--text-strong)', chevron: '%236B7280' };
 
   const filteredAnnouncements = useMemo(
     () => filterAnnouncements(items, { tag: activeFilter, course: courseValue, kind, query }),
@@ -868,7 +869,7 @@ export default function Class() {
                   borderRadius: '0.857em',
                   flexShrink: 0,
                   cursor: 'pointer',
-                  backgroundImage: isActive ? 'linear-gradient(135deg, #FF4D4D 0%, #FF8A1B 100%)' : 'none',
+                  backgroundImage: isActive ? shaded('linear-gradient(135deg, #FF4D4D 0%, #FF8A1B 100%)') : 'none',
                   backgroundColor: isActive ? 'transparent' : 'var(--surface)',
                   outline: isActive ? 'none' : '1px var(--line) solid',
                   outlineOffset: '-1px',
