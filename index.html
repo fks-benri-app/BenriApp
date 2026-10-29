@@ -16,8 +16,11 @@
     <meta name="theme-color" content="#FFFFFF" />
     <script>
       // React が起動する前に、ダークモードのときのバーの色を反映する(白い一瞬のちらつきを防ぐ)
+      // 同じく、CSS の色(テーマ)と画面の背景も先に反映する(ダークで白く一瞬光るのを防ぐ)
       try {
         if (localStorage.getItem('cn:darkMode') === '1') {
+          document.documentElement.dataset.theme = 'dark';
+          document.documentElement.style.background = '#121214';
           document.querySelector('meta[name="theme-color"]').setAttribute('content', '#1f1f23');
         }
       } catch (e) {}

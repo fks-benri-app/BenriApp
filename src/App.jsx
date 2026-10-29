@@ -7,7 +7,8 @@ import Class, { bootOpenPending } from './pages/Class';
 const LinkPage = lazy(() => import('./pages/LinkPage'));
 const Settings = lazy(() => import('./pages/Settings'));
 const NotifySettings = lazy(() => import('./pages/NotifySettings'));
-const Home = lazy(() => import('./pages/Home'));
+// ホームは起動直後に使うので、遅延読み込みにしない(切り替え時の白い点滅を防ぐ)
+import Home from './pages/Home';
 
 // ログイン済み(連携済み)の人だけが入れるページを包む
 function RequireIdentity({ children }) {
