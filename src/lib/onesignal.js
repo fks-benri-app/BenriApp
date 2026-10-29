@@ -152,7 +152,16 @@ export async function setDevicePushEnabled(on) {
 }
 
 // この端末の通知が、今オンかどうか
+// オフラインでは OneSignal の SDK が読めず、待ち続けてしまうので、時間で打ち切る。
+// そのときは、この端末に保存した「オフ」の印で代用する(画面を開けなくしないため)。
+const SDK_WAIT_MS = 3000;
 export async function getDevicePushEnabled() {
-  await initOneSignal();
-  return withOneSignal((OneSignal) => !!OneSignal.User.PushSubscription.optedIn);
+  try {
+    return await Promise.race([
+      initOneSignal().then(() => withOneSignal((OneSignal) => !!OneSignal.User.PushSubscription.optedIn)),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('onesignal timeout')), SDK_WAIT_MS)),
+    ]);
+  } catch {
+    return !isPushOffByUser();
+  }
 }
