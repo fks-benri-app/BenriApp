@@ -8,6 +8,7 @@ import { useAccountName } from '../lib/account';
 import pkg from '../../package.json';
 import Switch from '../components/Switch';
 import { useNotifyPrefs } from '../lib/notifyPrefs';
+import { isPushOffByUser } from '../lib/onesignal';
 
 // フィードバックのフォームのURL。ここに入れると押せるようになる(空の間は灰色で押せない)
 const FEEDBACK_FORM_URL = 'https://forms.gle/pmiB1KdWofSkPgrd8';
@@ -227,7 +228,7 @@ export default function Settings() {
           </div>
 
           <Section title="通知設定">
-            <Row label="クラスルーム通知" value={notifyPrefs.offCourses.length ? `${notifyPrefs.offCourses.length}件の授業がオフ` : 'すべてオン'} onClick={() => navigate('/settings/notify', { state: { from: '/settings' } })} />
+            <Row label="クラスルーム通知" value={isPushOffByUser() ? 'オフ' : notifyPrefs.offCourses.length ? `${notifyPrefs.offCourses.length}件の授業がオフ` : 'すべてオン'} onClick={() => navigate('/settings/notify', { state: { from: '/settings' } })} />
             <Divider />
             <Row label="授業前通知" disabled />
           </Section>

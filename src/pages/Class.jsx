@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAnnouncements } from '../lib/announcements';
-import { ensureSubscription } from '../lib/onesignal';
+import { ensureSubscription, getDevicePushEnabled } from '../lib/onesignal';
 import { usePushBroken, usePushKey, usePushSubs, useDeviceSubscriptionId, judgeDeviceBroken, goRepairNotifications, markPushFixed, isPushRecentlyFixed } from '../lib/pushStatus';
 import { useIdentity } from '../auth/identity';
 import { THEMES } from '../lib/themes';
@@ -25,6 +25,7 @@ import settingsActiveIcon from '../assets/images/icons/settings-active.svg';
 // ★ ヘッダー用アイコン
 import searchIcon from '../assets/images/icons/search.svg';
 import bellIcon from '../assets/images/icons/bell.svg';
+import bellOffIcon from '../assets/images/icons/bell-off.svg';
 import readAllIcon from '../assets/images/icons/read-all.svg';
 
 const TABS = [
@@ -615,6 +616,13 @@ export default function Class() {
 
   // 検索
   const [searchOpen, setSearchOpen] = useState(false);
+  // この端末の通知がオンか(オフなら、ベルに斜線を付ける)。画面を開くたびに確かめる
+  const [devicePushOn, setDevicePushOn] = useState(true);
+  useEffect(() => {
+    let alive = true;
+    getDevicePushEnabled().then((v) => alive && setDevicePushOn(v)).catch(() => {});
+    return () => { alive = false; };
+  }, []);
   const [query, setQuery] = useState('');
   const searchInputRef = useRef(null);
 
@@ -807,8 +815,8 @@ export default function Class() {
                 <button
                   type="button"
                   onClick={() => navigate('/settings/notify', { state: { from: '/class' } })}
-                  aria-label="通知設定"
-                  title="通知設定"
+                  aria-label={devicePushOn ? '通知設定' : '通知設定(この端末はオフ)'}
+                  title={devicePushOn ? '通知設定' : '通知設定(この端末はオフ)'}
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
@@ -826,7 +834,7 @@ export default function Class() {
                 >
                   <img
                     className="icon-ink"
-                    src={bellIcon}
+                    src={devicePushOn ? bellIcon : bellOffIcon}
                     alt=""
                     aria-hidden="true"
                     draggable={false}

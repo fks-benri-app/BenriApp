@@ -1,4 +1,14 @@
 import { CONFIG } from '../config';
+import { storage } from './storage';
+
+// この端末の通知を、利用者が自分でオフにしたかどうか(オフの間は、自動でオンに戻さない)
+const PUSH_OFF_KEY = 'pushOffByUser';
+export function isPushOffByUser() {
+  return storage.get(PUSH_OFF_KEY) === '1';
+}
+function setPushOffByUser(off) {
+  storage.set(PUSH_OFF_KEY, off ? '1' : '0');
+}
 
 window.OneSignalDeferred = window.OneSignalDeferred || [];
 
@@ -65,6 +75,8 @@ export async function subscribeAs(externalId, onPermissionDone) {
         await OneSignal.login(externalId);
       }
     } else if (!OneSignal.User.PushSubscription.optedIn) {
+      // 連携し直すときは、オフの記録を消して、通知を受け取る状態にする
+      setPushOffByUser(false);
       await OneSignal.User.PushSubscription.optIn();
     }
 
@@ -107,7 +119,8 @@ export async function ensureSubscription(externalId) {
       await OneSignal.login(externalId);
       changed = true;
     }
-    if (!OneSignal.User.PushSubscription.optedIn) {
+    // 利用者が自分でオフにした端末は、ここでオンに戻さない
+    if (!OneSignal.User.PushSubscription.optedIn && !isPushOffByUser()) {
       await OneSignal.User.PushSubscription.optIn();
       changed = true;
     }
@@ -131,6 +144,7 @@ export async function unsubscribe() {
 export async function setDevicePushEnabled(on) {
   await initOneSignal();
   return withOneSignal(async (OneSignal) => {
+    setPushOffByUser(!on);
     if (on) await OneSignal.User.PushSubscription.optIn();
     else await OneSignal.User.PushSubscription.optOut();
     return !!OneSignal.User.PushSubscription.optedIn;
