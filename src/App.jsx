@@ -6,6 +6,7 @@ import Class from './pages/Class';
 // 連携画面と設定画面は、開いたときに読み込む(最初の表示に必要な JS を減らす)
 const LinkPage = lazy(() => import('./pages/LinkPage'));
 const Settings = lazy(() => import('./pages/Settings'));
+const NotifySettings = lazy(() => import('./pages/NotifySettings'));
 
 // ログイン済み(連携済み)の人だけが入れるページを包む
 function RequireIdentity({ children }) {
@@ -29,6 +30,14 @@ export default function App() {
         element={
           <RequireIdentity>
             <Class />
+          </RequireIdentity>
+        }
+      />
+      <Route
+        path="/settings/notify"
+        element={
+          <RequireIdentity>
+            <NotifySettings />
           </RequireIdentity>
         }
       />

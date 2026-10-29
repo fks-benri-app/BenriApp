@@ -12,7 +12,10 @@ service cloud.firestore {
     // schoolEmail と pushBroken を含む生徒の情報。こちらも本人だけが読める。
     match /users/{studentId} {
       allow read: if request.auth != null && request.auth.uid == studentId;
-      allow write: if false;
+      // 通知の設定(notifyPrefs)だけ、本人が書き換えられる。ほかの項目は GAS だけが書く
+      allow update: if request.auth != null && request.auth.uid == studentId
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['notifyPrefs']);
+      allow create, delete: if false;
     }
 
     // ここに書いていないパスは、すべて拒否される(既定)。

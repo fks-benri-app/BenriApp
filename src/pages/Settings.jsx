@@ -6,6 +6,8 @@ import { currentFontSize, setFontSize, FONT_SIZE_MIN, FONT_SIZE_MAX, FONT_SIZE_D
 import { isDarkMode, toggleDarkMode } from '../lib/themes';
 import { useAccountName } from '../lib/account';
 import pkg from '../../package.json';
+import Switch from '../components/Switch';
+import { useNotifyPrefs } from '../lib/notifyPrefs';
 
 // フィードバックのフォームのURL。ここに入れると押せるようになる(空の間は灰色で押せない)
 const FEEDBACK_FORM_URL = 'https://forms.gle/pmiB1KdWofSkPgrd8';
@@ -82,27 +84,6 @@ function Row({ label, value, onClick, disabled, chevron = true }) {
   );
 }
 
-function Switch({ on, disabled }) {
-  return (
-    <span
-      style={{
-        width: '3.429em',
-        height: '2em',
-        padding: '0.143em',
-        background: on ? 'var(--text-strong)' : 'var(--switch-off)',
-        borderRadius: '1em',
-        display: 'flex',
-        justifyContent: on ? 'flex-end' : 'flex-start',
-        alignItems: 'center',
-        boxSizing: 'border-box',
-        opacity: disabled ? 0.5 : 1,
-        transition: 'background 0.15s',
-      }}
-    >
-      <span style={{ width: '1.714em', height: '1.714em', background: 'var(--surface)', borderRadius: '50%', boxShadow: '0 1px 2px rgba(0,0,0,0.06)' }} />
-    </span>
-  );
-}
 
 function OutlineButton({ children, color, bg, border, onClick }) {
   return (
@@ -138,6 +119,7 @@ export default function Settings() {
   const studentClass = identity ? classOf(identity.id) : null;
   const accountName = useAccountName(identity ? identity.id : null);
   const [dark, setDark] = useState(isDarkMode);
+  const notifyPrefs = useNotifyPrefs(identity ? identity.id : null).prefs;
 
   // 下のバー: お知らせへ移動。ホーム・カレンダーはまだ画面がないので何もしない
   function onSelectTab(id) {
@@ -243,7 +225,7 @@ export default function Settings() {
           </div>
 
           <Section title="通知設定">
-            <Row label="クラスルーム通知" disabled />
+            <Row label="クラスルーム通知" value={notifyPrefs.enabled ? 'オン' : 'オフ'} onClick={() => navigate('/settings/notify')} />
             <Divider />
             <Row label="授業前通知" disabled />
           </Section>

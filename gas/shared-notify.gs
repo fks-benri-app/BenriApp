@@ -217,7 +217,10 @@ function sendToCourse_(studentId, item, ref) {
 
   // 自分の分は保存ずみ。ほかの人の分を保存し、書けた人だけを送り先にする
   const saved = saveAnnouncementsFor_(members.filter(function (m) { return m !== studentId; }), item.docId, item.rec);
-  const recipients = [studentId].concat(saved);
+  // 授業をオフにしている仲間は、保存はするが、送り先からは外す
+  const recipients = [studentId].concat(saved.filter(function (id) {
+    return notifyAllowed_(getNotifyPrefs_(id), ref.courseId);
+  }));
 
   const targets = [];
   recipients.forEach(function (id) {
@@ -257,8 +260,11 @@ function flushPendingShared_(studentId) {
 
   const now = Date.now();
   const keep = [];
+  const prefs = getNotifyPrefs_(studentId);
   list.forEach(function (p) {
     if (now - p.since > SHARE_PENDING_DROP_MS) return;
+    // 待っている間に、この授業の通知をオフにしたら、送らない
+    if (!notifyAllowed_(prefs, String(p.postKey).split('.')[0])) return;
     let selfSend = false;
     try {
       const c = readClaim_(p.postKey);
@@ -281,4 +287,44 @@ function flushPendingShared_(studentId) {
   });
   if (keep.length > 0) props.setProperty('sharePending', JSON.stringify(keep));
   else props.deleteProperty('sharePending');
+}
+
+// ----- 通知の設定(アプリの「通知設定」で決める。users/{生徒ID}.notifyPrefs) -----
+// 全体のオン/オフ(enabled)と、授業ごとのオフ(offCourses)。未設定ならすべてオン(これまでどおり)
+const NOTIFY_PREFS_DEFAULT = { enabled: true, offCourses: [] };
+
+// Firestore の値(fields)から設定を取り出す。読めなければ、すべてオン
+function notifyPrefsFrom_(fields) {
+  try {
+    const m = fields && fields.notifyPrefs && fields.notifyPrefs.mapValue && fields.notifyPrefs.mapValue.fields;
+    if (!m) return NOTIFY_PREFS_DEFAULT;
+    const enabled = !(m.enabled && m.enabled.booleanValue === false);
+    const list = (m.offCourses && m.offCourses.arrayValue && m.offCourses.arrayValue.values) || [];
+    return { enabled: enabled, offCourses: list.map(function (v) { return v.stringValue; }).filter(Boolean) };
+  } catch (e) {
+    return NOTIFY_PREFS_DEFAULT;
+  }
+}
+
+// 生徒の設定を読む。読めないとき(通信エラー・ドキュメントなし)は、すべてオン
+function getNotifyPrefs_(studentId) {
+  try {
+    const res = fsRequest_(fsDocUrl_('/users/' + encodeURIComponent(studentId)) + '?mask.fieldPaths=notifyPrefs', 'get');
+    if (res.getResponseCode() !== 200) return NOTIFY_PREFS_DEFAULT;
+    return notifyPrefsFrom_(JSON.parse(res.getContentText()).fields);
+  } catch (e) {
+    console.error('通知設定の読み取りに失敗: ' + e);
+    return NOTIFY_PREFS_DEFAULT;
+  }
+}
+
+// この授業の通知を送ってよいか(全体がオン、かつこの授業がオフでない)
+function notifyAllowed_(prefs, courseId) {
+  return !!prefs && prefs.enabled && prefs.offCourses.indexOf(courseId || '') < 0;
+}
+
+// 投稿のリンクから授業IDだけを取る。取れなければ null
+function courseIdFromLink_(link) {
+  const m = String(link || '').match(/\/c\/([^/?#]+)/);
+  return m ? m[1] : null;
 }

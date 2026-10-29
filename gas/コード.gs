@@ -361,6 +361,12 @@ function decodeClassroomId_(s) {
 // 新着通知の送信制御
 function notifyFresh_(studentId, fresh) {
   if (fresh.length === 0) return;
+  // 通知の設定で、オフの授業・全体オフの分は送らない(お知らせの保存は済んでいる)
+  const prefs = getNotifyPrefs_(studentId);
+  fresh = fresh.filter(function (item) {
+    return notifyAllowed_(prefs, courseIdFromLink_(item.info.link));
+  });
+  if (fresh.length === 0) return;
   if (fresh.length < BATCH_THRESHOLD) {
     fresh.forEach(function (item) {
       // 授業の中で共有できる投稿は、最初に見つけた1人が全員分をまとめて送る。済んでいれば、自分では送らない
