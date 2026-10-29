@@ -153,7 +153,9 @@ html[data-theme="dark"] {
 }
 
 /* 画像として読むアイコン(ベルなど)は、CSS の色を変えられない。ダークでは反転して明るくする */
-html[data-theme="dark"] img.icon-ink { filter: invert(1) hue-rotate(180deg); }
+html[data-theme="dark"] img.icon-ink { filter: invert(1) hue-rotate(180deg) brightness(0.8); }
+/* 選択中の色付きアイコンは、タグと同じ程度に少し暗くする */
+html[data-theme="dark"] img.icon-active { filter: brightness(0.78); }
 
 /* ===== 押したときの反応 =====
    押している間だけ少し薄くする(縮めない)。離すと戻る。無効なボタンには出さない。 */

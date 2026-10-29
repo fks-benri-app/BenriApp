@@ -88,7 +88,6 @@ export function BottomNav({ activeTab, onSelect }) {
       padding: '0 1.143em env(safe-area-inset-bottom)',
       height: 'calc(4.571em + env(safe-area-inset-bottom))',
       background: 'var(--surface)',
-      borderTop: '1px var(--line) solid',
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
@@ -123,7 +122,7 @@ export function BottomNav({ activeTab, onSelect }) {
                 height: '1.5em',
                 opacity: isActive ? 1 : 0.45
               }}
-              className={isActive ? undefined : 'icon-ink'}
+              className={isActive ? 'icon-active' : 'icon-ink'}
               src={isActive ? tab.activeIcon : tab.icon}
               alt={tab.id}
             />
