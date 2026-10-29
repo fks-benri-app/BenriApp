@@ -264,7 +264,7 @@ export default function ClassBackdrop() {
                   padding: '0.571em 1.143em',
                   borderRadius: '0.857em',
                   flexShrink: 0,
-                  backgroundImage: isActive ? 'linear-gradient(135deg, #FF4D4D 0%, #FF8A1B 100%)' : 'none',
+                  backgroundImage: isActive ? 'linear-gradient(var(--tag-shade), var(--tag-shade)), linear-gradient(135deg, #FF4D4D 0%, #FF8A1B 100%)' : 'none',
                   backgroundColor: isActive ? 'transparent' : 'var(--surface)',
                   outline: isActive ? 'none' : '1px var(--line) solid',
                   outlineOffset: '-1px',
