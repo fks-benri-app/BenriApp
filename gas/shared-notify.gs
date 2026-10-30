@@ -177,7 +177,7 @@ function saveAnnouncementsFor_(ids, docId, rec) {
 function buildMessage_(item) {
   const info = item.info;
   return {
-    heading: info.category + (info.courseName ? ': ' + info.courseName : ''),
+    heading: info.courseName || info.category, // タイトルは授業名だけ
     body: info.dueDate ? info.title + '(期限: ' + info.dueDate + ')' : info.title,
     url: APP_URL + '?open=' + encodeURIComponent(item.docId),
     data: {

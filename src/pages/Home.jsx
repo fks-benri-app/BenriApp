@@ -272,7 +272,7 @@ export default function Home() {
           width: '100%',
         }}
       >
-        <div style={{ padding: '0 1.714em', height: '34px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ padding: '0 1.143em', height: '34px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ color: 'var(--text-strong)', fontSize: '1.871em', fontFamily: 'Inter', fontWeight: '800', userSelect: 'none' }}>
             {editing ? '編集' : 'ホーム'}
           </div>
@@ -313,7 +313,7 @@ export default function Home() {
           ref={gridRef}
           onClick={(e) => { if (editingRef.current && e.target === e.currentTarget) setEditing(false); }}
           // マス目はヘッダーと同じ左右の余白の内側いっぱいに広げる
-          style={{ position: 'relative', margin: '0 1.714em', height: rows * cell }}
+          style={{ position: 'relative', margin: '0 1.143em', height: rows * cell }}
         >
           {shown.map((it) => {
             const g = gadgetById(it.id);
