@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
-import { doc, onSnapshot } from 'firebase/firestore';
-import { db } from './firebase';
+import { subscribe, userDoc } from './firestoreLazy';
 import { storage } from './storage';
 
 // users/{生徒ID}.name(GAS が Google アカウントの表示名を保存する)。未保存なら空文字
@@ -18,8 +17,8 @@ function entryFor(studentId) {
   if (e) return e;
   e = { name: cleanName(storage.get(NAME_KEY(studentId)) || ''), subs: new Set() };
   store.set(studentId, e);
-  onSnapshot(
-    doc(db, 'users', studentId),
+  subscribe(
+    userDoc(studentId),
     (snap) => {
       const name = cleanName(snap.exists() ? snap.data().name : '');
       e.name = name;

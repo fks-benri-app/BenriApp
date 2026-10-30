@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { collection, limit, onSnapshot, orderBy, query } from 'firebase/firestore';
-import { db } from './firebase';
+import { subscribe } from './firestoreLazy';
 import { storage } from './storage';
 import { cleanTeacher, cleanText, courseKey, courseLabel, joinTitleAndBody, kindOf, shortCourse } from './filters';
 
@@ -112,14 +111,13 @@ export function useAnnouncements(studentId, { limitTo } = {}) {
     if (!studentId) return undefined;
     const cached = loadCache(studentId);
     setState(cached ? { status: 'ready', items: cached } : { status: 'loading', items: [] });
-    const q = query(
-      collection(db, 'users', studentId, 'announcements'),
-      orderBy('receivedAt', 'desc'),
-      limit(limitTo || 100)
-    );
-    // onSnapshot なので、新しい通知が保存されると画面が自動で更新される
-    return onSnapshot(
-      q,
+    // subscribe は Firestore を必要になったときに読み込んでから購読する。新しい通知が保存されると画面が自動で更新される
+    return subscribe(
+      ({ fs, db }) => fs.query(
+        fs.collection(db, 'users', studentId, 'announcements'),
+        fs.orderBy('receivedAt', 'desc'),
+        fs.limit(limitTo || 100)
+      ),
       (snap) => {
         const items = snap.docs.map(toAnnouncement).filter((a) => !a.deleted);
         // 件数を絞った取得(ホーム)は、保存がまだ無いときだけ保存する(お知らせ画面の保存を、少ない件数で上書きしない)
