@@ -1,6 +1,6 @@
 // ガジェットの登録簿。設定は gadgets.json に書く(中身の部品は components.js)。
 //
-// gadgets.json の項目(大きさ・位置は、基準の列数 BASE_COLS での値。画面の列数に合わせて自動で換算される):
+// gadgets.json の項目(大きさ・位置は、マスの数で書く。画面が広くても、マスの大きさは変わらない):
 //   id          保存に使う名前。変えない。重複不可
 //   type        部品の名前(components.js にあるもの)
 //   title       枠の見出し
@@ -8,12 +8,12 @@
 //   initial     true: 初めて開いたときから置く
 //   addable     true: ガジェットの追加画面から追加できる(その画面は今後作る。省略時は true)
 //   defaultPos  初めて置くときの位置と大きさ(x, y, w, h)
-//   min / max   大きさの範囲(w, h)。max.w は BASE_COLS まで
+//   min / max   大きさの範囲(w, h)。マスの数で書く(画面の列数まで)
 // 形式がおかしい項目は、読み飛ばして、コンソールに理由を出す(画面が壊れないように)。
 
 import gadgetsJson from './gadgets.json';
 import { COMPONENTS } from './components';
-import { BASE_COLS, BASE_ROWS } from '../lib/homeLayout';
+const MAX_CELLS = 40; // 大きさ・位置として書ける上限(マス)。実際の列数は画面の幅で決まる
 
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 
@@ -31,12 +31,12 @@ function normalize(raw, seen) {
 
   const min = raw.min || {};
   const max = raw.max || {};
-  const minW = min.w ?? 2;
-  const maxW = max.w ?? BASE_COLS;
-  const minH = min.h ?? 2;
-  const maxH = max.h ?? BASE_ROWS;
+  const minW = min.w ?? 1;
+  const maxW = max.w ?? MAX_CELLS;
+  const minH = min.h ?? 1;
+  const maxH = max.h ?? MAX_CELLS;
   if (![minW, maxW, minH, maxH].every(Number.isInteger)) return fail('min / max が整数ではない');
-  if (minW < 1 || maxW > BASE_COLS || minW > maxW || minH < 1 || minH > maxH) return fail('min / max の範囲がおかしい');
+  if (minW < 1 || maxW > MAX_CELLS || minW > maxW || minH < 1 || maxH > MAX_CELLS || minH > maxH) return fail('min / max の範囲がおかしい');
 
   const dp = raw.defaultPos || {};
   const x = dp.x ?? 0;
@@ -51,7 +51,7 @@ function normalize(raw, seen) {
     path: typeof raw.path === 'string' && raw.path ? raw.path : null,
     initial: raw.initial === true,
     addable: raw.addable !== false,
-    defaultPos: { x: clamp(x, 0, BASE_COLS - w), y, w, h },
+    defaultPos: { x, y, w, h },
     minW, maxW, minH, maxH,
     Component: COMPONENTS[raw.type],
   };

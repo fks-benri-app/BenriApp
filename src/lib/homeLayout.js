@@ -1,14 +1,14 @@
 // ホーム画面の配置。
-// ・列数は画面の横幅で決める(gridFor)。マスは正方形で、表示できる行数は画面の高さで決まる(下は、スクロールで続く)
-// ・ガジェットの大きさ・位置(gadgets.json)は、基準の列数 BASE_COLS での値。別の列数では比率で変換する(rangeFor)
-// ・配置は列数ごとに保存する。まだ保存が無い列数は、近い列数の保存を比率で移して使う
+// ・列数は画面の横幅で決める(gridFor)。マスは正方形で、画面の全幅を使う。表示できる行数は画面の高さで決まる(下は、スクロールで続く)
+// ・ガジェットの大きさ・位置(gadgets.json)は、マスの数で指定する。画面が広くても、マスの大きさは変わらない(rangeFor)
+// ・配置は列数ごとに保存する。まだ保存が無い列数は、近い列数の保存をそのまま使う(範囲外は clampItem で収める)
 // ・保存するのは「ガジェットIDごとの x / y / w / h(マス)」だけ。中身は src/gadgets/index.js にある
 import { storage } from './storage';
 
 export const BASE_COLS = 5;   // gadgets.json の基準の列数
 export const BASE_ROWS = 10;  // gadgets.json の基準の行数
-const MIN_COLS = 4;
-const MAX_COLS = 12;
+const MIN_COLS = 3;
+const MAX_COLS = 30;
 const TARGET_CELL = 68;       // 1マスの目安の大きさ(px)。これに近づくように列数を決める
 const KEY = 'homeLayouts';
 const LEGACY_KEY = 'homeLayout'; // 列数を分けていなかった頃の保存(基準の列数として読む)
@@ -24,23 +24,22 @@ const isObj = (v) => v && typeof v === 'object' && !Array.isArray(v);
 // 画面の横幅・高さ(px)から、列数・マスの大きさ(px)・表示できる行数を決める
 export function gridFor(width, height) {
   const cols = clamp(Math.round(width / TARGET_CELL), MIN_COLS, MAX_COLS);
-  const cell = width / cols;
+  const cell = width / cols; // 全幅を、列数で割り切る(端まで置ける)
   const rows = Math.max(3, Math.floor(height / cell));
   return { cols, cell, rows };
 }
 
-// ガジェットの大きさの範囲と初期位置を、列数に合わせて換算する(基準の列数からの比率)
+// ガジェットの大きさの範囲と初期位置。マスの数はそのまま使う(列数に比例させない)
+// 幅だけは、画面の列数を超えないように抑える
 export function rangeFor(g, cols) {
-  const s = cols / BASE_COLS;
-  const sc = (v) => Math.max(1, Math.round(v * s));
-  const maxW = Math.min(sc(g.maxW), cols);
-  const minW = Math.min(sc(g.minW), maxW);
-  const maxH = sc(g.maxH);
-  const minH = Math.min(sc(g.minH), maxH);
-  const defaultW = clamp(sc(g.defaultPos.w), minW, maxW);
-  const defaultH = clamp(sc(g.defaultPos.h), minH, maxH);
-  const defaultX = clamp(Math.round(g.defaultPos.x * s), 0, cols - defaultW);
-  const defaultY = Math.max(0, Math.round(g.defaultPos.y * s));
+  const maxW = Math.min(g.maxW, cols);
+  const minW = Math.min(g.minW, maxW);
+  const maxH = g.maxH;
+  const minH = Math.min(g.minH, maxH);
+  const defaultW = clamp(g.defaultPos.w, minW, maxW);
+  const defaultH = clamp(g.defaultPos.h, minH, maxH);
+  const defaultX = clamp(g.defaultPos.x, 0, cols - defaultW);
+  const defaultY = Math.max(0, g.defaultPos.y);
   return { minW, maxW, minH, maxH, defaultX, defaultY, defaultW, defaultH };
 }
 
@@ -89,17 +88,16 @@ function readAll() {
   return {};
 }
 
-// 保存された配置を、別の列数に比率で移す
-function scaleSaved(obj, from, to) {
-  const k = to / from;
+// 保存された配置を別の列数で使う。マスの数は列数に比例しないので、そのまま使い、範囲外は clampItem で収める
+function scaleSaved(obj) {
   return Object.fromEntries(
     Object.entries(obj)
       .filter(([, p]) => isObj(p))
       .map(([id, p]) => [id, {
-        x: Math.round(num(p.x, 0) * k),
-        y: Math.round(num(p.y, 0) * k),
-        w: Math.max(1, Math.round(num(p.w, 1) * k)),
-        h: Math.max(1, Math.round(num(p.h, 1) * k)),
+        x: num(p.x, 0),
+        y: num(p.y, 0),
+        w: Math.max(1, num(p.w, 1)),
+        h: Math.max(1, num(p.h, 1)),
       }]),
   );
 }
@@ -118,7 +116,7 @@ export function loadLayout(gadgets, cols) {
       .map(Number)
       .filter((k) => Number.isFinite(k) && k > 0 && isObj(all[k]))
       .sort((a, b) => Math.abs(a - cols) - Math.abs(b - cols))[0];
-    if (nearest !== undefined) source = scaleSaved(all[nearest], nearest, cols);
+    if (nearest !== undefined) source = scaleSaved(all[nearest]);
   }
 
   let items;
