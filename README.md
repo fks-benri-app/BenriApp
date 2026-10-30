@@ -141,6 +141,9 @@ GAS のコードはこのリポジトリには含まれません。GAS 側には
 - スクリプトプロパティ:`PUSH_KEY_SECRET`(通知キーの元になる秘密の値)、`FIREBASE_SERVICE_ACCOUNT`、OneSignal の REST API キー
 - `PUSH_KEY_SECRET` は**一度設定したら再生成しないでください**。変えると、全員の通知キーが変わり、通知が止まります。
 - 旧方式(生徒 ID を宛先にする端末)が残っている間は、GAS の `INCLUDE_LEGACY_ID = true` を維持します。
+- 期限のある課題の 1 日前リマインドは `gas/assignment-reminder.gs` にあります。`setupDueReminderTrigger` を 1 回実行して、毎時の trigger を設定してください。JST の 18 時以降に、明日が期限の課題を送ります。
+- リマインドは、Firestore の `announcements` を全生徒から検索します(`dueAt` の範囲)。検索で「インデックスが必要」と出た場合は、ログのリンクからインデックスを作ってください。
+- この機能を入れる前に保存された課題には `dueAt` が無いため、リマインドの対象になりません。
 
 ## 使い方の例
 
