@@ -3,7 +3,7 @@
 import { storage } from './storage';
 
 const KEY = 'homeLayout';
-export const COLS = 4;   // 横は4分割
+export const COLS = 5;   // 横は5分割
 export const ROWS = 10;  // 縦は画面の高さを10分割(これより下は、スクロールで続く)
 
 const num = (v, d) => (Number.isFinite(v) ? Math.round(v) : d);

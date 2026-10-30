@@ -18,8 +18,10 @@ function loadCache(studentId) {
   try {
     const raw = JSON.parse(storage.get(CACHE_KEY) || 'null');
     if (raw && raw.studentId === studentId && Array.isArray(raw.items)) {
-      memoryCache.set(studentId, raw.items);
-      return raw.items;
+      // 「今日・昨日」の表示は、読んだ時点の日付で作り直す
+      const items = raw.items.map((a) => (a.receivedAtMs ? { ...a, time: formatTime(new Date(a.receivedAtMs)) } : a));
+      memoryCache.set(studentId, items);
+      return items;
     }
   } catch { /* 壊れていたら無視して読み直す */ }
   return null;
@@ -79,6 +81,7 @@ function toAnnouncement(doc) {
     courseFull: courseLabel(d.courseName), // 検索用(授業名の全体)
     kind: kindOf(d.category), // 'announcement' | 'assignment' | 'material' | 'other'
     time: formatTime(receivedAt),
+    receivedAtMs: receivedAt.getTime(),
     content,
     body: fullBody, // 全文(なければ空)
     rawBody: typeof d.rawBody === 'string' ? d.rawBody : '', // Classroom の原文(改行・空白そのまま。なければ空)
