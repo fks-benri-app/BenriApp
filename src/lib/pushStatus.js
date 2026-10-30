@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
-import { doc, onSnapshot } from 'firebase/firestore';
-import { db } from './firebase';
+import { subscribe, userDoc } from './firestoreLazy';
 import { getSubscriptionId } from './onesignal';
 
 /**
@@ -12,8 +11,8 @@ export function usePushBroken(studentId) {
   const [broken, setBroken] = useState(false);
   useEffect(() => {
     if (!studentId) return undefined;
-    return onSnapshot(
-      doc(db, 'users', studentId),
+    return subscribe(
+      userDoc(studentId),
       (snap) => setBroken(!!(snap.exists() && snap.data().pushBroken === true)),
       () => setBroken(false)
     );
@@ -43,8 +42,8 @@ export function usePushKey(studentId) {
     let attempt = 0;
 
     const listen = () => {
-      unsubscribe = onSnapshot(
-        doc(db, 'users', studentId),
+      unsubscribe = subscribe(
+        userDoc(studentId),
         (snap) => {
           attempt = 0;
           const v = snap.exists() ? snap.data().pushKey : '';
@@ -90,8 +89,8 @@ export function usePushSubs(studentId) {
       setSubs(null);
       return undefined;
     }
-    return onSnapshot(
-      doc(db, 'users', studentId),
+    return subscribe(
+      userDoc(studentId),
       (snap) => {
         const v = snap.exists() ? snap.data().pushSubs : null;
         setSubs(Array.isArray(v) ? v.filter((s) => s && typeof s.id === 'string').map((s) => ({ id: s.id, enabled: s.enabled === true })) : null);

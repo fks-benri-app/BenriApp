@@ -1,8 +1,7 @@
 // 授業ごとの通知の設定(users/{生徒ID}.notifyPrefs.offCourses に、オフの授業IDを入れる)。
 // 全体のオン/オフは端末ごとに、OneSignal の購読で決める(lib/onesignal.js)。
 import { useEffect, useState } from 'react';
-import { doc, onSnapshot, updateDoc } from 'firebase/firestore';
-import { db } from './firebase';
+import { subscribe, updateUserDoc, userDoc } from './firestoreLazy';
 
 export const DEFAULT_PREFS = { offCourses: [] };
 
@@ -20,8 +19,8 @@ export function useNotifyPrefs(studentId) {
   const [state, setState] = useState({ loaded: false, prefs: DEFAULT_PREFS });
   useEffect(() => {
     if (!studentId) return undefined;
-    return onSnapshot(
-      doc(db, 'users', studentId),
+    return subscribe(
+      userDoc(studentId),
       (snap) => setState({ loaded: true, prefs: normalize(snap.exists() ? snap.data().notifyPrefs : null) }),
       () => setState({ loaded: true, prefs: DEFAULT_PREFS })
     );
@@ -31,5 +30,5 @@ export function useNotifyPrefs(studentId) {
 
 // 授業ごとの設定を保存する。本人だけが書けるように、Firestore のルールで notifyPrefs に限っている
 export async function saveNotifyPrefs(studentId, prefs) {
-  await updateDoc(doc(db, 'users', studentId), { notifyPrefs: { offCourses: prefs.offCourses } });
+  await updateUserDoc(studentId, { notifyPrefs: { offCourses: prefs.offCourses } });
 }

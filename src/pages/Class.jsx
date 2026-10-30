@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { doc, onSnapshot } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { subscribe, userDoc } from '../lib/firestoreLazy';
 import { useAnnouncements } from '../lib/announcements';
 import { ensureSubscription, getDevicePushEnabled } from '../lib/onesignal';
 import { usePushBroken, usePushKey, usePushSubs, useDeviceSubscriptionId, judgeDeviceBroken, goRepairNotifications, markPushFixed, isPushRecentlyFixed } from '../lib/pushStatus';
@@ -105,8 +104,8 @@ function useSchoolEmail(studentId) {
   const [email, setEmail] = useState('');
   useEffect(() => {
     if (!studentId) return undefined;
-    return onSnapshot(
-      doc(db, 'users', studentId),
+    return subscribe(
+      userDoc(studentId),
       (snap) => {
         const v = snap.exists() ? snap.data().schoolEmail : '';
         setEmail(typeof v === 'string' && v ? v : loadSchoolEmail());
