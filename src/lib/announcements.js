@@ -101,7 +101,7 @@ function toAnnouncement(doc) {
  * 将来ログインを入れて保存先のパスが変わっても、ここだけ直せば画面は変わらない。
  * @returns {{ status: 'loading'|'ready'|'error', items: Array, markRead: (id: string) => void, markAllRead: (ids: string[]) => void }}
  */
-export function useAnnouncements(studentId) {
+export function useAnnouncements(studentId, { limitTo } = {}) {
   const [state, setState] = useState(() => {
     const cached = loadCache(studentId);
     return cached ? { status: 'ready', items: cached } : { status: 'loading', items: [] };
@@ -115,22 +115,24 @@ export function useAnnouncements(studentId) {
     const q = query(
       collection(db, 'users', studentId, 'announcements'),
       orderBy('receivedAt', 'desc'),
-      limit(100)
+      limit(limitTo || 100)
     );
     // onSnapshot なので、新しい通知が保存されると画面が自動で更新される
     return onSnapshot(
       q,
       (snap) => {
         const items = snap.docs.map(toAnnouncement).filter((a) => !a.deleted);
-        saveCache(studentId, items);
+        // 件数を絞った取得(ホーム)は、保存がまだ無いときだけ保存する(お知らせ画面の保存を、少ない件数で上書きしない)
+        if (!limitTo || !loadCache(studentId)) saveCache(studentId, items);
         setState({ status: 'ready', items });
       },
       (error) => {
         console.error(error);
-        setState({ status: 'error', items: [] });
+        // 前回の内容が表示できているなら、それを消さない(オフラインなど)
+        setState((prev) => (prev.items.length ? prev : { status: 'error', items: [] }));
       }
     );
-  }, [studentId]);
+  }, [studentId, limitTo]);
 
   const markRead = useCallback((id) => {
     setReadIds((prev) => {

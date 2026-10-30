@@ -6,10 +6,19 @@
     <title>Classroom通知</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- 文字(Google Fonts)は、読み込みが終わってから反映する。最初の表示を待たせない -->
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;600;700;800&display=swap"
       rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
     />
+    <noscript>
+      <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;600;700;800&display=swap"
+        rel="stylesheet"
+      />
+    </noscript>
 
     <link rel="manifest" href="%BASE_URL%manifest.json" />
     <link rel="apple-touch-icon" href="%BASE_URL%icon-192.png" />
