@@ -4,6 +4,7 @@ import { useIdentity } from '../auth/identity';
 import BottomNav from '../components/BottomNav';
 import { GADGETS, gadgetById } from '../gadgets';
 import { currentFontSize } from '../lib/fontSize';
+import { THEMES } from '../lib/themes';
 import { BASE_COLS, gridFor, loadLayout, rangeFor, resolveLayout, saveLayout } from '../lib/homeLayout';
 
 const NO_SCROLLBAR_CSS = '.no-scrollbar{scrollbar-width:none;-ms-overflow-style:none}.no-scrollbar::-webkit-scrollbar{display:none}';
@@ -25,19 +26,6 @@ const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土'];
 const NEXT_CLASS = { name: '数学Ⅲ', period: '1限 08:40 - 09:35', room: '221教室' };
 // 曜日ごとの予定の点の色(テスト用)。予定が無い曜日は点を出さない
 const TEST_EVENT_DOTS = { 1: '#9ca3af', 2: '#3b82f6', 3: '#22c55e', 4: '#f59e0b', 6: '#9ca3af' };
-
-// カードの中の小さなアイコンの枠と、アイコン(線画)
-const ICON_BADGE = { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 24, height: 24, borderRadius: 8, background: 'rgba(255,255,255,0.22)' };
-const IconBook = (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z" /><path d="M4 19V5" />
-  </svg>
-);
-const IconCalendar = (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
-    <rect x="3" y="5" width="18" height="16" rx="3" /><path d="M3 10h18M8 3v4M16 3v4" />
-  </svg>
-);
 
 const sameDay = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 
@@ -308,17 +296,16 @@ export default function Home() {
           paddingTop: 'calc(2em + env(safe-area-inset-top))',
           paddingBottom: '1.143em',
           background: 'var(--surface)',
-          borderBottom: '1px var(--line) solid',
           width: '100%',
         }}
       >
         <div style={{ padding: '0 1.714em', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.857em', minHeight: 48 }}>
           <div style={{ minWidth: 0 }}>
-            <div style={{ color: 'var(--text-muted)', fontSize: '0.857em', fontWeight: 600, userSelect: 'none' }}>
-              {editing ? 'ホームを編集中' : '今日もがんばろう！'}
+            <div style={{ color: 'var(--text-muted)', fontSize: '0.929em', fontWeight: 600, userSelect: 'none' }}>
+              {editing ? 'ホームを編集中' : 'おはようございます！'}
             </div>
-            <div style={{ color: 'var(--text-strong)', fontSize: '1.714em', fontFamily: 'Inter', fontWeight: '800', userSelect: 'none', lineHeight: 1.25 }}>
-              {editing ? 'ガジェットを並べ替え' : 'こんにちは'}
+            <div style={{ color: 'var(--text-strong)', fontSize: '1.871em', fontFamily: 'Inter', fontWeight: '800', userSelect: 'none', lineHeight: 1.2 }}>
+              {editing ? 'ガジェットを並べ替え' : '今日は特曜日です！'}
             </div>
           </div>
           {editing ? (
@@ -360,14 +347,11 @@ export default function Home() {
         {/* 次の授業と今週の予定。参考のガジェットの見た目(今は表示だけ。動かせない) */}
         <section style={{ padding: '0 1.143em', display: 'flex', flexDirection: 'column', gap: '0.857em', paddingBottom: '1.143em' }}>
           <div style={{
-            background: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)', borderRadius: 24, padding: '1.143em 1.286em',
+            background: THEMES.cyan.gradient, borderRadius: 24, padding: '1.143em 1.286em',
             color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.857em',
           }}>
             <div style={{ minWidth: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5em', fontSize: '0.929em', fontWeight: 700 }}>
-                <span style={ICON_BADGE}>{IconBook}</span>
-                次の授業
-              </div>
+              <div style={{ fontSize: '0.929em', fontWeight: 700 }}>次の授業</div>
               <div style={{ fontSize: '1.857em', fontWeight: 800, fontFamily: 'Inter', marginTop: '0.3em', lineHeight: 1.15 }}>{NEXT_CLASS.name}</div>
               <div style={{ fontSize: '0.929em', opacity: 0.9, marginTop: '0.35em' }}>{NEXT_CLASS.period} ・ {NEXT_CLASS.room}</div>
             </div>
@@ -375,10 +359,7 @@ export default function Home() {
           </div>
 
           <div style={{ background: 'var(--surface-2)', borderRadius: 24, padding: '1em 1.143em' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5em', fontSize: '1em', fontWeight: 700, color: 'var(--text-strong)', userSelect: 'none' }}>
-              <span style={{ ...ICON_BADGE, background: 'var(--ink)', color: 'var(--on-ink)' }}>{IconCalendar}</span>
-              今週の予定
-            </div>
+            <div style={{ fontSize: '1em', fontWeight: 700, color: 'var(--text-strong)', userSelect: 'none' }}>今週の予定</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.286em', marginTop: '0.857em' }}>
               {weekDays.map((d) => {
                 const isToday = sameDay(d, today);
