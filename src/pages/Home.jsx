@@ -312,8 +312,8 @@ export default function Home() {
         <div
           ref={gridRef}
           onClick={(e) => { if (editingRef.current && e.target === e.currentTarget) setEditing(false); }}
-          // マス目は画面の全幅を使う(端までガジェットを置ける)
-          style={{ position: 'relative', width: '100%', height: rows * cell }}
+          // マス目はヘッダーと同じ左右の余白の内側いっぱいに広げる
+          style={{ position: 'relative', margin: '0 1.714em', height: rows * cell }}
         >
           {shown.map((it) => {
             const g = gadgetById(it.id);
