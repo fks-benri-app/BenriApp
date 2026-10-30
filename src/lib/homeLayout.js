@@ -58,7 +58,8 @@ const overlaps = (a, b) =>
 
 // 重なりを解消し、空いている所へ上から詰める。
 // 動かしたガジェットは置いた位置のまま。残りは上の順に、空いている一番上まで移す(隙間を残さない)
-export function resolveLayout(items, movedId) {
+// keepY: 残りの縦の位置を変えず、重なったときだけ下へずらす(保存した配置を読むとき使う)
+export function resolveLayout(items, movedId, { keepY = false } = {}) {
   const moved = items.filter((i) => i.id === movedId);
   const rest = items.filter((i) => i.id !== movedId).sort((a, b) => a.y - b.y || a.x - b.x);
   const placed = [];
@@ -68,7 +69,7 @@ export function resolveLayout(items, movedId) {
     placed.push(cur);
   });
   rest.forEach((it) => {
-    const cur = { ...it, y: 0 };
+    const cur = { ...it, y: keepY ? it.y : 0 };
     while (placed.some((p) => overlaps(p, cur))) cur.y += 1;
     placed.push(cur);
   });
@@ -132,7 +133,8 @@ export function loadLayout(gadgets, cols) {
         return { id: g.id, x: r.defaultX, y: r.defaultY, w: r.defaultW, h: r.defaultH };
       });
   }
-  return resolveLayout(items, null);
+  // 保存した位置はそのまま使う(縦の位置を詰めると、動かした位置が毎回ずれてしまう)
+  return resolveLayout(items, null, { keepY: true });
 }
 
 // ガジェットを追加する(追加画面から使う。今はまだ呼ばれていない)。一番下に置く
