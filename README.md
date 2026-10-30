@@ -36,6 +36,9 @@ GAS は新着を検知すると、`pushKey` を宛先にして OneSignal へ送�
 - **Google でログイン**:学校の Google アカウントで連携します。パスワードの入力はありません。
 - **プッシュ通知**:Classroom の新着を、アプリを閉じていても受け取れます。
 - **お知らせの一覧**:未読・既読、テスト関連などで絞り込み、授業や形式でも絞れます。まとめて既読にもできます。
+- **ホーム画面(ガジェット)**:お知らせなどを「ガジェット」として並べられます。長押しで編集モードに入り、ドラッグで移動、角のハンドルで大きさを変えられます。配置は端末ごとに保存されます。
+- **授業ごとの通知設定**:授業ごとに通知のオン・オフを切り替えられます。全体のオン・オフは、この端末の購読で決まります。
+- **オフライン表示**:前回読んだお知らせは、端末に保存して、オフラインでも表示します。
 - **検索**:教科・先生・本文で検索できます。
 - **PWA 対応**:iPhone・Android では、ホーム画面に追加する手順を案内します。iPhone ではホーム画面から開かないと通知が届きません。
 - **通知の自己修復**:通知が届いていない可能性があるときは、お知らせ画面に「通知を直す」を表示します。修復ページで端末側の古い記録を消して、登録し直せます。
@@ -64,23 +67,72 @@ npm run preview # ビルド結果の確認
 
 - `main` に push すると、GitHub Actions(`.github/workflows/deploy.yml`)がビルドして GitHub Pages に公開します。
 - `vite.config.js` の `base` は、リポジトリ名(`/BenriApp/`)に合わせてあります。変えると、JS・CSS が読み込めず、画面が真っ白になります。
+- ライブラリは、チャンクに分けて配信します(`vite.config.js` の `manualChunks`)。`vendor-react`、`vendor-firebase`(起動時に読む)、`vendor-firestore`(必要になったときに読む)です。Firestore は直接 import せず、`src/lib/firestoreLazy.js` を通してください。
 - 設定値(GAS の URL、OneSignal の App ID)は `src/config.js` にあります。
 
 ### 主なファイル
 
 ```
-public/                  そのまま配信されるファイル(manifest、Service Worker、修復ページ repair.html)
-src/config.js            GAS_URL、OneSignal App ID、Firebase の設定
-src/auth/identity.jsx    ログイン状態の窓口(GAS のトークンで Firebase にログイン)
-src/lib/onesignal.js     OneSignal の初期化・購読・購読状態の確認
-src/lib/pushStatus.js    pushKey の取得、「通知を直す」の表示の判定
-src/lib/announcements.js お知らせの取得・既読の管理
-src/lib/storage.js       localStorage のラッパー
-src/pages/LinkPage.jsx   ログイン画面と、通知許可・再連携のダイアログ
-src/pages/Class.jsx      お知らせの一覧と詳細
-src/components/          ログイン画面の部品、PWA の追加案内
-firestore.rules          Firestore のセキュリティルール
+public/                    そのまま配信されるファイル(manifest、OneSignal の Service Worker、修復ページ repair.html)
+src/config.js              GAS_URL、OneSignal App ID、Firebase の設定
+src/auth/identity.jsx      ログイン状態の窓口(GAS のトークンで Firebase にログイン)
+src/lib/firebase.js        Firebase App と Auth(Firestore は含まない)
+src/lib/firestoreLazy.js   Firestore を必要になったときに読み込む。購読は subscribe、保存は updateUserDoc を通す
+src/lib/onesignal.js       OneSignal の初期化・購読・購読状態の確認
+src/lib/pushStatus.js      pushKey の取得、「通知を直す」の表示の判定
+src/lib/notifyPrefs.js     授業ごとの通知設定(users/{生徒ID}.notifyPrefs)
+src/lib/announcements.js   お知らせの取得・既読の管理・端末へのキャッシュ
+src/lib/account.js         アカウント名の取得(端末に保存して次回すぐ表示)
+src/lib/homeLayout.js      ホームのマス目、ガジェットの配置(重なりの解消・保存)
+src/lib/bootOpen.js        通知から開いたときの画面の判定
+src/lib/storage.js         localStorage のラッパー
+src/gadgets/gadgets.json   ホームに置けるガジェットの設定(ガジェットを足すときはここに書く)
+src/gadgets/index.js       gadgets.json を読み込み、形式を確かめる
+src/gadgets/components.js  gadgets.json の type と、中身の部品の対応表
+src/gadgets/ClassNoticesGadget.jsx  「お知らせ」ガジェットの中身
+src/pages/Home.jsx         ホーム画面(ガジェットを並べる・編集する)
+src/pages/Class.jsx        お知らせの一覧と詳細
+src/pages/Settings.jsx     設定画面
+src/pages/NotifySettings.jsx  通知の詳細設定(授業ごとのオン・オフ)
+src/pages/LinkPage.jsx     ログイン画面と、通知許可・再連携のダイアログ
+src/components/            ログイン画面の部品、PWA の追加案内
+firestore.rules            Firestore のセキュリティルール
 ```
+
+### ガジェットを追加する
+
+ホームに置く部品は、`src/gadgets/gadgets.json` に項目を書いて増やします。
+
+```json
+{
+  "id": "classNotices",
+  "type": "classNotices",
+  "title": "お知らせ",
+  "path": "/class",
+  "initial": true,
+  "addable": true,
+  "defaultPos": { "x": 0, "y": 0, "w": 5, "h": 5 },
+  "min": { "w": 3, "h": 3 },
+  "max": { "w": 40, "h": 14 }
+}
+```
+
+| 項目 | 意味 |
+| --- | --- |
+| `id` | 保存に使う名前。他と重ならないものにし、後から変えない |
+| `type` | 中身の部品の名前(`src/gadgets/components.js` にあるもの) |
+| `title` | 枠の見出し |
+| `path` | タップしたときに開く画面。省略するとタップしても何も起きない |
+| `initial` | `true` なら、初めて開いたときから置く |
+| `addable` | `true` なら、ガジェットの追加画面から追加できる(省略時は `true`) |
+| `defaultPos` | 初めて置くときの位置と大きさ(マスの数) |
+| `min` / `max` | 大きさの範囲(マスの数)。実際の上限は、画面の列数で決まる |
+
+- 大きさと位置は**マスの数**で書きます。画面が広くても、マス 1 つの大きさは変わりません。
+- マス目の列数は画面の幅から決まり、3〜30 列の範囲です。1 マスの目安は約 68px です。
+- 形式がおかしい項目(`id` の重複、未対応の `type`、範囲の誤りなど)は読み飛ばし、理由をコンソールに出します。画面は壊れません。
+- 中身を新しく作るときだけ、部品を `src/gadgets/` に作り、`components.js` に 1 行足します。
+- 配置は端末ごとに保存されます。初めての端末では、`initial: true` のガジェットだけを置きます。保存済みの端末に後から追加したガジェットは、追加画面ができるまで自動では出ません。
 
 ### 連携する側(GAS)について
 
@@ -150,10 +202,10 @@ iPhone で、再連携の画面から戻れないときは、左下の「←」�
 
 | タブ | 役割 |
 | --- | --- |
-| ホーム | 置いたガジェットを並べて表示します |
+| ホーム | 置いたガジェットを並べて表示します(実装済み) |
 | 予定表 | 授業や課題の予定を、カレンダーで表示します |
-| ガジェット | ガジェットルームです。ガジェットを追加・管理します |
-| 設定 | 通知や、アカウントに関する設定をまとめます |
+| ガジェット | ガジェットルームです。ガジェットを追加・管理します(追加画面は未実装。現状は `gadgets.json` で定義) |
+| 設定 | 通知や、アカウントに関する設定をまとめます(実装済み) |
 
 ### 4. 通知の仕組みの改善(将来の構想)
 
