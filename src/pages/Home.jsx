@@ -23,11 +23,21 @@ const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土'];
 // テスト用の仮のデータ(次の授業・予定のある曜日)。本物の時間割の取得先ができたら差し替える
 const NEXT_CLASS = { name: '数学Ⅲ', period: '1限 08:40 - 09:35', room: '221教室' };
-const TEST_EVENT_WEEKDAYS = [1, 5, 6]; // 月・金・土に点を出す
+// 曜日ごとの予定の点の色(テスト用)。予定が無い曜日は点を出さない
+const TEST_EVENT_DOTS = { 1: '#9ca3af', 2: '#3b82f6', 3: '#22c55e', 4: '#f59e0b', 6: '#9ca3af' };
 
-// ガジェットと同じ見た目の枠と見出し
-const GADGET_CARD = { background: 'var(--surface-2)', borderRadius: 20, padding: '1em 1.143em', color: 'var(--text-strong)' };
-const GADGET_TITLE = { fontSize: '1em', fontWeight: 700, color: 'var(--text-strong)', userSelect: 'none' };
+// カードの中の小さなアイコンの枠と、アイコン(線画)
+const ICON_BADGE = { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 24, height: 24, borderRadius: 8, background: 'rgba(255,255,255,0.22)' };
+const IconBook = (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z" /><path d="M4 19V5" />
+  </svg>
+);
+const IconCalendar = (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
+    <rect x="3" y="5" width="18" height="16" rx="3" /><path d="M3 10h18M8 3v4M16 3v4" />
+  </svg>
+);
 
 const sameDay = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 
@@ -302,10 +312,14 @@ export default function Home() {
           width: '100%',
         }}
       >
-        {/* クラス画面のタイトルバーと同じ構成 */}
-        <div style={{ padding: '0 1.714em', height: '34px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.857em' }}>
-          <div style={{ color: 'var(--text-strong)', fontSize: '1.871em', fontFamily: 'Inter', fontWeight: '800', userSelect: 'none', minWidth: 0 }}>
-            {editing ? 'ホームを編集' : 'こんにちは'}
+        <div style={{ padding: '0 1.714em', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.857em', minHeight: 48 }}>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ color: 'var(--text-muted)', fontSize: '0.857em', fontWeight: 600, userSelect: 'none' }}>
+              {editing ? 'ホームを編集中' : '今日もがんばろう！'}
+            </div>
+            <div style={{ color: 'var(--text-strong)', fontSize: '1.714em', fontFamily: 'Inter', fontWeight: '800', userSelect: 'none', lineHeight: 1.25 }}>
+              {editing ? 'ガジェットを並べ替え' : 'こんにちは'}
+            </div>
           </div>
           {editing ? (
             <button
@@ -319,18 +333,14 @@ export default function Home() {
               完了
             </button>
           ) : (
-            // 右: AIアシスタント(未実装。ボタンだけ置く)
-            <button
-              type="button"
-              aria-label="AIアシスタント"
-              style={{
-                flexShrink: 0, width: 34, height: 34, borderRadius: '50%', border: '1px solid var(--line-strong)',
-                background: 'var(--surface)', color: 'var(--text-strong)', fontFamily: 'Inter', fontWeight: 700,
-                fontSize: '0.786em', cursor: 'pointer', padding: 0,
-              }}
-            >
-              AI
-            </button>
+            // 右: ユーザーのアイコン(今はアプリのアイコンを仮に使う)
+            <img
+              src={`${import.meta.env.BASE_URL}icon-192.png`}
+              alt="ユーザーのアイコン"
+              width={48}
+              height={48}
+              style={{ flexShrink: 0, width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', userSelect: 'none', border: '1px solid var(--line)' }}
+            />
           )}
         </div>
       </header>
@@ -347,33 +357,46 @@ export default function Home() {
           WebkitOverflowScrolling: 'touch',
         }}
       >
-        {/* 次の授業と今週の予定。ガジェットと同じ見た目(今は表示だけ。動かせない) */}
+        {/* 次の授業と今週の予定。参考のガジェットの見た目(今は表示だけ。動かせない) */}
         <section style={{ padding: '0 1.143em', display: 'flex', flexDirection: 'column', gap: '0.857em', paddingBottom: '1.143em' }}>
-          <div style={GADGET_CARD}>
-            <div style={GADGET_TITLE}>次の授業</div>
-            <div style={{ fontSize: '1.571em', fontWeight: 800, fontFamily: 'Inter', marginTop: '0.4em', lineHeight: 1.2, color: 'var(--text-strong)' }}>{NEXT_CLASS.name}</div>
-            <div style={{ fontSize: '0.929em', color: 'var(--text-muted)', marginTop: '0.35em' }}>{NEXT_CLASS.period} ・ {NEXT_CLASS.room}</div>
+          <div style={{
+            background: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)', borderRadius: 24, padding: '1.143em 1.286em',
+            color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.857em',
+          }}>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5em', fontSize: '0.929em', fontWeight: 700 }}>
+                <span style={ICON_BADGE}>{IconBook}</span>
+                次の授業
+              </div>
+              <div style={{ fontSize: '1.857em', fontWeight: 800, fontFamily: 'Inter', marginTop: '0.3em', lineHeight: 1.15 }}>{NEXT_CLASS.name}</div>
+              <div style={{ fontSize: '0.929em', opacity: 0.9, marginTop: '0.35em' }}>{NEXT_CLASS.period} ・ {NEXT_CLASS.room}</div>
+            </div>
+            <span style={{ fontSize: '1.429em', opacity: 0.9 }}>›</span>
           </div>
-          <div style={GADGET_CARD}>
-            <div style={GADGET_TITLE}>今週の予定</div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.286em', marginTop: '0.714em' }}>
+
+          <div style={{ background: 'var(--surface-2)', borderRadius: 24, padding: '1em 1.143em' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5em', fontSize: '1em', fontWeight: 700, color: 'var(--text-strong)', userSelect: 'none' }}>
+              <span style={{ ...ICON_BADGE, background: 'var(--ink)', color: 'var(--on-ink)' }}>{IconCalendar}</span>
+              今週の予定
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.286em', marginTop: '0.857em' }}>
               {weekDays.map((d) => {
                 const isToday = sameDay(d, today);
-                const hasEvent = TEST_EVENT_WEEKDAYS.includes(d.getDay());
+                const dot = TEST_EVENT_DOTS[d.getDay()];
                 return (
                   <div
                     key={d.toISOString()}
                     style={{
-                      borderRadius: 14,
-                      background: isToday ? 'var(--ink)' : 'var(--surface)',
-                      color: isToday ? 'var(--on-ink)' : 'var(--text-strong)',
-                      padding: '0.571em 0',
-                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.286em',
+                      borderRadius: 16,
+                      background: isToday ? '#1e3a8a' : 'var(--surface)',
+                      color: isToday ? '#ffffff' : 'var(--text-strong)',
+                      padding: '0.714em 0',
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.357em',
                       userSelect: 'none',
                     }}
                   >
-                    <div style={{ width: 6, height: 6, borderRadius: 999, background: hasEvent ? 'currentColor' : 'transparent' }} />
-                    <div style={{ fontSize: '0.786em', fontWeight: 600, opacity: isToday ? 1 : 0.6 }}>{WEEKDAYS[d.getDay()]}</div>
+                    <div style={{ width: 6, height: 6, borderRadius: 999, background: isToday ? '#ffffff' : (dot || 'transparent') }} />
+                    <div style={{ fontSize: '0.786em', fontWeight: 600, opacity: isToday ? 1 : 0.7 }}>{WEEKDAYS[d.getDay()]}</div>
                     <div style={{ fontSize: '1em', fontWeight: 700 }}>{d.getDate()}</div>
                   </div>
                 );
