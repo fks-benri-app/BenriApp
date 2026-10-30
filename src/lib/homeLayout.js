@@ -10,7 +10,7 @@ const num = (v, d) => (Number.isFinite(v) ? Math.round(v) : d);
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 
 // 大きさと位置を、そのガジェットの最小・最大の範囲と画面の中に収める
-function clampItem(it, g) {
+export function clampItem(it, g) {
   const w = clamp(num(it.w, g.defaultPos.w), g.minW, Math.min(g.maxW, COLS));
   const h = clamp(num(it.h, g.defaultPos.h), g.minH, g.maxH);
   const x = clamp(num(it.x, 0), 0, COLS - w);
@@ -34,15 +34,29 @@ export function resolveLayout(items, movedId) {
   return placed;
 }
 
-// 保存された配置を読む。足りないガジェットは初期位置、おかしい値は範囲内に直す
+// 保存された配置を読む。
+// ・まだ一度も保存していない(初めて開いた)ときは、initial: true のガジェットだけを置く
+// ・保存があるときは、保存に入っているガジェットだけを置く(保存に無いものは、追加されるまで出ない)
+// 値がおかしいものは範囲内に直す
 export function loadLayout(gadgets) {
-  let saved = {};
+  let saved = null;
   try {
     const v = JSON.parse(storage.get(KEY) || 'null');
     if (v && typeof v === 'object' && !Array.isArray(v)) saved = v;
   } catch { /* 壊れていたら初期配置 */ }
-  const items = gadgets.map((g) => clampItem({ ...g.defaultPos, ...(saved[g.id] || {}), id: g.id }, g));
+  const isObj = (v) => v && typeof v === 'object';
+  const items = saved
+    ? gadgets.filter((g) => isObj(saved[g.id])).map((g) => clampItem({ ...g.defaultPos, ...saved[g.id], id: g.id }, g))
+    : gadgets.filter((g) => g.initial).map((g) => clampItem({ ...g.defaultPos, id: g.id }, g));
   return resolveLayout(items, null);
+}
+
+// ガジェットを追加する(追加画面から使う。今はまだ呼ばれていない)。一番下に置く
+export function addToLayout(layout, g) {
+  if (layout.some((i) => i.id === g.id)) return layout;
+  const bottom = layout.reduce((m, i) => Math.max(m, i.y + i.h), 0);
+  const item = clampItem({ ...g.defaultPos, y: bottom, id: g.id }, g);
+  return resolveLayout([...layout, item], g.id);
 }
 
 export function saveLayout(items) {
