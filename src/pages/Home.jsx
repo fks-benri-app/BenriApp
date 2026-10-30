@@ -20,7 +20,15 @@ const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 // ・長押し: 編集モード。ドラッグで動かせる。右下の角をドラッグで大きさを変えられる(最小・最大の範囲内)
 // ・重なったときは他を押し下げ、空いた隙間は上へ詰める
 // ・編集中に画面の端へ指を寄せると、自動でスクロールする
+const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土'];
+
 export default function Home() {
+  // 今日の日付と曜日(上部の見出し)
+  const today = new Date();
+  const weekday = WEEKDAYS[today.getDay()];
+  const dateLabel = `${today.getMonth() + 1}月${today.getDate()}日（${weekday}）`;
+  const greeting = `今日は${weekday}曜日です！`;
+
   const navigate = useNavigate();
   const { identity } = useIdentity();
   const fontPx = currentFontSize();
@@ -282,15 +290,21 @@ export default function Home() {
           width: '100%',
         }}
       >
-        <div style={{ padding: '0 1.143em', height: '34px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ color: 'var(--text-strong)', fontSize: '1.871em', fontFamily: 'Inter', fontWeight: '800', userSelect: 'none' }}>
-            {editing ? '編集' : 'ホーム'}
+        <div style={{ padding: '0 1.143em', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.857em' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.286em', minWidth: 0 }}>
+            <div style={{ color: 'var(--muted)', fontSize: '0.929em', fontFamily: 'Inter', fontWeight: '600', userSelect: 'none' }}>
+              {dateLabel}
+            </div>
+            <div style={{ color: 'var(--text-strong)', fontSize: '1.571em', fontFamily: 'Inter', fontWeight: '800', userSelect: 'none', lineHeight: 1.25 }}>
+              {editing ? 'ホームを編集' : greeting}
+            </div>
           </div>
-          {editing && (
+          {editing ? (
             <button
               type="button"
               onClick={() => setEditing(false)}
               style={{
+                flexShrink: 0,
                 border: 'none',
                 borderRadius: '999px',
                 padding: '0.5em 1.2em',
@@ -303,6 +317,14 @@ export default function Home() {
             >
               完了
             </button>
+          ) : (
+            <img
+              src={`${import.meta.env.BASE_URL}icon-192.png`}
+              alt=""
+              width={48}
+              height={48}
+              style={{ flexShrink: 0, width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', userSelect: 'none' }}
+            />
           )}
         </div>
       </header>
