@@ -4,6 +4,8 @@
 const ONESIGNAL_APP_ID = "726063a2-acd8-4d5d-9ff0-98902924cfe1";
 const LABEL_NAME = 'ClassroomNotified';
 const APP_URL = 'https://fks-benri-app.github.io/BenriApp/';
+// 通知のアイコン(Chrome・Android で表示される。iPhone の Safari は、ホーム画面アプリのアイコンになる)
+const NOTIFY_ICON_URL = 'https://fks-benri-app.github.io/BenriApp/icon-192.png';
 const EMAIL_PATTERN = /^fks(\d{3})(\d)(\d{2})@g\.nagano-c\.ed\.jp$/;
 
 const QUIET_START_HOUR = 23;       // 通知停止時間
@@ -378,7 +380,8 @@ function notifyFresh_(studentId, fresh) {
       const info = item.info;
       const docId = item.docId;
       try {
-        const heading = info.category + (info.courseName ? ': ' + info.courseName : '');
+        // タイトルは授業名だけにする(授業名が無いときは形式名)
+        const heading = info.courseName || info.category;
         const body = info.dueDate ? info.title + '(期限: ' + info.dueDate + ')' : info.title;
         const res = sendDirectNotification_(
           pushTargets_(studentId), heading, body,
@@ -430,7 +433,8 @@ function sendDirectNotification_(externalUserId, title, body, url, data) {
     "include_aliases": { "external_id": [].concat(externalUserId) },
     "target_channel": "push",
     "headings": { "en": title, "ja": title },
-    "contents": { "en": body, "ja": body }
+    "contents": { "en": body, "ja": body },
+    "chrome_web_icon": NOTIFY_ICON_URL
   };
   if (url) payload.url = url;
   if (data) payload.data = data;
