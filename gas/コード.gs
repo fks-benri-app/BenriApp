@@ -415,12 +415,21 @@ function notifyFresh_(studentId, fresh) {
 
   if (fallback.length === 0) return;
 
+  // タイトルは授業名(重複を除き、3つまで。残りは「ほか」)。本文は件数と投稿のタイトル
+  const courses = [];
+  fallback.forEach(function (x) {
+    const c = x.info.courseName;
+    if (c && courses.indexOf(c) < 0) courses.push(c);
+  });
+  const heading = courses.length
+    ? courses.slice(0, 3).join('・') + (courses.length > 3 ? ' ほか' + (courses.length - 3) + '授業' : '')
+    : '新着のお知らせ';
   const titles = fallback.slice(0, 3).map(function (x) { return x.info.title; }).join(' / ');
   const more = fallback.length > 3 ? ' ほか' + (fallback.length - 3) + '件' : '';
   const res = sendDirectNotification_(
     pushTargets_(studentId),
-    '新しいお知らせが' + fallback.length + '件あります',
-    titles + more,
+    heading,
+    fallback.length + '件の新着: ' + titles + more,
     APP_URL
   );
   recordPushResult_(studentId, res);
