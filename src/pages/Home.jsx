@@ -20,6 +20,10 @@ const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 // ・長押し: 編集モード。ドラッグで動かせる。右下の角をドラッグで大きさを変えられる(最小・最大の範囲内)
 // ・重なったときは他を押し下げ、空いた隙間は上へ詰める
 // ・編集中に画面の端へ指を寄せると、自動でスクロールする
+// マス目の最大幅(px)と、左右の余白。PC の広い画面でも、列数が増えすぎないように止める
+const CANVAS_MAX_W = 960;
+const CANVAS_SIDE_PAD = '3.428em';
+
 export default function Home() {
   const navigate = useNavigate();
   const { identity } = useIdentity();
@@ -312,7 +316,13 @@ export default function Home() {
         <div
           ref={gridRef}
           onClick={(e) => { if (editingRef.current && e.target === e.currentTarget) setEditing(false); }}
-          style={{ position: 'relative', margin: '0 1.714em', height: rows * cell }}
+          // タブレットや PC では、マス目を最大幅で止めて中央に置く(画面いっぱいに広げると、マスとガジェットが大きくなりすぎるため)
+          style={{
+            position: 'relative',
+            width: `min(calc(100% - ${CANVAS_SIDE_PAD}), ${CANVAS_MAX_W}px)`,
+            margin: '0 auto',
+            height: rows * cell,
+          }}
         >
           {shown.map((it) => {
             const g = gadgetById(it.id);
