@@ -1011,12 +1011,11 @@ export default function Class() {
                     )}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.429em' }}>
-                    <div style={{ color: 'var(--text-muted)', fontSize: '0.786em', fontWeight: '400', position: 'relative', top: '-0.214em' }}>
+                    <div style={{ color: 'var(--text-muted)', fontSize: '0.786em', fontWeight: '400', position: 'relative', top: '-0.214em', fontVariantNumeric: 'tabular-nums' }}>
                       {ann.time}
                     </div>
-                    {ann.isUnread && (
-                      <div style={{ width: '0.571em', height: '0.571em', background: 'linear-gradient(135deg, #FF4D4D 0%, #FF8A1B 100%)', borderRadius: '50%' }} />
-                    )}
+                    {/* 既読でも場所は空けておく(未読・既読で、時刻の位置がずれないように) */}
+                    <div style={{ width: '0.571em', height: '0.571em', background: 'linear-gradient(135deg, #FF4D4D 0%, #FF8A1B 100%)', borderRadius: '50%', visibility: ann.isUnread ? 'visible' : 'hidden' }} />
                   </div>
                 </div>
                 <div style={{ color: 'var(--text-body)', fontSize: '1em', fontWeight: 400, lineHeight: 1.4286, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>

@@ -320,7 +320,7 @@ export default function Home() {
                   <div style={{ color: 'var(--text-strong)', fontSize: '1.071em', fontWeight: 700, marginBottom: '0.571em', flexShrink: 0 }}>
                     {g.title}
                   </div>
-                  <div className="no-scrollbar" style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
+                  <div className="no-scrollbar" style={{ flex: 1, minHeight: 0, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
                     <Component identity={identity} />
                   </div>
                 </section>
