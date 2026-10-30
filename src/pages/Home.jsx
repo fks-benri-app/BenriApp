@@ -12,18 +12,6 @@ const SLOP = 10;      // 長押しの前にこれ以上動いたら、スクロ�
 const GAP = 10;       // 枠と枠のあいだ(px)
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 
-// 大きさを変える取っ手。角は丸、辺は細長い白い印(キャンバ風)。中心を辺・角の上に置く
-const HANDLES = [
-  { dir: 'nw', label: '左上', cursor: 'nwse-resize', w: 14, h: 14, box: { left: -14, top: -14 } },
-  { dir: 'n', label: '上', cursor: 'ns-resize', w: 26, h: 10, box: { left: '50%', marginLeft: -14, top: -14 } },
-  { dir: 'ne', label: '右上', cursor: 'nesw-resize', w: 14, h: 14, box: { right: -14, top: -14 } },
-  { dir: 'e', label: '右', cursor: 'ew-resize', w: 10, h: 26, box: { right: -14, top: '50%', marginTop: -14 } },
-  { dir: 'se', label: '右下', cursor: 'nwse-resize', w: 14, h: 14, box: { right: -14, bottom: -14 } },
-  { dir: 's', label: '下', cursor: 'ns-resize', w: 26, h: 10, box: { left: '50%', marginLeft: -14, bottom: -14 } },
-  { dir: 'sw', label: '左下', cursor: 'nesw-resize', w: 14, h: 14, box: { left: -14, bottom: -14 } },
-  { dir: 'w', label: '左', cursor: 'ew-resize', w: 10, h: 26, box: { left: -14, top: '50%', marginTop: -14 } },
-];
-
 // ホーム画面: 画面を COLS×ROWS に等分したマス目に、ガジェットを置く。
 // ・タップ: ガジェットの画面を開く
 // ・長押し: 編集モード。ドラッグで整数マス単位に動かせる。右下の角をドラッグで大きさを変えられる(最小・最大の範囲内)
@@ -88,7 +76,7 @@ export default function Home() {
   }, [showPreview]);
 
   // 動かす(move)か大きさを変える(resize)かを、指の動きから決める
-  function startGesture(type, id, clientX, clientY, dir) {
+  function startGesture(type, id, clientX, clientY) {
     const origin = layoutRef.current.find((i) => i.id === id);
     if (!origin) return;
     const def = gadgetById(id);
@@ -103,21 +91,11 @@ export default function Home() {
       if (type === 'move') {
         next = { ...origin, x: clamp(origin.x + dx, 0, COLS - origin.w), y: Math.max(0, origin.y + dy) };
       } else {
-        // 取っ手の向きに応じて、右・左・下・上の辺を動かす(反対側の辺は動かさない)
-        const right = origin.x + origin.w;
-        const bottom = origin.y + origin.h;
-        let { x, y, w, h } = origin;
-        if (dir.includes('e')) w = clamp(origin.w + dx, def.minW, Math.min(def.maxW, COLS - origin.x));
-        if (dir.includes('w')) {
-          x = clamp(origin.x + dx, Math.max(0, right - def.maxW), right - def.minW);
-          w = right - x;
-        }
-        if (dir.includes('s')) h = clamp(origin.h + dy, def.minH, def.maxH);
-        if (dir.includes('n')) {
-          y = clamp(origin.y + dy, Math.max(0, bottom - def.maxH), bottom - def.minH);
-          h = bottom - y;
-        }
-        next = { ...origin, x, y, w, h };
+        next = {
+          ...origin,
+          w: clamp(origin.w + dx, def.minW, Math.min(def.maxW, COLS - origin.x)),
+          h: clamp(origin.h + dy, def.minH, def.maxH),
+        };
       }
       const cur = previewRef.current;
       const same = cur && cur.find((i) => i.id === id);
@@ -330,7 +308,8 @@ export default function Home() {
                     display: 'flex',
                     flexDirection: 'column',
                     boxShadow: isActive ? '0 16px 36px rgba(0,0,0,0.28)' : '0 2px 8px rgba(0,0,0,0.02)',
-                    outline: editing ? '2px solid #7c3aed' : 'none',
+                    outline: editing ? '2px dashed var(--line-strong)' : 'none',
+                    outlineOffset: '2px',
                     cursor: editing ? 'grab' : 'pointer',
                     touchAction: editing ? 'none' : 'manipulation',
                     userSelect: 'none',
@@ -368,41 +347,38 @@ export default function Home() {
                   </div>
                 )}
 
-                {editing && HANDLES.map((h) => (
+                {editing && (
                   <div
-                    key={h.dir}
                     role="button"
-                    aria-label={`${g.title}の大きさを変える(${h.label})`}
+                    aria-label={`${g.title}の大きさを変える`}
                     onPointerDown={(e) => {
                       e.stopPropagation();
                       e.preventDefault();
-                      startGesture('resize', it.id, e.clientX, e.clientY, h.dir);
+                      startGesture('resize', it.id, e.clientX, e.clientY);
                     }}
                     style={{
                       position: 'absolute',
-                      width: 28,
-                      height: 28,
+                      right: -8,
+                      bottom: -8,
+                      width: 32,
+                      height: 32,
+                      borderRadius: '50%',
+                      background: 'var(--ink)',
+                      color: 'var(--on-ink)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       touchAction: 'none',
-                      cursor: h.cursor,
+                      cursor: 'nwse-resize',
                       zIndex: 4,
-                      ...h.box,
+                      boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
                     }}
                   >
-                    <div
-                      style={{
-                        width: h.w,
-                        height: h.h,
-                        borderRadius: 999,
-                        background: '#ffffff',
-                        border: '1px solid rgba(0,0,0,0.18)',
-                        boxShadow: '0 1px 4px rgba(0,0,0,0.25)',
-                      }}
-                    />
+                    <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
+                      <path d="M12 2L2 12M12 7L7 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" fill="none" />
+                    </svg>
                   </div>
-                ))}
+                )}
               </div>
             );
           })}

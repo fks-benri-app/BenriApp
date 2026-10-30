@@ -1,15 +1,15 @@
 import React, { useLayoutEffect, useRef, useState } from 'react';
 import { useAnnouncements } from '../lib/announcements';
 import { KIND_OPTIONS } from '../lib/filters';
-import { currentFontSize, FONT_SIZE_DEFAULT } from '../lib/fontSize';
+import { currentFontSize } from '../lib/fontSize';
 import { courseThemeOrNull, shaded } from '../pages/Class';
 
 const KIND_LABELS = Object.fromEntries(KIND_OPTIONS.map((k) => [k.id, k.label]));
-const MIN_ITEMS = 3;  // 枠が小さくても、これだけは出す
+const MIN_ITEMS = 2;  // 枠が小さくても、これだけは出す
 const ITEM_EM = 7;    // 1件ぶんの高さ(文字の大きさの何倍か)
 const MIN_FONT = 9;   // これより小さくはしない(px)
 
-// お知らせ: 枠の高さに合わせて、入るだけ件数を出す。小さい枠では、最低3件を文字を小さくして入れる。
+// お知らせ: 枠の高さに合わせて、入るだけ件数を出す(最低2件)。小さすぎる枠では、2件が入るまで文字を小さくする。
 export default function ClassNoticesGadget({ identity }) {
   const { status, items } = useAnnouncements(identity?.id);
   const rootRef = useRef(null);
@@ -25,13 +25,15 @@ export default function ClassNoticesGadget({ identity }) {
     return () => ro.disconnect();
   }, []);
 
-  const userFont = currentFontSize();
-  // 3件が入るのに必要な文字の大きさ。足りないときは、デフォルトの文字の大きさを上限に小さくする
-  const fit = boxH / (MIN_ITEMS * ITEM_EM);
-  const fontPx = !boxH || fit >= userFont
-    ? userFont
-    : Math.max(MIN_FONT, Math.min(FONT_SIZE_DEFAULT, Math.floor(fit)));
-  const count = boxH ? Math.max(MIN_ITEMS, Math.floor(boxH / (ITEM_EM * fontPx))) : MIN_ITEMS;
+  // 文字の大きさは、ふだんの大きさのまま。枠の高さに入るだけ件数を出す。
+  // ただし最低2件は出す。ふだんの大きさで2件も入らない小さい枠(例: 2×2)だけ、2件が入るまで文字を小さくする。
+  const baseFont = currentFontSize();
+  const countAt = (font) => Math.floor(boxH / (ITEM_EM * font));
+  let fontPx = baseFont;
+  if (boxH && countAt(baseFont) < MIN_ITEMS) {
+    fontPx = Math.max(MIN_FONT, Math.floor(boxH / (MIN_ITEMS * ITEM_EM)));
+  }
+  const count = boxH ? Math.max(MIN_ITEMS, countAt(fontPx)) : MIN_ITEMS;
   const shown = status === 'ready' ? items.slice(0, count) : [];
 
   return (
