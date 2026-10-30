@@ -1,40 +1,58 @@
-import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useIdentity } from '../auth/identity';
 import BottomNav from '../components/BottomNav';
 import { GADGETS, gadgetById } from '../gadgets';
 import { currentFontSize } from '../lib/fontSize';
-import { COLS, ROWS, loadLayout, resolveLayout, saveLayout } from '../lib/homeLayout';
+import { BASE_COLS, gridFor, loadLayout, rangeFor, resolveLayout, saveLayout } from '../lib/homeLayout';
 
 const NO_SCROLLBAR_CSS = '.no-scrollbar{scrollbar-width:none;-ms-overflow-style:none}.no-scrollbar::-webkit-scrollbar{display:none}';
-const HOLD_MS = 420;  // この時間さわり続けると、編集モードに入る
-const SLOP = 10;      // 長押しの前にこれ以上動いたら、スクロールとみなす
-const GAP = 10;       // 枠と枠のあいだ(px)
+const HOLD_MS = 420;   // この時間さわり続けると、編集モードに入る
+const SLOP = 10;       // 長押しの前にこれ以上動いたら、スクロールとみなす
+const GAP = 10;        // 枠と枠のあいだ(px)
+const EDGE = 56;       // ドラッグ中、画面の上下の端からこの距離(px)に指があると、自動で送る
+const EDGE_STEP = 14;  // 自動で送る量(px)。16msごと
+const EXTRA_ROWS = 2;  // 編集中は、下に余白を作る(下へ動かせるように)
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 
-// ホーム画面: 画面を COLS×ROWS に等分したマス目に、ガジェットを置く。
+// ホーム画面: 画面の横幅に合わせた列数のマス目に、ガジェットを置く。
 // ・タップ: ガジェットの画面を開く
-// ・長押し: 編集モード。ドラッグで整数マス単位に動かせる。右下の角をドラッグで大きさを変えられる(最小・最大の範囲内)
-// ・重なったときは、他のガジェットが下へ押し下げられる
+// ・長押し: 編集モード。ドラッグで動かせる。右下の角をドラッグで大きさを変えられる(最小・最大の範囲内)
+// ・重なったときは他を押し下げ、空いた隙間は上へ詰める
+// ・編集中に画面の端へ指を寄せると、自動でスクロールする
 export default function Home() {
   const navigate = useNavigate();
   const { identity } = useIdentity();
   const fontPx = currentFontSize();
 
-  const [layout, setLayout] = useState(() => loadLayout(GADGETS));
-  const [preview, setPreview] = useState(null);   // 動かし中の配置(離したら保存する)
-  const [activeId, setActiveId] = useState(null); // 動かしている、または大きさを変えているガジェット
+  const [size, setSize] = useState({ w: 0, h: 0 }); // 表示領域の大きさ(px)
+  const grid = useMemo(
+    () => (size.w ? gridFor(size.w, size.h) : { cols: BASE_COLS, cell: 0, rows: 0 }),
+    [size],
+  );
+  const { cols, cell } = grid;
+
+  // 操作して確定した配置(列数つき)。無ければ、保存または初期配置から作る
+  const [custom, setCustom] = useState({ cols: 0, items: null });
+  const layout = useMemo(
+    () => (custom.items && custom.cols === cols ? custom.items : loadLayout(GADGETS, cols)),
+    [custom, cols],
+  );
+
+  const [preview, setPreview] = useState(null);     // 動かし中の配置(離したら確定する)
+  const [activeId, setActiveId] = useState(null);   // 動かしている、または大きさを変えているガジェット
   const [activeType, setActiveType] = useState(null); // 'move' | 'resize'
   const [editing, setEditing] = useState(false);
-  const [size, setSize] = useState({ w: 0, h: 0 }); // マス目全体の大きさ(px)
 
   const mainRef = useRef(null);
   const gridRef = useRef(null);
   const layoutRef = useRef(layout);
   layoutRef.current = layout;
+  const colsRef = useRef(cols);
+  colsRef.current = cols;
+  const cellRef = useRef(cell);
+  cellRef.current = cell;
   const previewRef = useRef(null);
-  const sizeRef = useRef(size);
-  sizeRef.current = size;
   const editingRef = useRef(false);
   editingRef.current = editing;
   const gesture = useRef(null);       // 動かしている最中の情報
@@ -46,29 +64,35 @@ export default function Home() {
     setPreview(v);
   }, []);
 
-  // 画面の大きさを測って、マス目の大きさを決める(回転や画面の変化にも合わせる)
+  // 表示領域の大きさを測る(回転・ウィンドウの大きさの変化・アドレスバーの出入りにも合わせる)
   useLayoutEffect(() => {
     const el = mainRef.current;
     if (!el) return undefined;
-    const measure = () => setSize({ w: gridRef.current ? gridRef.current.clientWidth : 0, h: el.clientHeight });
+    const measure = () => {
+      const w = gridRef.current ? gridRef.current.clientWidth : 0;
+      const h = el.clientHeight;
+      setSize((prev) => (prev.w === w && prev.h === h ? prev : { w, h }));
+    };
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
 
-  // 動かし終わったら、結果を確定して保存する
+  // 動かし終わったら、結果を確定して保存する(列数ごとに保存)
   const finishGesture = useCallback(() => {
     const g = gesture.current;
     if (!g) return;
     gesture.current = null;
+    clearInterval(g.timer);
     window.removeEventListener('pointermove', g.onMove);
     window.removeEventListener('pointerup', g.onEnd);
     window.removeEventListener('pointercancel', g.onEnd);
     const next = previewRef.current;
     if (next) {
-      setLayout(next);
-      saveLayout(next);
+      const c = colsRef.current;
+      setCustom({ cols: c, items: next });
+      saveLayout(next, c);
     }
     showPreview(null);
     setActiveId(null);
@@ -80,21 +104,33 @@ export default function Home() {
     const origin = layoutRef.current.find((i) => i.id === id);
     if (!origin) return;
     const def = gadgetById(id);
-    const g = { type, id, sx: clientX, sy: clientY };
-    g.onMove = (e) => {
-      const cw = sizeRef.current.w / COLS;
-      const ch = sizeRef.current.h / ROWS;
-      if (!cw || !ch) return;
-      const dx = Math.round((e.clientX - g.sx) / cw);
-      const dy = Math.round((e.clientY - g.sy) / ch);
+    const main = mainRef.current;
+    const g = {
+      type, id,
+      sx: clientX, sy: clientY,
+      lastX: clientX, lastY: clientY,
+      startScroll: main ? main.scrollTop : 0,
+      timer: null,
+    };
+
+    // 指の位置と、画面の送り量から、配置を計算して見せる
+    g.update = () => {
+      const c = colsRef.current;
+      const cw = cellRef.current;
+      if (!cw) return;
+      const scrollNow = main ? main.scrollTop : g.startScroll;
+      // 画面を送った分も、動いた量に入れる(送りながら動かしても、指の下の枠がずれない)
+      const dx = Math.round((g.lastX - g.sx) / cw);
+      const dy = Math.round((g.lastY - g.sy + (scrollNow - g.startScroll)) / cw);
+      const r = rangeFor(def, c);
       let next;
       if (type === 'move') {
-        next = { ...origin, x: clamp(origin.x + dx, 0, COLS - origin.w), y: Math.max(0, origin.y + dy) };
+        next = { ...origin, x: clamp(origin.x + dx, 0, c - origin.w), y: Math.max(0, origin.y + dy) };
       } else {
         next = {
           ...origin,
-          w: clamp(origin.w + dx, def.minW, Math.min(def.maxW, COLS - origin.x)),
-          h: clamp(origin.h + dy, def.minH, def.maxH),
+          w: clamp(origin.w + dx, r.minW, Math.min(r.maxW, c - origin.x)),
+          h: clamp(origin.h + dy, r.minH, r.maxH),
         };
       }
       const cur = previewRef.current;
@@ -102,7 +138,28 @@ export default function Home() {
       if (same && same.x === next.x && same.y === next.y && same.w === next.w && same.h === next.h) return;
       showPreview(resolveLayout(layoutRef.current.map((i) => (i.id === id ? next : i)), id));
     };
+
+    g.onMove = (e) => {
+      g.lastX = e.clientX;
+      g.lastY = e.clientY;
+      g.update();
+    };
     g.onEnd = () => finishGesture();
+
+    // 指が画面の端にあるあいだは、指を動かさなくても送る
+    g.timer = setInterval(() => {
+      const m = mainRef.current;
+      if (!m) return;
+      const rect = m.getBoundingClientRect();
+      let dir = 0;
+      if (g.lastY < rect.top + EDGE) dir = -1;
+      else if (g.lastY > rect.bottom - EDGE) dir = 1;
+      if (!dir) return;
+      const before = m.scrollTop;
+      m.scrollTop = before + dir * EDGE_STEP;
+      if (m.scrollTop !== before) g.update();
+    }, 16);
+
     gesture.current = g;
     setActiveId(id);
     setActiveType(type);
@@ -115,6 +172,7 @@ export default function Home() {
   useEffect(() => () => {
     const g = gesture.current;
     if (g) {
+      clearInterval(g.timer);
       window.removeEventListener('pointermove', g.onMove);
       window.removeEventListener('pointerup', g.onEnd);
       window.removeEventListener('pointercancel', g.onEnd);
@@ -131,11 +189,11 @@ export default function Home() {
 
   function onGadgetPointerDown(e, id) {
     if (gesture.current) return;
+    if (e.pointerType === 'mouse' && e.button !== 0) return; // 右クリックでは動かさない
     if (editingRef.current) {
       startGesture('move', id, e.clientX, e.clientY);
       return;
     }
-    if (e.pointerType === 'mouse' && e.button !== 0) return;
     if (press.current) clearTimeout(press.current.timer);
     const sx = e.clientX;
     const sy = e.clientY;
@@ -177,9 +235,8 @@ export default function Home() {
   }
 
   const shown = preview || layout;
-  const rows = Math.max(ROWS, ...shown.map((i) => i.y + i.h));
-  const cw = size.w / COLS;
-  const ch = size.h / ROWS;
+  const bottom = shown.reduce((m, i) => Math.max(m, i.y + i.h), 0);
+  const rows = Math.max(grid.rows, bottom + (editing ? EXTRA_ROWS : 0));
 
   return (
     <div
@@ -255,7 +312,7 @@ export default function Home() {
         <div
           ref={gridRef}
           onClick={(e) => { if (editingRef.current && e.target === e.currentTarget) setEditing(false); }}
-          style={{ position: 'relative', margin: '0 1.714em', height: rows * ch }}
+          style={{ position: 'relative', margin: '0 1.714em', height: rows * cell }}
         >
           {shown.map((it) => {
             const g = gadgetById(it.id);
@@ -264,8 +321,8 @@ export default function Home() {
             const isActive = activeId === it.id;
             const isMoving = isActive && activeType === 'move';
             const isResizing = isActive && activeType === 'resize';
-            // 動かしている間は、指にぴったり付いて(位置は即時)、少し持ち上がって見える。
-            // 他の枠は、押し下げられたときに滑らかに移る。
+            // 動かしている間は指にぴったり付いて(位置は即時)、少し持ち上がって見える。
+            // 他の枠は、押し下げられたり詰められたりしたときに滑らかに移る。
             const transition = isActive
               ? (isResizing
                 ? 'transform 0.18s ease, width 0.12s ease, height 0.12s ease'
@@ -276,10 +333,10 @@ export default function Home() {
                 key={it.id}
                 style={{
                   position: 'absolute',
-                  left: it.x * cw + GAP / 2,
-                  top: it.y * ch + GAP / 2,
-                  width: it.w * cw - GAP,
-                  height: it.h * ch - GAP,
+                  left: it.x * cell + GAP / 2,
+                  top: it.y * cell + GAP / 2,
+                  width: it.w * cell - GAP,
+                  height: it.h * cell - GAP,
                   zIndex: isActive ? 3 : 1,
                   transform: isMoving ? 'scale(1.06)' : 'scale(1)',
                   transformOrigin: 'center center',
