@@ -43,6 +43,16 @@ export default function Home() {
   const [activeId, setActiveId] = useState(null);   // 動かしている、または大きさを変えているガジェット
   const [activeType, setActiveType] = useState(null); // 'move' | 'resize'
   const [editing, setEditing] = useState(false);
+  // 幅を測れたら true。測る前は、仮の大きさで描かない(位置が後から動いて見えるのを防ぐ)
+  const measured = size.w > 0;
+  // 最初の位置を描いたあとで、移動のアニメーションを有効にする(開いた直後に、位置がぐわんと動かないように)
+  const [animReady, setAnimReady] = useState(false);
+  useEffect(() => {
+    if (!measured) return undefined;
+    let id2 = 0;
+    const id1 = requestAnimationFrame(() => { id2 = requestAnimationFrame(() => setAnimReady(true)); });
+    return () => { cancelAnimationFrame(id1); cancelAnimationFrame(id2); };
+  }, [measured]);
 
   const mainRef = useRef(null);
   const gridRef = useRef(null);
@@ -315,7 +325,7 @@ export default function Home() {
           // マス目はヘッダーと同じ左右の余白の内側いっぱいに広げる
           style={{ position: 'relative', margin: '0 1.143em', height: rows * cell }}
         >
-          {shown.map((it) => {
+          {measured && shown.map((it) => {
             const g = gadgetById(it.id);
             if (!g) return null;
             const { Component } = g;
@@ -328,7 +338,7 @@ export default function Home() {
               ? (isResizing
                 ? 'transform 0.18s ease, width 0.12s ease, height 0.12s ease'
                 : 'transform 0.18s ease, box-shadow 0.18s ease')
-              : 'left 0.18s ease, top 0.18s ease, width 0.18s ease, height 0.18s ease, transform 0.18s ease';
+              : (animReady ? 'left 0.18s ease, top 0.18s ease, width 0.18s ease, height 0.18s ease, transform 0.18s ease' : 'none');
             return (
               <div
                 key={it.id}
