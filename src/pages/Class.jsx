@@ -9,6 +9,8 @@ import { useIdentity } from '../auth/identity';
 import { THEMES } from '../lib/themes';
 import { currentFontSize } from '../lib/fontSize';
 import { KIND_OPTIONS, buildCourseOptions, filterAnnouncements } from '../lib/filters';
+import { peekBootOpen, takeBootOpen } from '../lib/bootOpen';
+import { courseTheme, courseThemeOrNull, shaded } from '../lib/courseTheme';
 
 // ★ assets 内の通常アイコン
 import homeIcon from '../assets/images/icons/home.svg';
@@ -46,14 +48,6 @@ const FILTERS = [
 // Classroom の投稿ページを開くURL。
 // 学校アカウントで開くため、?authuser=学校のアドレス を付ける。アドレスは画面には出さず、この端末の localStorage にだけ置く。
 // 連携ページ(GAS)から戻ってきたとき、アプリのURLの ?school=... で受け取って保存する
-// 通知を押して開いたとき、URL の ?open=<お知らせID> でそのお知らせの詳細を開く。
-// ルーターがURLを書き換える前に、読み込み時に1回だけ控えておく
-let BOOT_OPEN = (() => {
-  try { return new URLSearchParams(window.location.search).get('open') || null; } catch { return null; }
-})();
-
-// 通知から開く途中(まだ詳細を開いていない)かどうか。起動画面をホームにしても、通知の詳細を開けるようにする
-export const bootOpenPending = () => BOOT_OPEN !== null;
 
 const SCHOOL_KEY = 'schoolEmail';
 const CLASSROOM_HOME = 'https://classroom.google.com/';
@@ -129,69 +123,16 @@ function openExternal(url) {
   window.location.href = url;
 }
 
-// ===== プルダウンを選んだときの色 =====
-// 存在するテーマ名（orangeRed等）を指定してエラーを防ぐ
-const DEFAULT_THEME = 'gray';
-
-// 形式ごと
-const KIND_THEMES = {
-  announcement: 'orangeRed',
-  assignment: 'orangeRed',
-  material: 'orangeRed',
-};
-
-// 授業ごと: 授業名に match の文字が含まれていたら、その色にする
-const COURSE_THEMES = [
-  { match: '化学', theme: 'blue' },
-  { match: '物理', theme: 'indigo' },
-  { match: '生物', theme: 'teal' },
-  { match: '地学', theme: 'cyan' },
-  { match: '数学', theme: 'indigo' },
-  { match: '古典', theme: 'red' },
-  { match: '英語', theme: 'cyan' },
-  { match: 'コミュ', theme: 'shuiro' },
-  { match: '論理表現', theme: 'pink' },
-  { match: '論表', theme: 'pink' },
-  { match: '論理国語', theme: 'red' },
-  { match: '論国', theme: 'red' },
-  { match: '国語', theme: 'red' },
-  { match: '保健', theme: 'green' },
-  { match: '体育', theme: 'emerald' },
-  { match: '情報', theme: 'blue' },
-  { match: '家庭', theme: 'lime' },
-  { match: '美術', theme: 'violet' },
-  { match: '書道', theme: 'violet' },
-  { match: '音楽', theme: 'pink' },
-  { match: '地理', theme: 'amber' },
-  { match: '史', theme: 'orange' },
-  { match: '公共', theme: 'yellow' },
-  { match: '政経', theme: 'amber' },
-  { match: '落とし物', theme: 'red' },
-  { match: '学年', theme: 'teal' },
-  { match: '探究', theme: 'emerald' },
-  { match: '生徒会', theme: 'green' },
-  { match: 'とんぼ祭', theme: 'orangeRed' },
-  { match: '組', theme: 'gray' },
-];
 
 // カードに出す形式の名前
 const KIND_LABELS = Object.fromEntries(KIND_OPTIONS.map((k) => [k.id, k.label]));
 
-const themeOf = (name) => THEMES[name] || THEMES[DEFAULT_THEME];
-// 当てはまる色がなければ null
-export const courseThemeOrNull = (label) => {
-  const hit = COURSE_THEMES.find((c) => String(label).includes(c.match));
-  return hit ? themeOf(hit.theme) : null;
-};
-const courseTheme = (label) => courseThemeOrNull(label) || themeOf(DEFAULT_THEME);
 
 // プルダウン(授業・形式)。スマホでは端末標準の選択画面が開く
 // 文字サイズを16px未満にすると、iPhoneで押したときに画面が拡大されてしまうため16pxにしている
 const chevron = (color) =>
   `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='${color}' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`;
 
-// 授業の色の上に、ダークのときだけ薄く暗くする層を重ねる(色は変えず、明度だけ下げる)
-export const shaded = (gradient) => `linear-gradient(var(--tag-shade), var(--tag-shade)), ${gradient}`;
 // theme: 選んでいるときの色 { gradient, textColor }
 function FilterSelect({ value, onChange, allLabel, options, label, theme, fontPx }) {
   const isActive = value !== '';
@@ -588,7 +529,7 @@ export default function Class() {
   }, [pushKey]);
 
   // 詳細画面。端末の戻るボタンでも、一覧に戻れるように、履歴(history)に積む
-  const [detailId, setDetailId] = useState(() => window.history.state?.__detail ?? BOOT_OPEN ?? null);
+  const [detailId, setDetailId] = useState(() => window.history.state?.__detail ?? peekBootOpen() ?? null);
   useEffect(() => {
     const onPop = () => setDetailId(window.history.state?.__detail ?? null);
     window.addEventListener('popstate', onPop);
@@ -597,9 +538,8 @@ export default function Class() {
 
   // 通知から開いた場合: URL をきれいにして、戻るで一覧に戻れるよう履歴を1つ積む
   useEffect(() => {
-    if (!BOOT_OPEN) return;
-    const id = BOOT_OPEN;
-    BOOT_OPEN = null;
+    const id = takeBootOpen();
+    if (!id) return;
     try {
       const u = new URL(window.location.href);
       u.searchParams.delete('open');

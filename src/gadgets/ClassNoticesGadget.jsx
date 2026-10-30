@@ -2,7 +2,7 @@ import React, { useLayoutEffect, useRef, useState } from 'react';
 import { useAnnouncements } from '../lib/announcements';
 import { KIND_OPTIONS } from '../lib/filters';
 import { currentFontSize } from '../lib/fontSize';
-import { courseThemeOrNull, shaded } from '../pages/Class';
+import { courseThemeOrNull, shaded } from '../lib/courseTheme';
 
 const KIND_LABELS = Object.fromEntries(KIND_OPTIONS.map((k) => [k.id, k.label]));
 const MIN_ITEMS = 2;   // 枠が小さくても、これだけは出す
