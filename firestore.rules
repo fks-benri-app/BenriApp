@@ -6,7 +6,10 @@ service cloud.firestore {
     // サービスアカウントはルールを素通りするので、アプリからの書き込みは全部拒否する。
     match /users/{studentId}/announcements/{id} {
       allow read: if request.auth != null && request.auth.uid == studentId;
-      allow write: if false;
+      // 本人は既読の印(read と readAt)だけ書ける。内容や、リマインドの印は GAS だけが書く
+      allow update: if request.auth != null && request.auth.uid == studentId
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read', 'readAt']);
+      allow create, delete: if false;
     }
 
     // schoolEmail と pushBroken を含む生徒の情報。こちらも本人だけが読める。

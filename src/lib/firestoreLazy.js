@@ -46,3 +46,12 @@ export async function updateUserDoc(studentId, data) {
   const { fs, db } = await loadFirestore();
   await fs.updateDoc(fs.doc(db, 'users', studentId), data);
 }
+
+/** お知らせを既読にする(本人が書けるのは、read と readAt の2つだけ。ルールで制限している) */
+export async function markAnnouncementReadRemote(studentId, docId) {
+  const { fs, db } = await loadFirestore();
+  await fs.updateDoc(fs.doc(db, 'users', studentId, 'announcements', docId), {
+    read: true,
+    readAt: fs.serverTimestamp(),
+  });
+}
