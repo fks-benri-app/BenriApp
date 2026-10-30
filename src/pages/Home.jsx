@@ -25,13 +25,15 @@ const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土'];
 const NEXT_CLASS = { name: '数学Ⅲ', period: '1限 08:40 - 09:35', room: '221教室' };
 const TEST_EVENT_WEEKDAYS = [1, 5, 6]; // 月・金・土に点を出す
 
+// ガジェットと同じ見た目の枠と見出し
+const GADGET_CARD = { background: 'var(--surface-2)', borderRadius: 20, padding: '1em 1.143em', color: 'var(--text-strong)' };
+const GADGET_TITLE = { fontSize: '1em', fontWeight: 700, color: 'var(--text-strong)', userSelect: 'none' };
+
 const sameDay = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 
 export default function Home() {
   // 今日の日付と、今週(日曜から土曜)の日付
   const today = new Date();
-  const weekday = WEEKDAYS[today.getDay()];
-  const dateLabel = `${today.getMonth() + 1}月${today.getDate()}日（${weekday}）`;
   const weekDays = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(today);
     d.setDate(today.getDate() - today.getDay() + i);
@@ -296,51 +298,39 @@ export default function Home() {
           paddingTop: 'calc(2em + env(safe-area-inset-top))',
           paddingBottom: '1.143em',
           background: 'var(--surface)',
+          borderBottom: '1px var(--line) solid',
           width: '100%',
         }}
       >
-        <div style={{ padding: '0 1.143em', display: 'grid', gridTemplateColumns: '48px 1fr 48px', alignItems: 'center', gap: '0.571em' }}>
-          {/* 左: AIアシスタント(未実装。ボタンだけ置く) */}
-          <button
-            type="button"
-            aria-label="AIアシスタント"
-            style={{
-              width: 48, height: 48, borderRadius: '50%', border: '1px solid var(--line-strong)',
-              background: 'var(--surface)', color: 'var(--text-strong)', fontFamily: 'Inter', fontWeight: 700,
-              fontSize: '0.857em', cursor: 'pointer', padding: 0,
-            }}
-          >
-            AI
-          </button>
-          {/* 中央: 挨拶と日付(編集中は「ホームを編集」) */}
-          <div style={{ textAlign: 'center', minWidth: 0 }}>
-            <div style={{ color: 'var(--text-strong)', fontSize: '1.286em', fontWeight: 700, userSelect: 'none' }}>
-              {editing ? 'ホームを編集' : 'こんにちは'}
-            </div>
-            <div style={{ color: 'var(--muted)', fontSize: '0.929em', fontWeight: 500, userSelect: 'none', marginTop: '0.214em' }}>
-              今日 {dateLabel}
-            </div>
+        {/* クラス画面のタイトルバーと同じ構成 */}
+        <div style={{ padding: '0 1.714em', height: '34px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.857em' }}>
+          <div style={{ color: 'var(--text-strong)', fontSize: '1.871em', fontFamily: 'Inter', fontWeight: '800', userSelect: 'none', minWidth: 0 }}>
+            {editing ? 'ホームを編集' : 'こんにちは'}
           </div>
-          {/* 右: アイコン(編集中は「完了」) */}
           {editing ? (
             <button
               type="button"
               onClick={() => setEditing(false)}
               style={{
-                justifySelf: 'end', border: 'none', borderRadius: '999px', padding: '0.5em 1.2em',
+                flexShrink: 0, border: 'none', borderRadius: '999px', padding: '0.5em 1.2em',
                 background: 'var(--ink)', color: 'var(--on-ink)', fontWeight: 700, fontSize: '0.857em', cursor: 'pointer',
               }}
             >
               完了
             </button>
           ) : (
-            <img
-              src={`${import.meta.env.BASE_URL}icon-192.png`}
-              alt=""
-              width={48}
-              height={48}
-              style={{ justifySelf: 'end', width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', userSelect: 'none' }}
-            />
+            // 右: AIアシスタント(未実装。ボタンだけ置く)
+            <button
+              type="button"
+              aria-label="AIアシスタント"
+              style={{
+                flexShrink: 0, width: 34, height: 34, borderRadius: '50%', border: '1px solid var(--line-strong)',
+                background: 'var(--surface)', color: 'var(--text-strong)', fontFamily: 'Inter', fontWeight: 700,
+                fontSize: '0.786em', cursor: 'pointer', padding: 0,
+              }}
+            >
+              AI
+            </button>
           )}
         </div>
       </header>
@@ -357,36 +347,38 @@ export default function Home() {
           WebkitOverflowScrolling: 'touch',
         }}
       >
-        {/* 次の授業と、今週の曜日(テスト用。授業の時間割の取得先ができたら差し替える) */}
-        <section style={{ padding: '0 1.143em', display: 'flex', flexDirection: 'column', gap: '1.143em', paddingBottom: '1.143em' }}>
-          <div style={{ background: '#B9A9FA', borderRadius: 24, padding: '1.143em 1.286em', color: '#111827' }}>
-            <div style={{ fontSize: '0.857em', fontWeight: 600, opacity: 0.7 }}>次の授業</div>
-            <div style={{ fontSize: '1.714em', fontWeight: 800, fontFamily: 'Inter', marginTop: '0.25em', lineHeight: 1.2 }}>{NEXT_CLASS.name}</div>
-            <div style={{ fontSize: '0.929em', marginTop: '0.5em' }}>{NEXT_CLASS.period} ・ {NEXT_CLASS.room}</div>
+        {/* 次の授業と今週の予定。ガジェットと同じ見た目(今は表示だけ。動かせない) */}
+        <section style={{ padding: '0 1.143em', display: 'flex', flexDirection: 'column', gap: '0.857em', paddingBottom: '1.143em' }}>
+          <div style={GADGET_CARD}>
+            <div style={GADGET_TITLE}>次の授業</div>
+            <div style={{ fontSize: '1.571em', fontWeight: 800, fontFamily: 'Inter', marginTop: '0.4em', lineHeight: 1.2, color: 'var(--text-strong)' }}>{NEXT_CLASS.name}</div>
+            <div style={{ fontSize: '0.929em', color: 'var(--text-muted)', marginTop: '0.35em' }}>{NEXT_CLASS.period} ・ {NEXT_CLASS.room}</div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.286em' }}>
-            {weekDays.map((d) => {
-              const isToday = sameDay(d, today);
-              const hasEvent = TEST_EVENT_WEEKDAYS.includes(d.getDay());
-              return (
-                <div
-                  key={d.toISOString()}
-                  style={{
-                    borderRadius: 999,
-                    border: isToday ? 'none' : '1px solid var(--line-strong)',
-                    background: isToday ? 'var(--ink)' : 'transparent',
-                    color: isToday ? 'var(--on-ink)' : 'var(--text-strong)',
-                    padding: '0.571em 0',
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.286em',
-                    userSelect: 'none',
-                  }}
-                >
-                  <div style={{ width: 6, height: 6, borderRadius: 999, background: hasEvent ? 'currentColor' : 'transparent' }} />
-                  <div style={{ fontSize: '0.786em', fontWeight: 600, opacity: isToday ? 1 : 0.6 }}>{WEEKDAYS[d.getDay()]}</div>
-                  <div style={{ fontSize: '1em', fontWeight: 700 }}>{d.getDate()}</div>
-                </div>
-              );
-            })}
+          <div style={GADGET_CARD}>
+            <div style={GADGET_TITLE}>今週の予定</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.286em', marginTop: '0.714em' }}>
+              {weekDays.map((d) => {
+                const isToday = sameDay(d, today);
+                const hasEvent = TEST_EVENT_WEEKDAYS.includes(d.getDay());
+                return (
+                  <div
+                    key={d.toISOString()}
+                    style={{
+                      borderRadius: 14,
+                      background: isToday ? 'var(--ink)' : 'var(--surface)',
+                      color: isToday ? 'var(--on-ink)' : 'var(--text-strong)',
+                      padding: '0.571em 0',
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.286em',
+                      userSelect: 'none',
+                    }}
+                  >
+                    <div style={{ width: 6, height: 6, borderRadius: 999, background: hasEvent ? 'currentColor' : 'transparent' }} />
+                    <div style={{ fontSize: '0.786em', fontWeight: 600, opacity: isToday ? 1 : 0.6 }}>{WEEKDAYS[d.getDay()]}</div>
+                    <div style={{ fontSize: '1em', fontWeight: 700 }}>{d.getDate()}</div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </section>
         <div
