@@ -4,7 +4,6 @@ import { useIdentity } from '../auth/identity';
 import BottomNav from '../components/BottomNav';
 import { GADGETS, gadgetById } from '../gadgets';
 import { currentFontSize } from '../lib/fontSize';
-import { THEMES } from '../lib/themes';
 import { BASE_COLS, gridFor, loadLayout, rangeFor, resolveLayout, saveLayout } from '../lib/homeLayout';
 
 // .hm-press: 押せるものは、押している間 0.95 倍に縮む(静かな動き)
@@ -12,10 +11,8 @@ const NO_SCROLLBAR_CSS = '.no-scrollbar{scrollbar-width:none;-ms-overflow-style:
   + '.hm-press{transition:transform .18s ease}.hm-press:active{transform:scale(.95)}';
 // デザインの決まり(Apple 風): 色は青ひとつ、角丸は決まった段階、影は使わない、太さは 400 / 600 / 700 だけ
 const ACCENT = '#0066cc';   // Action Blue。押せるもの・今日の印はこの色だけ
-const R_LG = 14;            // 小さめの面
-const R_XL = 20;            // 大きな面(カード・ガジェット)
-const R_MD = 10;            // 面の中の小さなタイル
-const TIGHT = '-0.02em';    // 大きな見出しは、少し詰める
+const R_LG = 12;            // 面の中の小さなタイル(日付)
+const R_XL = 24;            // 大きな面(カード・ガジェット)
 const HOLD_MS = 420;   // この時間さわり続けると、編集モードに入る
 const SLOP = 10;       // 長押しの前にこれ以上動いたら、スクロールとみなす
 const GAP = 10;        // 枠と枠のあいだ(px)
@@ -31,18 +28,38 @@ const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 // ・編集中に画面の端へ指を寄せると、自動でスクロールする
 const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土'];
 // テスト用の仮のデータ(次の授業・予定のある曜日)。本物の時間割の取得先ができたら差し替える
-const NEXT_CLASS = { name: '数学Ⅲ', period: '1限 08:40 - 09:35', room: '221教室' };
+const NEXT_CLASS = { name: '数学Ⅲ', time: '08:40 - 09:35', room: '221教室' };
 // 予定のある曜日(テスト用)。予定が無い曜日は点を出さない
 const TEST_EVENT_DAYS = [1, 2, 3, 4, 6];
 
-const sameDay = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+const dateLabel = (d) => `${d.getMonth() + 1}月${d.getDate()}日（${WEEKDAYS[d.getDay()]}）`;
+const EVENT_RED = '#FF4D4D'; // 予定のある日の印(Figma の指定)
+
+// 次の授業カードの右の飾り(Figma の図形を、そのまま重ねたもの)
+const box = (w, h, l, t, extra) => ({ position: 'absolute', width: w, height: h, left: l, top: t, ...extra });
+const rot = { transform: 'rotate(-29deg)', transformOrigin: 'top left' };
+function ClassArt() {
+  return (
+    <div aria-hidden="true" style={{ position: 'absolute', width: 216, height: 216, right: -51, top: 14, opacity: 0.9, overflow: 'hidden', pointerEvents: 'none' }}>
+      <div style={box(153.62, 99.84, 31.46, 41.91, { outline: '2.03px #A4CCEF solid', outlineOffset: '-1.01px' })} />
+      <div style={box(126.9, 110.72, 23.72, 82.75, { ...rot, background: 'linear-gradient(153deg, #CFEAFF 0%, #75B3EE 40%, #3379CB 76%, #2455A6 100%)' })} />
+      <div style={box(67.51, 36.46, 60.82, 88.43, { ...rot, background: 'linear-gradient(168deg, #255BAA 0%, #77B4EA 100%)' })} />
+      <div style={box(126.9, 98.56, 23.72, 82.75, { ...rot, background: 'linear-gradient(163deg, #E3F4FF 0%, #ACD6FA 38%, #548ED5 100%)' })} />
+      <div style={box(108.01, 32.41, 31.59, 83.02, { ...rot, opacity: 0.75, outline: '1.62px #EDF8FF solid', outlineOffset: '-0.81px' })} />
+      <div style={box(58.04, 10.8, 83.87, 118.88, { ...rot, opacity: 0.65, outline: '1.35px #B9DEFB solid', outlineOffset: '-0.68px' })} />
+      <div style={box(146.13, 91.37, 39.16, 59.4, { outline: '2.3px #A6D3F7 solid', outlineOffset: '-1.15px' })} />
+      <div style={box(35.1, 31.05, 147.16, 143.1, { outline: '1.89px #699DD2 solid', outlineOffset: '-0.94px' })} />
+      <div style={box(5.4, 5.4, 153.91, 162, { background: '#427EC3' })} />
+    </div>
+  );
+}
 
 export default function Home() {
-  // 今日の日付と、今週(日曜から土曜)の日付
+  // 今日の日付と、今日から7日分の日付
   const today = new Date();
   const weekDays = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(today);
-    d.setDate(today.getDate() - today.getDay() + i);
+    d.setDate(today.getDate() + i);
     return d;
   });
 
@@ -310,9 +327,9 @@ export default function Home() {
         <div style={{ padding: '0 1.714em', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.857em', minHeight: 48 }}>
           <div style={{ minWidth: 0 }}>
             <div style={{ color: 'var(--text-muted)', fontSize: '0.929em', fontWeight: 600, userSelect: 'none' }}>
-              {editing ? 'ホームを編集中' : 'おはようございます！'}
+              {editing ? 'ホームを編集中' : dateLabel(today)}
             </div>
-            <div style={{ color: 'var(--text-strong)', fontSize: '1.871em', fontFamily: 'Inter', fontWeight: 700, letterSpacing: TIGHT, userSelect: 'none', lineHeight: 1.2 }}>
+            <div style={{ color: 'var(--text-strong)', fontSize: '1.571em', fontFamily: 'Inter', fontWeight: 800, userSelect: 'none', lineHeight: 1.25, marginTop: '0.2em' }}>
               {editing ? 'ガジェットを並べ替え' : '今日は特曜日です！'}
             </div>
           </div>
@@ -353,43 +370,44 @@ export default function Home() {
           WebkitOverflowScrolling: 'touch',
         }}
       >
-        {/* 次の授業と今週の予定。参考のガジェットの見た目(今は表示だけ。動かせない) */}
-        <section style={{ padding: '0 1.143em', display: 'flex', flexDirection: 'column', gap: '0.857em', paddingBottom: '1.143em' }}>
+        {/* 次の授業と一週間の予定。Figma の見た目(今は表示だけ。動かせない) */}
+        <section style={{ padding: '0 1.143em', display: 'flex', flexDirection: 'column', gap: '0.857em', paddingBottom: '0.857em' }}>
           <div style={{
-            background: THEMES.cyan.gradient, borderRadius: R_XL, padding: '1.286em 1.429em',
-            color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.857em',
+            position: 'relative', overflow: 'hidden', minHeight: 160, boxSizing: 'border-box',
+            background: 'linear-gradient(90deg, #CCEBFF 0%, #ffffff 100%)', borderRadius: R_XL, padding: '1.143em',
+            color: '#111827', display: 'flex', alignItems: 'center',
           }}>
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: '0.857em', fontWeight: 600, opacity: 0.85 }}>次の授業</div>
-              <div style={{ fontSize: '1.857em', fontWeight: 700, fontFamily: 'Inter', letterSpacing: TIGHT, marginTop: '0.25em', lineHeight: 1.15 }}>{NEXT_CLASS.name}</div>
-              <div style={{ fontSize: '0.929em', fontWeight: 400, opacity: 0.9, marginTop: '0.4em' }}>{NEXT_CLASS.period} ・ {NEXT_CLASS.room}</div>
+            <div style={{ position: 'relative', zIndex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '0.714em' }}>
+              <div style={{ fontSize: '1.714em', fontWeight: 800, fontFamily: 'Inter', lineHeight: 1.2 }}>{NEXT_CLASS.name}</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.286em', fontSize: '1.071em', fontWeight: 700 }}>
+                <div>{NEXT_CLASS.room}</div>
+                <div>{NEXT_CLASS.time}</div>
+              </div>
             </div>
-            <svg width="10" height="16" viewBox="0 0 10 16" aria-hidden="true" style={{ flexShrink: 0, opacity: 0.8 }}>
-              <path d="M2 2l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-            </svg>
+            <ClassArt />
           </div>
 
-          <div style={{ background: 'var(--surface-2)', borderRadius: R_XL, padding: '1.143em 1.143em 1.0em' }}>
-            <div style={{ fontSize: '1.071em', fontWeight: 700, color: 'var(--text-strong)', userSelect: 'none' }}>今週の予定</div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.357em', marginTop: '0.857em' }}>
+          <div style={{ background: 'var(--surface-2)', borderRadius: R_XL, padding: '1.143em', display: 'flex', flexDirection: 'column', gap: '0.857em' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.857em' }}>
+              <div style={{ fontSize: '1.143em', fontWeight: 700, color: 'var(--text-strong)', userSelect: 'none' }}>一週間の予定</div>
+              <div style={{ fontSize: '0.857em', fontWeight: 400, color: 'var(--text-muted)', userSelect: 'none' }}>{dateLabel(today)}から</div>
+            </div>
+            <div style={{ display: 'flex', gap: '0.571em' }}>
               {weekDays.map((d) => {
-                const isToday = sameDay(d, today);
                 const hasEvent = TEST_EVENT_DAYS.includes(d.getDay());
                 return (
                   <div
                     key={d.toISOString()}
                     style={{
-                      borderRadius: R_LG,
-                      background: isToday ? ACCENT : 'var(--surface)',
-                      color: isToday ? '#ffffff' : 'var(--text-strong)',
-                      padding: '0.714em 0',
-                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.357em',
+                      flex: '1 1 0', minWidth: 0, borderRadius: R_LG, background: 'var(--surface-2)',
+                      padding: '0.714em 0.571em',
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.286em',
                       userSelect: 'none',
                     }}
                   >
-                    <div style={{ fontSize: '0.786em', fontWeight: 600, opacity: isToday ? 0.85 : 0.6 }}>{WEEKDAYS[d.getDay()]}</div>
-                    <div style={{ fontSize: '1.071em', fontWeight: 700 }}>{d.getDate()}</div>
-                    <div style={{ width: 5, height: 5, borderRadius: 999, background: hasEvent ? (isToday ? '#ffffff' : ACCENT) : 'transparent' }} />
+                    <div style={{ color: 'var(--text-muted)', fontSize: '0.786em', fontWeight: 700 }}>{WEEKDAYS[d.getDay()]}</div>
+                    <div style={{ color: 'var(--text-strong)', fontSize: '1em', fontWeight: 800 }}>{d.getDate()}</div>
+                    <div style={{ color: hasEvent ? EVENT_RED : 'var(--text-muted)', fontSize: '0.786em', fontWeight: 700, lineHeight: 1 }}>{hasEvent ? '●' : '·'}</div>
                   </div>
                 );
               })}
@@ -446,7 +464,7 @@ export default function Home() {
                     width: '100%',
                     height: '100%',
                     boxSizing: 'border-box',
-                    padding: '0.9em',
+                    padding: '1.143em',
                     // 影は使わない。動かしている間は、面の色を変えて浮いて見せる
                     background: isMoving ? 'var(--surface)' : 'var(--surface-2)',
                     border: `1px solid ${isMoving ? 'var(--line-strong)' : 'transparent'}`,
@@ -463,8 +481,9 @@ export default function Home() {
                     WebkitTouchCallout: 'none',
                   }}
                 >
-                  <div style={{ color: 'var(--text-strong)', fontSize: '1.071em', fontWeight: 700, marginBottom: '0.571em', flexShrink: 0 }}>
-                    {g.title}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.857em', marginBottom: '0.857em', flexShrink: 0 }}>
+                    <div style={{ color: 'var(--text-strong)', fontSize: '1.143em', fontWeight: 700 }}>{g.title}</div>
+                    {g.path && !editing && <div style={{ color: 'var(--text-muted)', fontSize: '0.857em', fontWeight: 400 }}>すべて見る</div>}
                   </div>
                   <div className="no-scrollbar" style={{ flex: 1, minHeight: 0, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
                     <Component identity={identity} />
