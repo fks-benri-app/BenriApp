@@ -6,6 +6,8 @@ import { bootOpenPending } from './lib/bootOpen';
 // 連携画面と設定画面は、開いたときに読み込む(最初の表示に必要な JS を減らす)
 const LinkPage = lazy(() => import('./pages/LinkPage'));
 const Settings = lazy(() => import('./pages/Settings'));
+// 時間割の読み取りのテスト画面(開発中。開いたときだけ読み込む)
+const OcrTest = lazy(() => import('./pages/OcrTest'));
 // お知らせ画面も、開いたときに読み込む(ホームの起動では読まない)
 const Class = lazy(() => import('./pages/Class'));
 // 通知の詳細設定は、ベルから開く大事な画面。オフラインでも開けるよう、遅延読み込みにしない
@@ -56,6 +58,7 @@ export default function App() {
           </RequireIdentity>
         }
       />
+      <Route path="/ocr-test" element={<OcrTest />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
     </Suspense>
