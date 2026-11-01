@@ -152,6 +152,7 @@ function saveAnnouncementsFor_(ids, docId, rec) {
       postTitle: str(rec.postTitle),
       deleted: { booleanValue: !!rec.deleted },
       ...dueFields_(rec),
+      read: { booleanValue: false },
     },
   });
   const token = getFirestoreToken_();
@@ -294,15 +295,35 @@ function flushPendingShared_(studentId) {
 // ----- 通知の設定(アプリの「通知設定」で、授業ごとにオフにしたもの) -----
 // users/{生徒ID}.notifyPrefs.offCourses に、オフの授業IDが入る。未設定なら、すべてオン。
 // 全体のオン/オフは、アプリが端末の購読で行う(GAS は見ない)。
-const NOTIFY_PREFS_DEFAULT = { offCourses: [] };
+const NOTIFY_PREFS_DEFAULT = {
+  offCourses: [],
+  remindAssignment: { on: true, daysBefore: 1 },
+  remindUnread: { on: true, afterHours: 24 },
+};
 
-// Firestore の値(fields)から設定を取り出す。読めなければ、すべてオン
+// Firestore の値(fields)から設定を取り出す。読めなければ、既定値(すべてオン)
 function notifyPrefsFrom_(fields) {
   try {
     const m = fields && fields.notifyPrefs && fields.notifyPrefs.mapValue && fields.notifyPrefs.mapValue.fields;
     if (!m) return NOTIFY_PREFS_DEFAULT;
     const list = (m.offCourses && m.offCourses.arrayValue && m.offCourses.arrayValue.values) || [];
-    return { offCourses: list.map(function (v) { return v.stringValue; }).filter(Boolean) };
+    const sub = function (k) { return (m[k] && m[k].mapValue && m[k].mapValue.fields) || {}; };
+    const num = function (v) { return v ? Number(v.integerValue !== undefined ? v.integerValue : v.doubleValue) : NaN; };
+    const a = sub('remindAssignment');
+    const u = sub('remindUnread');
+    const days = num(a.daysBefore);
+    const hours = num(u.afterHours);
+    return {
+      offCourses: list.map(function (v) { return v.stringValue; }).filter(Boolean),
+      remindAssignment: {
+        on: !(a.on && a.on.booleanValue === false),
+        daysBefore: [1, 2, 3].indexOf(days) >= 0 ? days : 1,
+      },
+      remindUnread: {
+        on: !(u.on && u.on.booleanValue === false),
+        afterHours: [12, 24, 72].indexOf(hours) >= 0 ? hours : 24,
+      },
+    };
   } catch (e) {
     return NOTIFY_PREFS_DEFAULT;
   }

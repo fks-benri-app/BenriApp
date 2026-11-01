@@ -4,7 +4,7 @@ import { useIdentity } from '../auth/identity';
 import Switch from '../components/Switch';
 import { currentFontSize } from '../lib/fontSize';
 import { useAnnouncements } from '../lib/announcements';
-import { courseIdOf, saveNotifyPrefs, useNotifyPrefs } from '../lib/notifyPrefs';
+import { DAY_OPTIONS, HOUR_OPTIONS, courseIdOf, saveNotifyPrefs, useNotifyPrefs } from '../lib/notifyPrefs';
 import { getDevicePushEnabled, setDevicePushEnabled } from '../lib/onesignal';
 
 // 通知の詳細設定。ベル・設定の「クラスルーム通知」から開く
@@ -62,7 +62,7 @@ export default function NotifySettings() {
     setNote('');
     setOffOverride(offCourses);
     try {
-      await saveNotifyPrefs(studentId, { offCourses });
+      await saveNotifyPrefs(studentId, { ...prefs, offCourses });
     } catch (e) {
       console.error('通知設定の保存に失敗', e);
       setOffOverride(null);
@@ -71,10 +71,22 @@ export default function NotifySettings() {
   }
   const offCourses = offOverride || prefs.offCourses;
 
+  // リマインドの設定を1つ変えて保存する(ほかの設定は、そのまま残す)
+  async function saveRemind(patch) {
+    setNote('');
+    try {
+      await saveNotifyPrefs(studentId, { ...prefs, ...patch });
+    } catch (e) {
+      console.error('リマインドの設定の保存に失敗', e);
+      setNote('保存できませんでした(' + (e && e.code ? e.code : '不明なエラー') + ')。もう一度押してください。');
+    }
+  }
+
   const rowStyle = { padding: '0.857em 1.143em', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.857em' };
   const sectionTitle = { color: 'var(--text-muted)', fontSize: '0.929em', fontWeight: 600, padding: '0 0.286em', marginBottom: '0.571em' };
   const card = { background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: '1.143em' };
   const divider = { height: '1px', background: 'var(--line)' };
+  const selectStyle = { padding: '0.4em 0.6em', borderRadius: '0.6em', border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--text-strong)', fontSize: '0.929em' };
 
   return (
     <div
@@ -150,6 +162,75 @@ export default function NotifySettings() {
                 </React.Fragment>
               );
             })
+          )}
+        </div>
+
+        <div style={{ ...sectionTitle, marginTop: '1.714em' }}>リマインド</div>
+        <div style={card}>
+          <div style={rowStyle}>
+            <div style={{ color: 'var(--text-strong)', fontWeight: 600, minWidth: 0 }}>
+              課題の期限を知らせる
+              <div style={{ color: 'var(--text-muted)', fontSize: '0.857em', fontWeight: 400, marginTop: '0.2em' }}>毎日18時以降に知らせます</div>
+            </div>
+            <button
+              type="button"
+              onClick={() => saveRemind({ remindAssignment: { ...prefs.remindAssignment, on: !prefs.remindAssignment.on } })}
+              disabled={!loaded}
+              aria-pressed={prefs.remindAssignment.on}
+              aria-label="課題の期限を知らせる"
+              style={{ border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', flexShrink: 0 }}
+            >
+              <Switch on={prefs.remindAssignment.on} disabled={!loaded} />
+            </button>
+          </div>
+          {prefs.remindAssignment.on && (
+            <>
+              <div style={divider} />
+              <div style={rowStyle}>
+                <div style={{ color: 'var(--text-body)' }}>期限の何日前</div>
+                <select
+                  value={prefs.remindAssignment.daysBefore}
+                  disabled={!loaded}
+                  onChange={(e) => saveRemind({ remindAssignment: { ...prefs.remindAssignment, daysBefore: Number(e.target.value) } })}
+                  style={selectStyle}
+                >
+                  {DAY_OPTIONS.map((d) => <option key={d} value={d}>{d}日前</option>)}
+                </select>
+              </div>
+            </>
+          )}
+          <div style={divider} />
+          <div style={rowStyle}>
+            <div style={{ color: 'var(--text-strong)', fontWeight: 600, minWidth: 0 }}>
+              未読のお知らせを知らせる
+              <div style={{ color: 'var(--text-muted)', fontSize: '0.857em', fontWeight: 400, marginTop: '0.2em' }}>読んでいないお知らせを、もう一度知らせます</div>
+            </div>
+            <button
+              type="button"
+              onClick={() => saveRemind({ remindUnread: { ...prefs.remindUnread, on: !prefs.remindUnread.on } })}
+              disabled={!loaded}
+              aria-pressed={prefs.remindUnread.on}
+              aria-label="未読のお知らせを知らせる"
+              style={{ border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', flexShrink: 0 }}
+            >
+              <Switch on={prefs.remindUnread.on} disabled={!loaded} />
+            </button>
+          </div>
+          {prefs.remindUnread.on && (
+            <>
+              <div style={divider} />
+              <div style={rowStyle}>
+                <div style={{ color: 'var(--text-body)' }}>受け取ってから</div>
+                <select
+                  value={prefs.remindUnread.afterHours}
+                  disabled={!loaded}
+                  onChange={(e) => saveRemind({ remindUnread: { ...prefs.remindUnread, afterHours: Number(e.target.value) } })}
+                  style={selectStyle}
+                >
+                  {HOUR_OPTIONS.map((h) => <option key={h} value={h}>{h === 72 ? '3日後' : h === 24 ? '1日後' : `${h}時間後`}</option>)}
+                </select>
+              </div>
+            </>
           )}
         </div>
 

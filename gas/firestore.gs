@@ -77,6 +77,7 @@ function saveAnnouncement_(studentId, docId, rec) {
       postTitle: str(rec.postTitle),
       deleted: { booleanValue: !!rec.deleted },
       ...dueFields_(rec),
+      read: { booleanValue: false },
     },
   };
   const res = UrlFetchApp.fetch(url, {

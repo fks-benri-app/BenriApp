@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { subscribe } from './firestoreLazy';
 import { storage } from './storage';
+import { markAnnouncementReadRemote } from './firestoreLazy';
 import { cleanTeacher, cleanText, courseKey, courseLabel, joinTitleAndBody, kindOf, shortCourse } from './filters';
 
 const READ_KEY = 'readIds';
@@ -132,6 +133,14 @@ export function useAnnouncements(studentId, { limitTo } = {}) {
     );
   }, [studentId, limitTo]);
 
+  // 既読は端末にも、Firestore にも書く(サーバーが未読の再通知を判断するため)
+  const syncRead = useCallback((ids) => {
+    if (!studentId) return;
+    ids.forEach((id) => {
+      markAnnouncementReadRemote(studentId, id).catch((e) => console.warn('既読を保存できませんでした', e && e.code));
+    });
+  }, [studentId]);
+
   const markRead = useCallback((id) => {
     setReadIds((prev) => {
       if (prev.has(id)) return prev;
@@ -140,7 +149,8 @@ export function useAnnouncements(studentId, { limitTo } = {}) {
       storage.set(READ_KEY, JSON.stringify([...next].slice(-500)));
       return next;
     });
-  }, []);
+    syncRead([id]);
+  }, [syncRead]);
 
   // 渡された id をまとめて既読にする(一斉既読)。状態の更新と保存は1回だけ
   const markAllRead = useCallback((ids) => {
@@ -152,7 +162,8 @@ export function useAnnouncements(studentId, { limitTo } = {}) {
       storage.set(READ_KEY, JSON.stringify([...next].slice(-500)));
       return next;
     });
-  }, []);
+    syncRead(ids);
+  }, [syncRead]);
 
   const items = useMemo(
     () => state.items.map((a) => ({ ...a, isUnread: !readIds.has(a.id) })),
