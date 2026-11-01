@@ -7,7 +7,15 @@ import { currentFontSize } from '../lib/fontSize';
 import { THEMES } from '../lib/themes';
 import { BASE_COLS, gridFor, loadLayout, rangeFor, resolveLayout, saveLayout } from '../lib/homeLayout';
 
-const NO_SCROLLBAR_CSS = '.no-scrollbar{scrollbar-width:none;-ms-overflow-style:none}.no-scrollbar::-webkit-scrollbar{display:none}';
+// .hm-press: 押せるものは、押している間 0.95 倍に縮む(静かな動き)
+const NO_SCROLLBAR_CSS = '.no-scrollbar{scrollbar-width:none;-ms-overflow-style:none}.no-scrollbar::-webkit-scrollbar{display:none}'
+  + '.hm-press{transition:transform .18s ease}.hm-press:active{transform:scale(.95)}';
+// デザインの決まり(Apple 風): 色は青ひとつ、角丸は決まった段階、影は使わない、太さは 400 / 600 / 700 だけ
+const ACCENT = '#0066cc';   // Action Blue。押せるもの・今日の印はこの色だけ
+const R_LG = 14;            // 小さめの面
+const R_XL = 20;            // 大きな面(カード・ガジェット)
+const R_MD = 10;            // 面の中の小さなタイル
+const TIGHT = '-0.02em';    // 大きな見出しは、少し詰める
 const HOLD_MS = 420;   // この時間さわり続けると、編集モードに入る
 const SLOP = 10;       // 長押しの前にこれ以上動いたら、スクロールとみなす
 const GAP = 10;        // 枠と枠のあいだ(px)
@@ -24,8 +32,8 @@ const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土'];
 // テスト用の仮のデータ(次の授業・予定のある曜日)。本物の時間割の取得先ができたら差し替える
 const NEXT_CLASS = { name: '数学Ⅲ', period: '1限 08:40 - 09:35', room: '221教室' };
-// 曜日ごとの予定の点の色(テスト用)。予定が無い曜日は点を出さない
-const TEST_EVENT_DOTS = { 1: '#9ca3af', 2: '#3b82f6', 3: '#22c55e', 4: '#f59e0b', 6: '#9ca3af' };
+// 予定のある曜日(テスト用)。予定が無い曜日は点を出さない
+const TEST_EVENT_DAYS = [1, 2, 3, 4, 6];
 
 const sameDay = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 
@@ -304,7 +312,7 @@ export default function Home() {
             <div style={{ color: 'var(--text-muted)', fontSize: '0.929em', fontWeight: 600, userSelect: 'none' }}>
               {editing ? 'ホームを編集中' : 'おはようございます！'}
             </div>
-            <div style={{ color: 'var(--text-strong)', fontSize: '1.871em', fontFamily: 'Inter', fontWeight: '800', userSelect: 'none', lineHeight: 1.2 }}>
+            <div style={{ color: 'var(--text-strong)', fontSize: '1.871em', fontFamily: 'Inter', fontWeight: 700, letterSpacing: TIGHT, userSelect: 'none', lineHeight: 1.2 }}>
               {editing ? 'ガジェットを並べ替え' : '今日は特曜日です！'}
             </div>
           </div>
@@ -312,9 +320,10 @@ export default function Home() {
             <button
               type="button"
               onClick={() => setEditing(false)}
+              className="hm-press"
               style={{
-                flexShrink: 0, border: 'none', borderRadius: '999px', padding: '0.5em 1.2em',
-                background: 'var(--ink)', color: 'var(--on-ink)', fontWeight: 700, fontSize: '0.857em', cursor: 'pointer',
+                flexShrink: 0, border: 'none', borderRadius: 999, padding: '0.6em 1.4em',
+                background: ACCENT, color: '#ffffff', fontWeight: 600, fontSize: '0.929em', cursor: 'pointer',
               }}
             >
               完了
@@ -347,38 +356,40 @@ export default function Home() {
         {/* 次の授業と今週の予定。参考のガジェットの見た目(今は表示だけ。動かせない) */}
         <section style={{ padding: '0 1.143em', display: 'flex', flexDirection: 'column', gap: '0.857em', paddingBottom: '1.143em' }}>
           <div style={{
-            background: THEMES.cyan.gradient, borderRadius: 24, padding: '1.143em 1.286em',
+            background: THEMES.cyan.gradient, borderRadius: R_XL, padding: '1.286em 1.429em',
             color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.857em',
           }}>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: '0.929em', fontWeight: 700 }}>次の授業</div>
-              <div style={{ fontSize: '1.857em', fontWeight: 800, fontFamily: 'Inter', marginTop: '0.3em', lineHeight: 1.15 }}>{NEXT_CLASS.name}</div>
-              <div style={{ fontSize: '0.929em', opacity: 0.9, marginTop: '0.35em' }}>{NEXT_CLASS.period} ・ {NEXT_CLASS.room}</div>
+              <div style={{ fontSize: '0.857em', fontWeight: 600, opacity: 0.85 }}>次の授業</div>
+              <div style={{ fontSize: '1.857em', fontWeight: 700, fontFamily: 'Inter', letterSpacing: TIGHT, marginTop: '0.25em', lineHeight: 1.15 }}>{NEXT_CLASS.name}</div>
+              <div style={{ fontSize: '0.929em', fontWeight: 400, opacity: 0.9, marginTop: '0.4em' }}>{NEXT_CLASS.period} ・ {NEXT_CLASS.room}</div>
             </div>
-            <span style={{ fontSize: '1.429em', opacity: 0.9 }}>›</span>
+            <svg width="10" height="16" viewBox="0 0 10 16" aria-hidden="true" style={{ flexShrink: 0, opacity: 0.8 }}>
+              <path d="M2 2l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+            </svg>
           </div>
 
-          <div style={{ background: 'var(--surface-2)', borderRadius: 24, padding: '1em 1.143em' }}>
-            <div style={{ fontSize: '1em', fontWeight: 700, color: 'var(--text-strong)', userSelect: 'none' }}>今週の予定</div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.286em', marginTop: '0.857em' }}>
+          <div style={{ background: 'var(--surface-2)', borderRadius: R_XL, padding: '1.143em 1.143em 1.0em' }}>
+            <div style={{ fontSize: '1.071em', fontWeight: 700, color: 'var(--text-strong)', userSelect: 'none' }}>今週の予定</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.357em', marginTop: '0.857em' }}>
               {weekDays.map((d) => {
                 const isToday = sameDay(d, today);
-                const dot = TEST_EVENT_DOTS[d.getDay()];
+                const hasEvent = TEST_EVENT_DAYS.includes(d.getDay());
                 return (
                   <div
                     key={d.toISOString()}
                     style={{
-                      borderRadius: 16,
-                      background: isToday ? '#1e3a8a' : 'var(--surface)',
+                      borderRadius: R_LG,
+                      background: isToday ? ACCENT : 'var(--surface)',
                       color: isToday ? '#ffffff' : 'var(--text-strong)',
                       padding: '0.714em 0',
                       display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.357em',
                       userSelect: 'none',
                     }}
                   >
-                    <div style={{ width: 6, height: 6, borderRadius: 999, background: isToday ? '#ffffff' : (dot || 'transparent') }} />
-                    <div style={{ fontSize: '0.786em', fontWeight: 600, opacity: isToday ? 1 : 0.7 }}>{WEEKDAYS[d.getDay()]}</div>
-                    <div style={{ fontSize: '1em', fontWeight: 700 }}>{d.getDate()}</div>
+                    <div style={{ fontSize: '0.786em', fontWeight: 600, opacity: isToday ? 0.85 : 0.6 }}>{WEEKDAYS[d.getDay()]}</div>
+                    <div style={{ fontSize: '1.071em', fontWeight: 700 }}>{d.getDate()}</div>
+                    <div style={{ width: 5, height: 5, borderRadius: 999, background: hasEvent ? (isToday ? '#ffffff' : ACCENT) : 'transparent' }} />
                   </div>
                 );
               })}
@@ -403,7 +414,7 @@ export default function Home() {
             const transition = isActive
               ? (isResizing
                 ? 'transform 0.18s ease, width 0.12s ease, height 0.12s ease'
-                : 'transform 0.18s ease, box-shadow 0.18s ease')
+                : 'transform 0.18s ease, background 0.18s ease')
               : (animReady ? 'left 0.18s ease, top 0.18s ease, width 0.18s ease, height 0.18s ease, transform 0.18s ease' : 'none');
             return (
               <div
@@ -415,7 +426,7 @@ export default function Home() {
                   width: it.w * cell - GAP,
                   height: it.h * cell - GAP,
                   zIndex: isActive ? 3 : 1,
-                  transform: isMoving ? 'scale(1.06)' : 'scale(1)',
+                  transform: isMoving ? 'scale(1.04)' : 'scale(1)',
                   transformOrigin: 'center center',
                   transition,
                 }}
@@ -436,14 +447,15 @@ export default function Home() {
                     height: '100%',
                     boxSizing: 'border-box',
                     padding: '0.9em',
-                    background: 'var(--surface-2)',
-                    borderRadius: '1.143em',
+                    // 影は使わない。動かしている間は、面の色を変えて浮いて見せる
+                    background: isMoving ? 'var(--surface)' : 'var(--surface-2)',
+                    border: `1px solid ${isMoving ? 'var(--line-strong)' : 'transparent'}`,
+                    borderRadius: R_XL,
                     overflow: 'hidden',
                     display: 'flex',
                     flexDirection: 'column',
-                    boxShadow: isActive ? '0 16px 36px rgba(0,0,0,0.28)' : '0 2px 8px rgba(0,0,0,0.02)',
-                    outline: editing ? '2px dashed var(--line-strong)' : 'none',
-                    outlineOffset: '2px',
+                    outline: editing ? '1px dashed var(--line-strong)' : 'none',
+                    outlineOffset: '3px',
                     cursor: editing ? 'grab' : 'pointer',
                     touchAction: editing ? 'none' : 'manipulation',
                     userSelect: 'none',
@@ -468,10 +480,10 @@ export default function Home() {
                       transform: 'translateX(-50%)',
                       background: 'var(--ink)',
                       color: 'var(--on-ink)',
-                      borderRadius: '999px',
-                      padding: '2px 10px',
+                      borderRadius: 999,
+                      padding: '3px 12px',
                       fontSize: '0.786em',
-                      fontWeight: 700,
+                      fontWeight: 600,
                       whiteSpace: 'nowrap',
                       pointerEvents: 'none',
                       zIndex: 5,
@@ -497,15 +509,14 @@ export default function Home() {
                       width: 32,
                       height: 32,
                       borderRadius: '50%',
-                      background: 'var(--ink)',
-                      color: 'var(--on-ink)',
+                      background: ACCENT,
+                      color: '#ffffff',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       touchAction: 'none',
                       cursor: 'nwse-resize',
                       zIndex: 4,
-                      boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
                     }}
                   >
                     <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
