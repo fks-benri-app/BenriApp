@@ -76,9 +76,73 @@ function groupByY(words, gap) {
   return lines.map((l) => ({ y: l.y, words: l.words.sort((a, b) => center(a.bbox).x - center(b.bbox).x) }));
 }
 
+// 見出し(「月曜日」「1限目」)が読めていれば、その位置から列と行を決めて組み立てる(PaddleOCR など、行単位で読めるとき向け)
+// 戻り値: { top, dayLabels, periodLabels, rows } か、見出しが足りなければ null
+export function buildGridByLabels(items, candidates) {
+  const usable = items.filter((w) => w.text.trim());
+  const dayHeads = [];
+  const periodHeads = [];
+  for (const w of usable) {
+    const t = w.text.normalize('NFKC').replace(/\s+/g, '');
+    const d = t.match(/^([月火水木金土日])曜/);
+    if (d && t.length <= 4) { dayHeads.push({ label: d[1], x: center(w.bbox).x, y: center(w.bbox).y }); continue; }
+    const p = t.match(/^(\d)限/);
+    if (p && t.length <= 4) periodHeads.push({ n: Number(p[1]), x: center(w.bbox).x, y: center(w.bbox).y });
+  }
+  // 同じ曜日・同じ時限が2回出たら、最初のものだけを使う
+  const uniq = (list, key) => list.filter((a, i) => list.findIndex((b) => b[key] === a[key]) === i);
+  const days = uniq(dayHeads, 'label').sort((a, b) => a.x - b.x);
+  const periods = uniq(periodHeads, 'n').sort((a, b) => a.y - b.y);
+  if (days.length < 3 || periods.length < 2) return null;
+
+  const colGap = (days[days.length - 1].x - days[0].x) / (days.length - 1);
+  const rowGap = (periods[periods.length - 1].y - periods[0].y) / (periods.length - 1);
+  // 時限の見出しは、行の上寄りにあるので、行の範囲は見出しの少し上から次の見出しの少し上まで
+  const lead = rowGap * 0.25;
+  const rowTop = (i) => periods[i].y - lead;
+  const rowBottom = (i) => (i + 1 < periods.length ? periods[i + 1].y - lead : periods[i].y + rowGap - lead);
+
+  const keyed = candidates
+    .map((c) => ({ candidate: c, key: normalizeForMatch(c) }))
+    .filter((k) => k.key.length > 0);
+
+  const cells = periods.map(() => days.map(() => []));
+  for (const w of usable) {
+    const c = center(w.bbox);
+    if (c.y < rowTop(0) || c.y >= rowBottom(periods.length - 1)) continue;
+    const ci = days.reduce((best, d, i) => (Math.abs(d.x - c.x) < Math.abs(days[best].x - c.x) ? i : best), 0);
+    if (Math.abs(days[ci].x - c.x) > colGap * 0.6) continue; // どの曜日の列にも入らない(時限の見出しなど)
+    const ri = periods.findIndex((_, i) => c.y >= rowTop(i) && c.y < rowBottom(i));
+    if (ri >= 0) cells[ri][ci].push({ w, y: c.y, x: c.x });
+  }
+
+  const rows = cells.map((rowCells, r) => ({
+    period: periods[r].n,
+    cells: rowCells.map((list, c) => {
+      const sorted = [...list].sort((a, b) => a.y - b.y);
+      const lines = sorted.map((s) => s.w.text);
+      const raw = lines.join('');
+      if (!raw) return { day: c, raw: '', lines: [], match: null };
+      // 授業名は最初の行にあることが多いが、決めつけず、どの行でも候補にいちばん近いものを選ぶ
+      let best = null;
+      for (const line of lines) {
+        const text = normalizeForMatch(line);
+        for (const k of keyed) {
+          const dist = fuzzyDistance(k.key, text);
+          if (dist <= allowedErrors(k.key.length) && (!best || dist < best.dist)) best = { candidate: k.candidate, dist };
+        }
+      }
+      return { day: c, raw, lines, match: best };
+    }),
+  }));
+  return { top: rowTop(0), dayLabels: days.map((d) => d.label), periodLabels: periods.map((p) => p.n), rows };
+}
+
 // 表の中の文字を、曜日×時限のマスに分け、マスごとに候補と照合する
 // days: 曜日の数(月〜)、periods: 時限の数
 export function buildGrid(words, candidates, { days = 6, periods = 7 } = {}) {
+  const byLabels = buildGridByLabels(words.filter((w) => w.confidence >= MIN_CONF), candidates);
+  if (byLabels) return byLabels;
   const usable = words.filter((w) => w.confidence >= MIN_CONF && w.text.trim());
   const top = findTableTop(usable, candidates);
   const table = usable.filter((w) => center(w.bbox).y > top);

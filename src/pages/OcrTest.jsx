@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import { coverage, matchLines } from '../lib/timetableMatch';
 import { buildGrid } from '../lib/timetableGrid';
+import { recognizeWithPaddle } from '../lib/paddleOcr';
 
 // 時間割の読み取りのテスト画面(保存はしない。写真は端末の中だけで読む)
 // 開き方: アプリの「#/ocr-test」へ行く
@@ -27,6 +28,9 @@ export default function OcrTest() {
   const [file, setFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState('');
   const [candidatesText, setCandidatesText] = useState(DEFAULT_CANDIDATES);
+  const [engine, setEngine] = useState('paddle'); // 'paddle' | 'tesseract'
+  const [fine, setFine] = useState(true);        // PaddleOCR: 検出を細かくする(Zenn の記事の設定)
+  const [elapsed, setElapsed] = useState(0);        // 読み取りにかかった時間(ミリ秒)
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState('');
   const [error, setError] = useState('');
@@ -48,6 +52,7 @@ export default function OcrTest() {
   const lineResults = useMemo(() => (raw ? matchLines(raw.lines, candidates) : []), [raw, candidates]);
   const cover = useMemo(() => (raw ? coverage(lineResults, candidates) : []), [raw, lineResults, candidates]);
   const grid = useMemo(() => (raw ? buildGrid(raw.words, candidates, { days: DAY_LABELS.length, periods: PERIODS }) : null), [raw, candidates]);
+  const dayLabels = (grid && grid.dayLabels) || DAY_LABELS; // 見出しが読めたときは、読んだ曜日を使う
 
   function onPick(e) {
     setFile(e.target.files?.[0] || null);
@@ -63,7 +68,32 @@ export default function OcrTest() {
     setError('');
     setRaw(null);
     setEdits({});
+    setElapsed(0);
     setProgress('文字認識を準備中…');
+    const t0 = Date.now();
+    try {
+      if (engine === 'paddle') {
+        // PaddleOCR: 行ごとに、文字・信頼度・位置が返る
+        const items = await recognizeWithPaddle(file, { fine }, setProgress);
+        setRaw({
+          text: items.map((i) => i.text).join('\n'),
+          lines: items.map((i) => ({ text: i.text, confidence: i.confidence })),
+          words: items,
+        });
+      } else {
+        setRaw(await runTesseract());
+      }
+      setElapsed(Date.now() - t0);
+    } catch (e) {
+      setError(`読み取りに失敗しました: ${e?.message || e}`);
+    } finally {
+      setBusy(false);
+      setProgress('');
+    }
+  }
+
+  // tesseract.js: 1文字ずつの位置が返る
+  async function runTesseract() {
     let worker = null;
     try {
       const { createWorker } = await import('tesseract.js');
@@ -87,13 +117,9 @@ export default function OcrTest() {
           }
         }
       }
-      setRaw({ text: data.text, lines, words });
-    } catch (e) {
-      setError(`読み取りに失敗しました: ${e?.message || e}`);
+      return { text: data.text, lines, words };
     } finally {
       if (worker) await worker.terminate().catch(() => {});
-      setBusy(false);
-      setProgress('');
     }
   }
 
@@ -130,6 +156,31 @@ export default function OcrTest() {
           />
         </div>
 
+        <div style={box}>
+          <div style={label}>3. 読み取りの方式</div>
+          <div style={{ display: 'flex', gap: '0.6em', flexWrap: 'wrap' }}>
+            {[['paddle', 'PaddleOCR(精度が高い)'], ['tesseract', 'tesseract.js(軽い)']].map(([id, name]) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setEngine(id)}
+                style={{ ...pickBtn, background: engine === id ? '#0066cc' : 'var(--surface)', color: engine === id ? '#ffffff' : '#0066cc' }}
+              >
+                {name}
+              </button>
+            ))}
+          </div>
+          {engine === 'paddle' && (
+            <>
+              <label style={{ display: 'flex', gap: '0.5em', alignItems: 'flex-start', fontSize: '0.857em', color: 'var(--text-strong)' }}>
+                <input type="checkbox" checked={fine} onChange={(e) => setFine(e.target.checked)} style={{ marginTop: '0.2em' }} />
+                <span>検出を細かくする(大きさ 1600・しきい値を下げる・領域を広げる)。小さい文字の取りこぼしが減ります</span>
+              </label>
+              <div style={{ fontSize: '0.786em', color: 'var(--text-muted)' }}>初回だけ、モデル(約20MB)を読み込みます。写真は端末の外に出ません。</div>
+            </>
+          )}
+        </div>
+
         <button
           type="button"
           onClick={run}
@@ -139,23 +190,24 @@ export default function OcrTest() {
             color: '#ffffff', fontWeight: 600, fontSize: '1em', cursor: !file || busy ? 'default' : 'pointer',
           }}
         >
-          {busy ? '読み取り中…' : '3. 読み取る'}
+          {busy ? '読み取り中…' : '4. 読み取る'}
         </button>
         {busy && <div style={{ color: 'var(--text-muted)', fontSize: '0.857em' }}>{progress}</div>}
         {error && <div style={{ color: '#b91c1c', fontSize: '0.929em' }}>{error}</div>}
+        {raw && elapsed > 0 && <div style={{ color: 'var(--text-muted)', fontSize: '0.786em' }}>読み取りにかかった時間: {(elapsed / 1000).toFixed(1)}秒(読み込みを含む)</div>}
 
         {raw && (
           <>
             {grid && (
               <div style={box}>
-                <div style={label}>4. 授業表(読み取りを曜日×時限に組み立てたもの)</div>
+                <div style={label}>5. 授業表(読み取りを曜日×時限に組み立てたもの)</div>
                 <div style={{ fontSize: '0.786em', color: 'var(--text-muted)' }}>
                   候補と合わない(要確認)マス: {grid.rows.reduce((n, r) => n + r.cells.filter((c) => !c.match && c.raw).length, 0)}件。
                   マスを選び直すと直せます。
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: `2.2em repeat(${DAY_LABELS.length}, 1fr)`, gap: 4, alignItems: 'stretch' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: `2.2em repeat(${dayLabels.length}, 1fr)`, gap: 4, alignItems: 'stretch' }}>
                   <div />
-                  {DAY_LABELS.map((d) => <div key={d} style={{ textAlign: 'center', fontSize: '0.786em', fontWeight: 700, color: 'var(--text-muted)' }}>{d}</div>)}
+                  {dayLabels.map((d) => <div key={d} style={{ textAlign: 'center', fontSize: '0.786em', fontWeight: 700, color: 'var(--text-muted)' }}>{d}</div>)}
                   {grid.rows.map((row) => (
                     <Fragment key={row.period}>
                       <div style={{ fontSize: '0.714em', color: 'var(--text-muted)', alignSelf: 'center' }}>{row.period}限</div>
@@ -176,6 +228,9 @@ export default function OcrTest() {
                               {candidates.map((c) => <option key={c} value={c}>{c}</option>)}
                             </select>
                             {unsure && <div style={{ fontSize: '0.6em', color: '#b45309', wordBreak: 'break-all' }}>{cell.raw.slice(0, 10)}</div>}
+                            {cell.lines && cell.lines.length > 1 && (
+                              <div style={{ fontSize: '0.571em', color: 'var(--text-muted)', wordBreak: 'break-all' }}>{cell.lines.slice(1).join(' ')}</div>
+                            )}
                           </div>
                         );
                       })}
@@ -186,7 +241,7 @@ export default function OcrTest() {
             )}
 
             <div style={box}>
-              <div style={label}>5. 候補ごとの見つかり方(近さ 0 がぴったり一致)</div>
+              <div style={label}>6. 候補ごとの見つかり方(近さ 0 がぴったり一致)</div>
               {cover.map((c) => (
                 <div key={c.candidate} style={{ display: 'flex', justifyContent: 'space-between', gap: '0.6em', fontSize: '0.929em', alignItems: 'baseline' }}>
                   <span style={{ color: 'var(--text-strong)', fontWeight: 600, minWidth: 0 }}>{c.candidate}</span>
@@ -202,7 +257,7 @@ export default function OcrTest() {
             </div>
 
             <div style={box}>
-              <div style={label}>6. 読み取った行(信頼度・近い候補)</div>
+              <div style={label}>7. 読み取った行(信頼度・近い候補)</div>
               {raw.lines.map((l, i) => {
                 const r = lineResults[i];
                 return (
@@ -218,7 +273,7 @@ export default function OcrTest() {
             </div>
 
             <details style={box}>
-              <summary style={{ ...label, cursor: 'pointer' }}>7. 読み取りの生の文字</summary>
+              <summary style={{ ...label, cursor: 'pointer' }}>8. 読み取りの生の文字</summary>
               <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.786em', color: 'var(--text-strong)', margin: 0 }}>{raw.text}</pre>
             </details>
           </>
