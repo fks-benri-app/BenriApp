@@ -13,6 +13,11 @@ const DEFAULT_CANDIDATES = [
 
 const box = { borderRadius: 14, background: 'var(--surface-2)', padding: '1em', display: 'flex', flexDirection: 'column', gap: '0.6em' };
 const label = { fontSize: '0.857em', fontWeight: 600, color: 'var(--text-muted)' };
+const pickBtn = {
+  borderRadius: 999, padding: '0.6em 1.1em', background: 'var(--surface)', color: '#0066cc',
+  border: '1px solid var(--line-strong)', fontWeight: 600, fontSize: '0.929em', cursor: 'pointer', position: 'relative', overflow: 'hidden',
+};
+const hiddenInput = { position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer' };
 
 export default function OcrTest() {
   const [file, setFile] = useState(null);
@@ -37,6 +42,13 @@ export default function OcrTest() {
   );
   const lineResults = useMemo(() => (raw ? matchLines(raw.lines, candidates) : []), [raw, candidates]);
   const cover = useMemo(() => (raw ? coverage(lineResults, candidates) : []), [raw, lineResults, candidates]);
+
+  function onPick(e) {
+    setFile(e.target.files?.[0] || null);
+    setRaw(null);
+    setError('');
+    e.target.value = ''; // 同じ写真を選び直したときも、変更として扱う
+  }
 
   async function run() {
     if (!file) return;
@@ -81,7 +93,16 @@ export default function OcrTest() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9em' }}>
         <div style={box}>
           <div style={label}>1. 写真を選ぶ(または撮る)</div>
-          <input type="file" accept="image/*" capture="environment" onChange={(e) => { setFile(e.target.files?.[0] || null); setRaw(null); }} />
+          <div style={{ display: 'flex', gap: '0.6em', flexWrap: 'wrap' }}>
+            <label style={pickBtn}>
+              写真ライブラリから選ぶ
+              <input type="file" accept="image/*" onChange={onPick} style={hiddenInput} />
+            </label>
+            <label style={pickBtn}>
+              カメラで撮る
+              <input type="file" accept="image/*" capture="environment" onChange={onPick} style={hiddenInput} />
+            </label>
+          </div>
           {previewUrl && <img src={previewUrl} alt="選んだ写真" style={{ width: '100%', borderRadius: 12, maxHeight: 360, objectFit: 'contain', background: 'var(--surface)' }} />}
         </div>
 
