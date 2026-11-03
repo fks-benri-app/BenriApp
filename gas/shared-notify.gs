@@ -180,15 +180,13 @@ function buildMessage_(item) {
   const info = item.info;
   return {
     heading: info.courseName || info.category, // タイトルは授業名だけ
-    body: info.dueDate ? info.title + '(期限: ' + info.dueDate + ')' : info.title,
+    body: info.title, // 本文は投稿タイトルだけ(期限・本文は通知に入れない)
     url: APP_URL + '?open=' + encodeURIComponent(item.docId),
     data: {
       docId: item.docId,
       category: info.category,
       courseName: info.courseName,
       title: info.title,
-      dueDate: info.dueDate || '',
-      body: String(info.body || '').slice(0, 300),
     },
   };
 }
