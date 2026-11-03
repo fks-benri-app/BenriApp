@@ -141,7 +141,7 @@ function sendDueReminders() {
       const res = sendDirectNotification_(
         pushTargets_(r.studentId),
         r.courseName || '課題',
-        '明日が期限: ' + r.title + (r.dueDate ? '(期限: ' + r.dueDate + ')' : ''),
+        '明日が期限: ' + r.title,
         APP_URL + '?open=' + encodeURIComponent(r.docId)
       );
       recordPushResult_(r.studentId, res);

@@ -13,7 +13,7 @@ const QUIET_END_HOUR = 6;          // 通知開始時間
 const OVERLAP_MS = 5 * 60 * 1000;  // 取りこぼし防止に前回より5分前から探す
 const MAX_THREADS = 20;
 const BATCH_THRESHOLD = 5;         // 新着がこの件数以上なら1通にまとめる
-const INCLUDE_LEGACY_ID = true;    // 移行中は古い方式(生徒ID)の端末にも送る
+const INCLUDE_LEGACY_ID = false;   // 古い方式(生徒ID)の端末には送らない。反映の前に、OneSignal で生徒IDの購読が残っていないか確認する(仕様書 13-2)
 
 
 // ==================================================
@@ -382,7 +382,7 @@ function notifyFresh_(studentId, fresh) {
       try {
         // タイトルは授業名だけにする(授業名が無いときは形式名)
         const heading = info.courseName || info.category;
-        const body = info.dueDate ? info.title + '(期限: ' + info.dueDate + ')' : info.title;
+        const body = info.title; // 本文は投稿タイトルだけ(期限・本文は通知に入れない)
         const res = sendDirectNotification_(
           pushTargets_(studentId), heading, body,
           APP_URL + '?open=' + encodeURIComponent(docId),
@@ -390,9 +390,7 @@ function notifyFresh_(studentId, fresh) {
             docId: docId,
             category: info.category,
             courseName: info.courseName,
-            title: info.title,
-            dueDate: info.dueDate || '',
-            body: String(info.body || '').slice(0, 300)
+            title: info.title
           }
         );
         recordPushResult_(studentId, res);
