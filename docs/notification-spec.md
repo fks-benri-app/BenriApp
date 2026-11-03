@@ -80,7 +80,15 @@ flowchart TD
 - 認証は既存の FIREBASE\_SERVICE\_ACCOUNT で OAuth トークンを作る(FCM 用のスコープを追加)。Cloud Functions は使わず、Spark で足りる。
 - 見出しは授業名、本文は投稿タイトルのみ。投稿の本文と添付は通知に入れない。
 - 通知のデータに、投稿 ID・種類(全員宛て/個人宛て)・授業 ID を入れる。タップしたら、その1件だけを読む。
-- トークンの登録は、アプリが GAS の Web アプリ(ログインと同じ仕組み)を呼んで行う。GAS が Firestore に保存し、その生徒の所属授業のトピックに購読させる。Web のクライアントはトピックを購読できないため、GAS 側(IID の batchAdd)で行う。要検証。
+- トークンの登録は、アプリが GAS の Web アプリ(ログインと同じ仕組み)を呼んで行う。GAS が Firestore に保存し、その生徒の所属授業のトピックに購読させる。
+- トピック購読は、GAS から FCM の v1 REST API で行う。
+    - 購読: `POST https://fcm.googleapis.com/v1/projects/{PROJECT_ID}/registrations/{REGISTRATION_ID}/topicSubscriptions?topic_name={TOPIC_NAME}`(本文は `{}`)
+    - 解除: `DELETE https://fcm.googleapis.com/v1/projects/{PROJECT_ID}/registrations/{REGISTRATION_ID}/topicSubscriptions/{TOPIC_NAME}`
+    - 1回の呼び出しは、1つの登録トークンを1つのトピックに入れる。まとめて入れる一括の上限(1,000台)は Admin SDK の話で、REST には当てはまらない。
+    - Authorization は OAuth2 のアクセストークン(サービスアカウントの JWT から取得)。
+    - REGISTRATION_ID は、アプリから受け取った FCM の登録トークン。
+- 旧 Instance ID API(iid.googleapis.com の batchAdd)は非推奨で、2027年9月29日に削除される。使わない。
+- 同じ購読が既にあると HTTP 409 が返る。再登録時はこれを正常として扱う。
 - 授業ごとの通知オフ(notifyPrefs.offCourses)は、その授業のトピックの購読解除で実現する。設定を変えたとき、アプリが GAS に購読の同期を頼む。
 - トピック送信は、端末ごとの成否が返らない。トークンの生存確認は、アプリの起動時に更新時刻を書き、一定期間(仮に60日)更新のないものを GAS が掃除する。「通知を直す」画面は、再登録だけの簡単なものにする。
 - 通知の許可がない端末と、購読が切れた端末には届かない。取りこぼしは、アプリを開いたときの同期で補う。
@@ -230,7 +238,9 @@ Spark の無料枠に収まる見込み。ただし余裕は、読み取りよ�
 
 - Classroom ユーザー ID の保存についての、学校の承認。
 - 同期の collection group クエリ1本と、メンバー確認のルールが両立するか(エミュレータで検証)。
-- GAS から FCM のトピック購読(IID の batchAdd)を呼べるか。
+- 1端末あたりのトピック数の上限(公式ページに数値なし)。授業数(1人約10)で足りるかを、実機で確認する。
+- 購読の数の見積もり: 800人 × 約10授業 = 約8,000回の購読呼び出し(初回と授業の変更時のみ)。FCM API の呼び出しで、Firestore の無料枠には数えない。FCM 側の上限は公式で確認する。
+- Web クライアントのトークンで、サーバー側の購読が通るか(テスト用端末で実機確認)。
 - 投稿の保存期間(目安は14日)。
 - link が無く postKey を作れない過去のお知らせの扱い(生徒ごとに残すか、捨てるか)。
 - 通知の許可を、利用者にどのタイミングで求めるか(移行時の再許可を含む)。
