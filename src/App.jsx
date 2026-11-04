@@ -8,6 +8,8 @@ const LinkPage = lazy(() => import('./pages/LinkPage'));
 const Settings = lazy(() => import('./pages/Settings'));
 // 時間割の読み取りのテスト画面(開発中。開いたときだけ読み込む)
 const OcrTest = lazy(() => import('./pages/OcrTest'));
+// 通知(FCM)の試験画面(開発中。開いたときだけ読み込む)
+const FcmTest = lazy(() => import('./pages/FcmTest'));
 // お知らせ画面も、開いたときに読み込む(ホームの起動では読まない)
 const Class = lazy(() => import('./pages/Class'));
 // 通知の詳細設定は、ベルから開く大事な画面。オフラインでも開けるよう、遅延読み込みにしない
@@ -59,6 +61,7 @@ export default function App() {
         }
       />
       <Route path="/ocr-test" element={<OcrTest />} />
+      <Route path="/fcm-test" element={<FcmTest />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
     </Suspense>
