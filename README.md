@@ -1,4 +1,3 @@
-````markdown
 # BenriApp(Classroom 通知)
 
 Google Classroom のお知らせ・課題を、スマホのプッシュ通知で受け取り、アプリ内で一覧できる PWA です。
