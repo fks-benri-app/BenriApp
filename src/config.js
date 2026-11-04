@@ -5,6 +5,9 @@ export const CONFIG = {
 
   // GAS ウェブアプリのデプロイURL
   GAS_URL: 'https://script.google.com/a/macros/g.nagano-c.ed.jp/s/AKfycbwrd_6ENel5PrSCeV8CzNZh1d200460-b_7O5Vb7o7Z8aZMe2bYDhkGSOIRDQ7rR6gm/exec',
+
+  // FCM の Web プッシュ証明書の公開鍵(VAPID)。公開してよい値(秘密鍵は入れない)
+  FCM_VAPID_KEY: 'BAUSuPlKLzlxdUyaGuMn2OdG-ceMqRkmtfgI3iDQwUheqrBPNfCITcjRnJJbEfGFlQSmaon3Kwj-4C_BRd74QKY',
 };
 
 export function isGasConfigured() {
