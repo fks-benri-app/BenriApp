@@ -1,7 +1,8 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useIdentity } from './auth/identity';
 import { bootOpenPending } from './lib/bootOpen';
+import { listenForegroundMessages } from './lib/fcm';
 
 // 連携画面と設定画面は、開いたときに読み込む(最初の表示に必要な JS を減らす)
 const LinkPage = lazy(() => import('./pages/LinkPage'));
@@ -26,6 +27,14 @@ function RequireIdentity({ children }) {
 
 export default function App() {
   const { ready, identity } = useIdentity();
+  // FCM の前面通知(許可済みのときだけ)。ログインに関係なく、開いている間は一度だけ購読する
+  useEffect(() => {
+    let off = () => {};
+    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+      listenForegroundMessages().then((f) => { off = f; }).catch(() => {});
+    }
+    return () => off();
+  }, []);
   // ログイン状態の確認が終わるまでは何も出さない(連携画面が一瞬ちらつくのを防ぐ)
   if (!ready) return null;
   // 起動時に開く画面: 連携済みならホーム、未連携なら連携画面。
