@@ -1,9 +1,12 @@
 import { useState } from 'react';
-import { requestFcmToken } from '../lib/fcm';
+import { requestFcmToken, registerFcmTokenToGas } from '../lib/fcm';
+import { useIdentity } from '../auth/identity';
+import { usePushKey } from '../lib/pushStatus';
 
 // 通知(FCM)の試験画面。開き方: アプリの「#/fcm-test」へ行く
 // 使い方: 「通知を許可してトークンを取る」を押す → 表示されたトークンを、
 // GAS のスクリプトプロパティ TEST_FCM_TOKEN に入れる → testFcmSubscribe / testFcmSend を実行する。
+// ログイン済みなら、取ったトークンは GAS にも登録する(users/{生徒ID}/fcmTokens)。
 // 保存はしない。トークンは、テスト端末のものだけを扱う。
 
 const box = { borderRadius: 14, background: 'var(--surface-2)', padding: '1em', display: 'flex', flexDirection: 'column', gap: '0.7em' };
@@ -18,6 +21,8 @@ export default function FcmTest() {
   const [token, setToken] = useState('');
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
+  const { identity } = useIdentity();
+  const pushKey = usePushKey(identity?.id);
 
   async function onClick() {
     setBusy(true);
@@ -26,7 +31,16 @@ export default function FcmTest() {
     try {
       const t = await requestFcmToken();
       setToken(t);
-      setStatus('トークンを取得しました。下の文字列を、GAS の TEST_FCM_TOKEN に入れてください。');
+      let msg = 'トークンを取得しました。下の文字列を、GAS の TEST_FCM_TOKEN に入れてください。';
+      if (identity && pushKey) {
+        try {
+          await registerFcmTokenToGas(identity.id, pushKey, t);
+          msg += ' GAS への登録も済みました。';
+        } catch (e) {
+          msg += ' (GAS への登録は失敗: ' + e.message + ')';
+        }
+      }
+      setStatus(msg);
     } catch (e) {
       setToken('');
       setStatus('失敗: ' + e.message);

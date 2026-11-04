@@ -15,3 +15,22 @@ firebase.initializeApp({
 
 // 通知の表示は、SDK が notification の内容で行う。ここでは初期化だけする
 firebase.messaging();
+
+// 前面の通知(listenForegroundMessages)を押したとき、data.url のページを開く。
+// SDK が出した通知(data.url なし)は、ここでは何もしない(SDK の既定の動きに任せる)。
+self.addEventListener('notificationclick', (event) => {
+  const url = event.notification.data && event.notification.data.url;
+  if (!url) return;
+  event.notification.close();
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
+      for (const c of list) {
+        if (c.url.startsWith(self.registration.scope.replace('/fcm/', '/')) && 'focus' in c) {
+          c.navigate(url).catch(() => {});
+          return c.focus();
+        }
+      }
+      return self.clients.openWindow(url);
+    })
+  );
+});

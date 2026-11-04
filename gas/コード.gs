@@ -22,6 +22,8 @@ const INCLUDE_LEGACY_ID = false;   // 古い方式(生徒ID)の端末には送�
 
 // Webアプリ表示
 function doGet(e) {
+  // アプリからの通知の登録(JSON で返す。画面は出さない)
+  if (e && e.parameter && e.parameter.action === 'registerFcm') return fcmRegisterHandler_(e.parameter);
   const props = PropertiesService.getUserProperties();
   const isAlreadySet = props.getProperty('isSetup') === 'true';
   const studentId = props.getProperty('studentId') || '';

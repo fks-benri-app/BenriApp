@@ -101,6 +101,45 @@ function fcmUnsubscribeTopic_(token, topic) {
   return code === 200;
 }
 
+// ----- 登録トークンの保存(アプリから呼ばれる) -----
+// アプリは GET で次を送る: ?action=registerFcm&studentId=…&pushKey=…&token=…
+// pushKey は、ログイン時に users/{生徒ID}.pushKey へ入っている値と同じものを使う(GAS が導出値と照合する)。
+// 保存先: users/{生徒ID}/fcmTokens/{トークンのハッシュ}(トークンの全文は、ドキュメントIDに使わない)
+function saveFcmToken_(studentId, token) {
+  const docId = Utilities.base64EncodeWebSafe(
+    Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, token)
+  ).replace(/=+$/, '');
+  const res = fsRequest_(
+    fsDocUrl_('/users/' + encodeURIComponent(studentId) + '/fcmTokens/' + docId),
+    'patch',
+    { fields: {
+      token: { stringValue: token },
+      updatedAt: { timestampValue: new Date().toISOString() },
+    } }
+  );
+  if (res.getResponseCode() >= 300) {
+    throw new Error('トークンの保存に失敗(' + res.getResponseCode() + '): ' + res.getContentText());
+  }
+}
+
+function fcmRegisterHandler_(p) {
+  const out = function (obj) {
+    return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
+  };
+  try {
+    const studentId = String(p.studentId || '');
+    const pushKey = String(p.pushKey || '');
+    const token = String(p.token || '');
+    if (!/^\d{6}$/.test(studentId) || !token || token.length > 512) return out({ ok: false, error: 'bad request' });
+    if (pushKey !== derivePushKey_(studentId)) return out({ ok: false, error: 'unauthorized' });
+    saveFcmToken_(studentId, token);
+    return out({ ok: true });
+  } catch (err) {
+    console.error('トークン登録に失敗: ' + err);
+    return out({ ok: false, error: 'server error' });
+  }
+}
+
 // ----- テスト用(GAS エディタから手動で実行する) -----
 function getTestFcmToken_() {
   const token = PropertiesService.getScriptProperties().getProperty('TEST_FCM_TOKEN');
