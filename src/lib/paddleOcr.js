@@ -1,13 +1,14 @@
 // PaddleOCR(PP-OCRv5 mobile)を、ブラウザの中で動かす(時間割の読み取りのテスト用)
-// 写真は端末の外に出ない。モデルと実行用の部品だけを、CDN(jsDelivr)から初回に読み込む。
-// モデル: pdfmarkdown-ppocrv5-models(PaddleOCR の PP-OCRv5 mobile を ONNX にしたもの。Apache-2.0。約20MB)
+// 写真は端末の外に出ない。モデルと実行用の部品は、アプリと同じ配信元(public/ocr/)から読む。
+// 外部の CDN には取りに行かない(第三者の配布元に依存しないため)。
+// モデル: PaddleOCR の PP-OCRv5 mobile を ONNX にしたもの(Apache-2.0。約21MB)
 //   検出 det(.ort)・認識 rec(.onnx。日本語・中国語・英語)・文字の辞書
+// 配置と出典は public/ocr/NOTICE.md を参照。
 
-const ORT_VERSION = '1.30.0'; // package.json の onnxruntime-web に合わせる
-const MODEL_BASE = 'https://cdn.jsdelivr.net/npm/pdfmarkdown-ppocrv5-models@1.0.0';
-const ORT_BASE = `https://cdn.jsdelivr.net/npm/onnxruntime-web@${ORT_VERSION}/dist/`;
-// 実行用の部品(onnxruntime-web。WebAssembly が約28MB)は、アプリに含めず、CDN から直接読み込む
-// (アプリに含めると、配信するファイルが大きくなるため)
+const BASE = import.meta.env.BASE_URL; // 例: /BenriApp/(vite.config.js の base に合わせる)
+const MODEL_BASE = `${BASE}ocr/models`;
+const ORT_BASE = `${BASE}ocr/ort/`;
+// 実行用の部品(onnxruntime-web 1.30.0)。ort.min.mjs が、同じフォルダの wasm を読む
 const ORT_MODULE_URL = `${ORT_BASE}ort.min.mjs`;
 const MAX_PIXEL_SIDE = 2400; // 写真の長い辺がこれより大きいときは縮める(スマホの写真は大きいので)
 
