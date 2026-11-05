@@ -8,27 +8,27 @@ import globeImg from '../assets/images/class/globe.webp';
 // テスト用の仮のデータ。本物の時間割の取得先ができたら差し替える。
 // 背景の色は theme.js の THEMES のキーで指定する(例: green)
 const NEXT_CLASS = { name: '地理総合', time: '08:40 - 09:35', room: '221教室', theme: 'green' };
-// 枠いっぱいに広げる。角丸は枠に任せる(gadgets.json の flush)。タイトルのカプセルは上に重なる
+// 枠いっぱいに広げる。角丸は枠に任せる(gadgets.json の flush)。タイトルのカプセルは上に重なる。
+// 最小の大きさ(横いっぱい・2マスの高さ)で、名前・教室・時間が収まるように文字を少し小さくしている
 export default function NextClassGadget() {
   const theme = THEMES[NEXT_CLASS.theme];
   return (
     <div style={{
       position: 'relative', overflow: 'hidden', boxSizing: 'border-box',
-      width: '100%', height: '100%', padding: '3.2em 1.143em 1.143em', borderRadius: 0,
-      // 地の色の上に白を薄くかけて、明るくする(文字は白のまま。0.18 を変えれば濃さを調整できる)
-      background: `linear-gradient(rgba(255,255,255,0.18), rgba(255,255,255,0.18)), ${shaded(theme.gradient)}`,
+      width: '100%', height: '100%', padding: '3em 1.143em 0.857em', borderRadius: 0,
+      background: shaded(theme.gradient),
       color: theme.textColor,
-      display: 'flex', alignItems: 'center', // カプセルの下で、残りの高さの中央に置く
+      display: 'flex', alignItems: 'flex-end', // カプセルの下で、下に寄せる
       fontSize: `${currentFontSize()}px`, // 文字サイズの設定に合わせる(14px を 1 とした比。14px で Figma と同じ大きさ)
     }}>
-      <div style={{ position: 'relative', zIndex: 1, minWidth: 0, maxWidth: '62%', display: 'flex', flexDirection: 'column', gap: '0.571em' }}>
+      <div style={{ position: 'relative', zIndex: 1, minWidth: 0, maxWidth: '62%', display: 'flex', flexDirection: 'column', gap: '0.286em' }}>
         <div style={{
-          fontSize: '2.571em', fontWeight: 800, fontFamily: 'Inter', lineHeight: 1.2,
+          fontSize: '2.2em', fontWeight: 800, fontFamily: 'Inter', lineHeight: 1.15,
           whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
         }}>
           {NEXT_CLASS.name}
         </div>
-        <div style={{ fontSize: '1.071em', fontWeight: 700, fontFamily: 'Inter', lineHeight: 1.4, whiteSpace: 'nowrap' }}>
+        <div style={{ fontSize: '0.929em', fontWeight: 700, fontFamily: 'Inter', lineHeight: 1.35, whiteSpace: 'nowrap' }}>
           <div>{NEXT_CLASS.room}</div>
           <div>{NEXT_CLASS.time}</div>
         </div>
