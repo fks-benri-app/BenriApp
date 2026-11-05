@@ -16,14 +16,12 @@ const NEXT_CLASS = { name: '地理総合', time: '08:40 - 09:35', room: '221教�
 // 左の余白は 12。カプセルも名前も教室も、同じ左端にそろえる。
 const MARGIN_X = '12cqmin';
 const NAME_STYLE = {
-  position: 'absolute', left: MARGIN_X, top: '28cqmin',
   fontSize: '24cqmin', fontWeight: 800, fontFamily: 'Inter', lineHeight: 1.1,
   whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
   // 地球の左端より手前で止める(長い名前は「…」になる)
   maxWidth: 'calc(100cqw - var(--d) * 0.95 - 16cqmin)',
 };
 const DETAIL_STYLE = {
-  position: 'absolute', left: MARGIN_X, bottom: '11cqmin',
   fontSize: '10cqmin', fontWeight: 700, fontFamily: 'Inter', lineHeight: 1.3, whiteSpace: 'nowrap',
 };
 
@@ -41,10 +39,13 @@ export default function NextClassGadget() {
       color: theme.textColor,
       containerType: 'size', // この枠の幅と高さの小さいほうを、cqmin の基準にする
     }}>
-      <div style={NAME_STYLE}>{NEXT_CLASS.name}</div>
-      <div style={DETAIL_STYLE}>
-        <div>{NEXT_CLASS.room}</div>
-        <div>{NEXT_CLASS.time}</div>
+      {/* 名前・教室・時間は1つの塊にして、下の余白 11 から積む。名前と教室のすきまは、教室と時間のすきまと同じ(行間だけ)になる */}
+      <div style={{ position: 'absolute', left: MARGIN_X, bottom: '11cqmin', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+        <div style={NAME_STYLE}>{NEXT_CLASS.name}</div>
+        <div style={DETAIL_STYLE}>
+          <div>{NEXT_CLASS.room}</div>
+          <div>{NEXT_CLASS.time}</div>
+        </div>
       </div>
       {/* 地球は右下に置く。枠の外にはみ出た部分は、枠の overflow: hidden で切れる */}
       <img
