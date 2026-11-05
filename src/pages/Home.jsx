@@ -434,7 +434,9 @@ export default function Home() {
                     ? { position: 'absolute', top: '0.857em', left: '0.857em', right: '0.857em', zIndex: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.571em', pointerEvents: 'none' }
                     : { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.571em', padding: '0.857em 0.857em 0', flexShrink: 0 }}>
                     {/* 授業カードの上のカプセルは、半透明の灰色にして、下の緑がうっすら見えるようにする */}
-                    <div style={g.flush ? { ...capsuleStyle, background: 'rgba(229, 231, 235, 0.5)' } : capsuleStyle}>{g.title}</div>
+                    <div style={g.flush
+                      ? { ...capsuleStyle, background: 'rgba(229, 231, 235, 0.5)', fontSize: '0.786em', padding: '0.3em 0.8em' }
+                      : capsuleStyle}>{g.title}</div>
                     {g.path && !editing && (
                       <div style={chevronStyle}>
                         <svg width="7" height="12" viewBox="0 0 8 14" aria-hidden="true">
