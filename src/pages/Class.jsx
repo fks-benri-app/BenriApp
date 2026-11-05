@@ -527,6 +527,13 @@ export default function Class() {
     ensureSubscription(pushKey).then((r) => { if (r && r.changed) markPushFixed(); }).catch(() => {});
   }, [pushKey]);
 
+  // 通知が許可済みの端末は、登録トークンの更新時刻を新しくする(古い端末の掃除の対象にしないため)。
+  // fcm の読み込みは、ここで必要になったときだけ行う(起動時の JS を増やさない)
+  useEffect(() => {
+    if (!identity?.id) return;
+    import('../lib/fcm').then((m) => m.refreshFcmTokenIfGranted(identity.id)).catch(() => {});
+  }, [identity?.id]);
+
   // 詳細画面。端末の戻るボタンでも、一覧に戻れるように、履歴(history)に積む
   const [detailId, setDetailId] = useState(() => window.history.state?.__detail ?? peekBootOpen() ?? null);
   useEffect(() => {

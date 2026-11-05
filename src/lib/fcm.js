@@ -45,6 +45,21 @@ export async function registerFcmToken(studentId, token) {
   return true;
 }
 
+// 通知が許可済みの端末だけ、登録トークンを取り直して保存する(updatedAt が新しくなる)。
+// 許可していない端末では、何もしない(許可のダイアログは出さない)。
+export async function refreshFcmTokenIfGranted(studentId) {
+  if (!studentId) return false;
+  if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return false;
+  if (!(await fcmSupported())) return false;
+  const registration = await navigator.serviceWorker.getRegistration(`${BASE}fcm/`);
+  if (!registration) return false;
+  const messaging = getMessaging(app);
+  const token = await getToken(messaging, { vapidKey: CONFIG.FCM_VAPID_KEY, serviceWorkerRegistration: registration });
+  if (!token) return false;
+  await registerFcmToken(studentId, token);
+  return true;
+}
+
 // アプリを開いている間に届いた通知を、画面の通知として出す。
 // (開いているときは、SDK が自動で表示しないため)。戻り値は購読を止める関数。
 export async function listenForegroundMessages() {
