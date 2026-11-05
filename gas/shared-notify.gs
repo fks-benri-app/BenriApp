@@ -46,18 +46,33 @@ function parsePostLink_(link) {
 }
 
 // この授業のメンバーとして、自分を登録(初回だけ。登録ずみなら何もしない)
+// 生徒の所属授業も users/{生徒ID}/courses/{授業ID} に記録する(トピック購読の同期で使う)
 function ensureMember_(studentId, courseId) {
   const props = PropertiesService.getUserProperties();
-  const flag = 'member_' + courseId;
+  const flag = 'memberCourse_' + courseId; // 以前の flag(member_)とは分けて、既存の生徒も1回は記録する
   if (props.getProperty(flag) === '1') return;
+  const now = { timestampValue: new Date().toISOString() };
   const res = fsRequest_(
     fsDocUrl_('/courses/' + encodeURIComponent(courseId) + '/members/' + encodeURIComponent(studentId)) +
       '?updateMask.fieldPaths=joinedAt',
     'patch',
-    { fields: { joinedAt: { timestampValue: new Date().toISOString() } } }
+    { fields: { joinedAt: now } }
   );
-  if (res.getResponseCode() < 300) props.setProperty(flag, '1');
-  else console.error('メンバー登録失敗: ' + res.getContentText());
+  if (res.getResponseCode() >= 300) {
+    console.error('メンバー登録失敗: ' + res.getContentText());
+    return;
+  }
+  const courseRes = fsRequest_(
+    fsDocUrl_('/users/' + encodeURIComponent(studentId) + '/courses/' + encodeURIComponent(courseId)) +
+      '?updateMask.fieldPaths=joinedAt',
+    'patch',
+    { fields: { joinedAt: now } }
+  );
+  if (courseRes.getResponseCode() >= 300) {
+    console.error('授業の記録失敗: ' + courseRes.getContentText()); // flag は立てない。次回やり直す
+    return;
+  }
+  props.setProperty(flag, '1');
 }
 
 // 授業のメンバー(生徒ID)の一覧

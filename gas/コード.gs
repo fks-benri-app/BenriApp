@@ -198,6 +198,13 @@ function checkNewAssignments() {
     console.error('通知の送信に失敗: ' + e);
   }
 
+  // 端末のトピック購読を、所属授業に合わせる(1時間に1回。USE_FCM が false の間は何もしない)
+  try {
+    fcmSyncStudent_(studentId);
+  } catch (e) {
+    console.error('FCM購読の同期に失敗: ' + e);
+  }
+
   Logger.log(`確認: ${Date.now() - startedAt}ms / 新着${fresh.length}件 / 対象スレッド${threads.length}件`);
 }
 

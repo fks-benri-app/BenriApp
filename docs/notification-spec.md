@@ -61,6 +61,7 @@ flowchart TD
 | users/{生徒ID}/readState/main | reads(投稿ID→既読時刻)と flags(送信済みの印) | 本人 | reads は本人、flags は GAS |
 | users/{生徒ID} | schoolEmail・name・notifyPrefs | 本人 | notifyPrefs は本人、ほかは GAS |
 | users/{生徒ID}/fcmTokens/{ハッシュ} | token・updatedAt（端末の登録トークン、1端末1件） | 本人（読み書き・削除） | 本人がアプリから書く。書けるのは token と updatedAt だけ。GAS は読む |
+| users/{生徒ID}/courses/{授業ID} | joinedAt（所属授業。GAS が、メンバー登録と同時に書く） | 本人は読めない | GAS |
 | classroomUsers/{ClassroomユーザーID} | 生徒ID(対応表) | GAS のみ | GAS |
 
 旧構造(users/{生徒ID}/announcements に全員分を書く方式)との違いは、全員宛てを授業側の1件にまとめる点と、既読・リマインドの印を投稿から切り離して readState に移す点。投稿鍵 postKey は、投稿のリンクから作る「授業ID.種類.投稿ID」で、全員で同じ値になる。
@@ -86,7 +87,7 @@ flowchart TD
 - 認証は既存の FIREBASE\_SERVICE\_ACCOUNT で OAuth トークンを作る(FCM 用のスコープを追加)。Cloud Functions は使わず、Spark で足りる。
 - 見出しは授業名、本文は投稿タイトルのみ。投稿の本文と添付は通知に入れない。
 - 通知のデータに、投稿 ID・種類(全員宛て/個人宛て)・授業 ID を入れる。タップしたら、その1件だけを読む。
-- トークンの登録は、アプリが GAS の Web アプリ(ログインと同じ仕組み)を呼んで行う。GAS が Firestore に保存し、その生徒の所属授業のトピックに購読させる。
+- トークンの登録は、アプリが Firestore の users/{生徒ID}/fcmTokens に直接書いて行う(GAS の URL は使わない。fetch は学校のログインで止まるため)。生徒の GAS が、1時間に1回、保存された端末を所属授業のトピックに購読させる(users/{生徒ID}/courses を見る)。
 - トピック購読は、GAS から FCM の v1 REST API で行う。
     - 購読: `POST https://fcm.googleapis.com/v1/projects/{PROJECT_ID}/registrations/{REGISTRATION_ID}/topicSubscriptions?topic_name={TOPIC_NAME}`(本文は `{}`)
     - 解除: `DELETE https://fcm.googleapis.com/v1/projects/{PROJECT_ID}/registrations/{REGISTRATION_ID}/topicSubscriptions/{TOPIC_NAME}`
