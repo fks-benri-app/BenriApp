@@ -6,15 +6,16 @@
     "initial": true,
     "addable": true,
     "fullWidth": true,
+    "flush": true,
     "defaultPos": {
       "x": 0,
       "y": 0,
       "w": 5,
-      "h": 2
+      "h": 3
     },
     "min": {
       "w": 3,
-      "h": 2
+      "h": 3
     },
     "max": {
       "w": 40,

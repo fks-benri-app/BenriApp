@@ -8,14 +8,13 @@ import globeImg from '../assets/images/class/globe.webp';
 // テスト用の仮のデータ。本物の時間割の取得先ができたら差し替える。
 // 背景の色は theme.js の THEMES のキーで指定する(例: green)
 const NEXT_CLASS = { name: '地理総合', time: '08:40 - 09:35', room: '221教室', theme: 'green' };
-const R_XL = 24; // 大きな面の角丸(Home.jsx と同じ)
-
+// 枠(見出し帯の下)いっぱいに広げる。角丸は枠に任せる(gadgets.json の flush)
 export default function NextClassGadget() {
   const theme = THEMES[NEXT_CLASS.theme];
   return (
     <div style={{
       position: 'relative', overflow: 'hidden', boxSizing: 'border-box',
-      width: '100%', height: '100%', padding: '1.143em', borderRadius: R_XL,
+      width: '100%', height: '100%', padding: '1.143em', borderRadius: 0,
       background: shaded(theme.gradient),
       color: theme.textColor,
       display: 'flex', alignItems: 'center',
