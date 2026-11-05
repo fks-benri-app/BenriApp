@@ -81,8 +81,8 @@ function fcmSend_(target, title, body, url, data) {
   return { ok: false, code: code, detail: res.getContentText() };
 }
 
-// 登録トークンを、トピックに購読させる。すでに購読ずみ(409)も成功とみなす
-function fcmSubscribeTopic_(token, topic) {
+// 登録トークンを、トピックに購読させる。戻り値は { code, body }(呼び出し側で判断する)
+function fcmSubscribeTopicCode_(token, topic) {
   const res = fcmRequest_(
     '/registrations/' + token + '/topicSubscriptions?topic_name=' + encodeURIComponent(topic),
     'post',
@@ -90,19 +90,26 @@ function fcmSubscribeTopic_(token, topic) {
   );
   const code = res.getResponseCode();
   if (code !== 200 && code !== 409) console.error('トピック購読に失敗(' + code + '): ' + res.getContentText());
+  return { code: code, body: res.getContentText() };
+}
+
+// 購読させる。すでに購読ずみ(409)も成功とみなす
+function fcmSubscribeTopic_(token, topic) {
+  const code = fcmSubscribeTopicCode_(token, topic).code;
   return code === 200 || code === 409;
 }
 
-// 登録トークンを、トピックから外す
+// 登録トークンを、トピックから外す。購読していない(404)も、外れている状態なので成功とみなす
 function fcmUnsubscribeTopic_(token, topic) {
   const res = fcmRequest_('/registrations/' + token + '/topicSubscriptions/' + encodeURIComponent(topic), 'delete');
   const code = res.getResponseCode();
-  if (code !== 200) console.error('トピック購読の解除に失敗(' + code + '): ' + res.getContentText());
-  return code === 200;
+  if (code !== 200 && code !== 404) console.error('トピック購読の解除に失敗(' + code + '): ' + res.getContentText());
+  return code === 200 || code === 404;
 }
 
 // ----- 購読の同期(生徒の GAS が、所属授業に合わせて端末をトピックへ入れる) -----
 const FCM_SYNC_INTERVAL_MS = 60 * 60 * 1000; // 同期は1時間に1回まで(確認は1分ごとに走るため)
+const FCM_TOKEN_MAX_AGE_MS = 60 * 24 * 60 * 60 * 1000; // 60日、アプリが開かれていない端末は消す
 
 // Firestore のコレクションの文書を、すべて取る(ページを分けて読む)
 function fsListDocs_(path) {
@@ -124,7 +131,8 @@ function fsListDocs_(path) {
 
 // 生徒の登録トークン(端末)を、所属授業のトピックすべてに購読させる。
 // 購読は冪等(すでにあれば 409 で成功扱い)なので、毎回全部を呼んでよい。
-// 解除(授業の通知オフ)は、ここでは扱わない(別の作業)。
+// 所属授業のうち、通知オフ(notifyPrefs.offCourses)のものは購読を外す。
+// 無効になった端末(UNREGISTERED)は、users/{生徒ID}/fcmTokens から消す。
 function fcmSyncStudent_(studentId) {
   if (!USE_FCM) return;
   const props = PropertiesService.getUserProperties();
@@ -132,23 +140,59 @@ function fcmSyncStudent_(studentId) {
   if (Date.now() - last < FCM_SYNC_INTERVAL_MS) return;
 
   const base = '/users/' + encodeURIComponent(studentId);
+  const userRes = fsRequest_(fsDocUrl_(base), 'get');
+  if (userRes.getResponseCode() !== 200) throw new Error('生徒の情報の取得失敗: ' + userRes.getContentText());
+  const offCourses = notifyPrefsFrom_(JSON.parse(userRes.getContentText()).fields).offCourses;
+
   const courses = fsListDocs_(base + '/courses').map(function (d) {
     return decodeURIComponent(d.name.split('/').pop());
   });
   const tokens = fsListDocs_(base + '/fcmTokens')
-    .map(function (d) { return d.fields && d.fields.token ? d.fields.token.stringValue : ''; })
-    .filter(function (t) { return !!t; });
+    .map(function (d) {
+      const f = d.fields || {};
+      return {
+        docId: d.name.split('/').pop(),
+        token: f.token ? f.token.stringValue : '',
+        updatedAt: f.updatedAt ? f.updatedAt.timestampValue : '',
+      };
+    })
+    .filter(function (t) { return !!t.token; });
 
-  let ok = 0;
-  let ng = 0;
-  courses.forEach(function (courseId) {
-    tokens.forEach(function (token) {
-      if (fcmSubscribeTopic_(token, topicForCourse_(courseId))) ok++;
-      else ng++;
+  const stats = { on: 0, off: 0, ng: 0, removed: 0 };
+  tokens.forEach(function (t) {
+    let dead = false;
+    // アプリは起動のたびに updatedAt を新しくする。長く開かれていない端末は、もう使われていないとみなして消す
+    if (t.updatedAt && Date.now() - Date.parse(t.updatedAt) > FCM_TOKEN_MAX_AGE_MS) {
+      const old = fsRequest_(fsDocUrl_(base + '/fcmTokens/' + t.docId), 'delete');
+      if (old.getResponseCode() < 300) stats.removed++;
+      else console.error('古い端末の削除に失敗: ' + old.getContentText());
+      return;
+    }
+    courses.forEach(function (courseId) {
+      if (dead) return;
+      const topic = topicForCourse_(courseId);
+      if (offCourses.indexOf(courseId) >= 0) {
+        if (fcmUnsubscribeTopic_(t.token, topic)) stats.off++;
+        else stats.ng++;
+        return;
+      }
+      const r = fcmSubscribeTopicCode_(t.token, topic);
+      if (r.code === 200 || r.code === 409) {
+        stats.on++;
+      } else if (r.code === 404 && r.body.indexOf('UNREGISTERED') >= 0) {
+        // 端末がアプリを消した、または登録が無効。この端末はもう使えないので消す
+        dead = true;
+        const del = fsRequest_(fsDocUrl_(base + '/fcmTokens/' + t.docId), 'delete');
+        if (del.getResponseCode() < 300) stats.removed++;
+        else console.error('無効な端末の削除に失敗: ' + del.getContentText());
+      } else {
+        stats.ng++;
+      }
     });
   });
   props.setProperty('fcmSyncAt', String(Date.now()));
-  console.log('FCM購読の同期: 授業' + courses.length + '件 × 端末' + tokens.length + '件 / 成功' + ok + ' 失敗' + ng);
+  console.log('FCM購読の同期: 授業' + courses.length + '件 × 端末' + tokens.length + '件 / 購読' + stats.on +
+    ' 解除' + stats.off + ' 削除' + stats.removed + ' 失敗' + stats.ng);
 }
 
 // ----- 登録トークンの保存(アプリから呼ばれる) -----
