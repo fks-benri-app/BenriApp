@@ -1,5 +1,4 @@
 import React from 'react';
-import { currentFontSize } from '../lib/fontSize';
 import { shaded } from '../lib/courseTheme';
 import { THEMES } from '../lib/themes';
 import globeImg from '../assets/images/class/globe.webp';
@@ -9,12 +8,19 @@ import globeImg from '../assets/images/class/globe.webp';
 // 背景の色は theme.js の THEMES のキーで指定する(例: green)
 const NEXT_CLASS = { name: '地理総合', time: '08:40 - 09:35', room: '221教室', theme: 'green' };
 
-// 大きさは、枠の幅と高さの小さいほう(cqmin)で決める。どの枠の大きさでも、同じ構図になる。
-// 数字は、高さ126px(2マス)の枠での目安を、1cqmin(小さいほうの1%)で書いたもの。
-// 文字サイズの設定(14px を基準)に比例して、全体を拡大縮小する。
-const u = (n) => `${(n * currentFontSize() / 14).toFixed(2)}cqmin`;
+// 大きさはすべて cqmin(枠の幅と高さの小さいほうの1%)で決める。
+// 文字サイズの設定は使わない(設定を変えても、この構図は崩れない)。
+// 数字は、参考画像の構図から決めた値。どの枠の大きさでも、同じ配置・同じ比率になる。
+const NAME_STYLE = {
+  position: 'absolute', left: '13cqmin', top: '18cqmin',
+  fontSize: '29cqmin', fontWeight: 800, fontFamily: 'Inter', lineHeight: 1.15,
+  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '60%',
+};
+const DETAIL_STYLE = {
+  position: 'absolute', left: '13cqmin', bottom: '16cqmin',
+  fontSize: '12cqmin', fontWeight: 700, fontFamily: 'Inter', lineHeight: 1.3, whiteSpace: 'nowrap',
+};
 
-// 名前はカプセルの下。教室と時間は下に寄せる。地球は右に置く。
 export default function NextClassGadget() {
   const theme = THEMES[NEXT_CLASS.theme];
   return (
@@ -23,28 +29,12 @@ export default function NextClassGadget() {
       width: '100%', height: '100%', borderRadius: 0,
       background: shaded(theme.gradient),
       color: theme.textColor,
-      containerType: 'size', // この枠の幅と高さを、cqmin の基準にする
+      containerType: 'size', // この枠の幅と高さの小さいほうを、cqmin の基準にする
     }}>
-      <div style={{
-        position: 'absolute', inset: 0, boxSizing: 'border-box',
-        padding: `${u(32)} ${u(12)} ${u(9.5)}`,
-        display: 'flex',
-      }}>
-        <div style={{
-          position: 'relative', zIndex: 1, minWidth: 0, maxWidth: '62%', height: '100%',
-          display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
-        }}>
-          <div style={{
-            fontSize: u(22), fontWeight: 800, fontFamily: 'Inter', lineHeight: 1.15,
-            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%',
-          }}>
-            {NEXT_CLASS.name}
-          </div>
-          <div style={{ marginTop: 'auto', fontSize: u(10.5), fontWeight: 700, fontFamily: 'Inter', lineHeight: 1.35, whiteSpace: 'nowrap' }}>
-            <div>{NEXT_CLASS.room}</div>
-            <div>{NEXT_CLASS.time}</div>
-          </div>
-        </div>
+      <div style={NAME_STYLE}>{NEXT_CLASS.name}</div>
+      <div style={DETAIL_STYLE}>
+        <div>{NEXT_CLASS.room}</div>
+        <div>{NEXT_CLASS.time}</div>
       </div>
       <img
         src={globeImg}
@@ -52,8 +42,8 @@ export default function NextClassGadget() {
         aria-hidden="true"
         draggable={false}
         style={{
-          position: 'absolute', right: u(5), top: '50%', transform: 'translateY(-50%)',
-          height: u(76), width: 'auto', pointerEvents: 'none', userSelect: 'none',
+          position: 'absolute', right: '12cqmin', top: '50%', transform: 'translateY(-50%)',
+          height: '84cqmin', width: 'auto', pointerEvents: 'none', userSelect: 'none',
         }}
       />
     </div>
