@@ -1,7 +1,8 @@
-import { lazy, Suspense, useEffect } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useIdentity } from './auth/identity';
-import { bootOpenPending } from './lib/bootOpen';
+import { markStartRedirectUsed, startsFromNotification } from './lib/bootOpen';
+import { loadFirestore } from './lib/firestoreLazy';
 import { listenForegroundMessages } from './lib/fcm';
 
 // 連携画面と設定画面は、開いたときに読み込む(最初の表示に必要な JS を減らす)
@@ -25,8 +26,23 @@ function RequireIdentity({ children }) {
   return identity ? children : <Navigate to="/" replace />;
 }
 
+// 「/」の画面。通知から起動した最初の1回だけ、お知らせ画面へ送る。
+// 送るときは、お知らせ画面に必要な読み込み(Firestore と画面の JS)を先に始めて、詳細が出るまでの時間を短くする
+function HomeRoute() {
+  const { identity } = useIdentity();
+  const [fromNotification] = useState(() => (identity ? startsFromNotification() : false));
+  useEffect(() => {
+    if (!fromNotification) return;
+    markStartRedirectUsed();
+    loadFirestore().catch(() => {});
+    import('./pages/Class').catch(() => {});
+  }, [fromNotification]);
+  if (!identity) return <LinkPage />;
+  return fromNotification ? <Navigate to="/class" replace /> : <Home />;
+}
+
 export default function App() {
-  const { ready, identity } = useIdentity();
+  const { ready } = useIdentity();
   // FCM の前面通知(許可済みのときだけ)。ログインに関係なく、開いている間は一度だけ購読する
   useEffect(() => {
     let off = () => {};
@@ -37,13 +53,10 @@ export default function App() {
   }, []);
   // ログイン状態の確認が終わるまでは何も出さない(連携画面が一瞬ちらつくのを防ぐ)
   if (!ready) return null;
-  // 起動時に開く画面: 連携済みならホーム、未連携なら連携画面。
-  // ただし通知を押して開いたとき(?open=)は、お知らせ画面へ送って詳細を開く
-  const home = identity ? (bootOpenPending() ? <Navigate to="/class" replace /> : <Home />) : <LinkPage />;
   return (
     <Suspense fallback={null}>
     <Routes>
-      <Route path="/" element={home} />
+      <Route path="/" element={<HomeRoute />} />
       <Route path="/link" element={<LinkPage />} />
       <Route
         path="/class"

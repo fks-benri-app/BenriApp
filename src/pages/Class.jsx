@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { subscribe, userDoc } from '../lib/firestoreLazy';
-import { useAnnouncements } from '../lib/announcements';
+import { fetchAnnouncementById, useAnnouncements } from '../lib/announcements';
 import { ensureSubscription, getDevicePushEnabled } from '../lib/onesignal';
 import { usePushBroken, usePushKey, usePushSubs, useDeviceSubscriptionId, judgeDeviceBroken, goRepairNotifications, markPushFixed, isPushRecentlyFixed } from '../lib/pushStatus';
 import { useIdentity } from '../auth/identity';
@@ -630,11 +630,25 @@ export default function Class() {
     else setDetailId(null);
   }
 
-  const detail = detailId ? items.find((a) => a.id === detailId) : null;
-  // 一覧に存在しない(削除済みなど)お知らせの詳細は開かない
+  // 一覧に無いお知らせ(通知の直後で、まだ端末に入っていない等)は、閉じずに1件だけ直接読んで開く
+  const [fetched, setFetched] = useState(null); // { id, item } か { id, missing: true }
+  const listed = detailId ? items.find((a) => a.id === detailId) : null;
+  const isListed = !!listed;
+  const detail = listed || (fetched && fetched.id === detailId && fetched.item) || null;
   useEffect(() => {
-    if (detailId && real.status === 'ready' && !detail) setDetailId(null);
-  }, [detailId, real.status, detail]);
+    if (!detailId || isListed || !identity?.id) return undefined;
+    if (fetched && fetched.id === detailId) {
+      // 読んでも無い(削除済みなど)お知らせの詳細は開かない
+      if (fetched.missing) setDetailId(null);
+      return undefined;
+    }
+    let alive = true;
+    // 読めなかったとき(オフラインなど)は、詳細を開いたままにする。戻るボタンで一覧へ戻れる
+    fetchAnnouncementById(identity.id, detailId)
+      .then((item) => { if (alive) setFetched(item ? { id: detailId, item } : { id: detailId, missing: true }); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, [detailId, isListed, identity?.id, fetched]);
 
   const emptyMessage =
     status === 'loading'
