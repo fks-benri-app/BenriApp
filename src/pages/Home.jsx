@@ -432,11 +432,11 @@ export default function Home() {
                   {/* タイトルはカプセルの中。右の > は、タップすると開く画面がある印。
                       flush の枠(授業カード)では、中身の上に重ねる */}
                   <div style={g.flush
-                    ? { position: 'absolute', top: '7cqmin', left: '12cqmin', right: '12cqmin', zIndex: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.571em', pointerEvents: 'none' }
+                    ? { position: 'absolute', top: '4cqmin', left: '13cqmin', right: '13cqmin', zIndex: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.571em', pointerEvents: 'none' }
                     : { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.571em', padding: '0.857em 0.857em 0', flexShrink: 0 }}>
                     {/* 授業カードの上のカプセルは、半透明の灰色にして、下の緑がうっすら見えるようにする */}
                     <div style={g.flush
-                      ? { ...capsuleStyle, background: 'rgba(229, 231, 235, 0.5)', fontSize: `${(8.8 * fontPx / 14).toFixed(2)}cqmin`, padding: '0.36em 0.9em' }
+                      ? { ...capsuleStyle, background: 'rgba(229, 231, 235, 0.5)', fontSize: '7.5cqmin', padding: '0.28em 0.8em' }
                       : capsuleStyle}>{g.title}</div>
                     {g.path && !editing && (
                       <div style={chevronStyle}>
