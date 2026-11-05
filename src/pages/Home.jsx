@@ -4,6 +4,9 @@ import { useIdentity } from '../auth/identity';
 import BottomNav from '../components/BottomNav';
 import { GADGETS, gadgetById } from '../gadgets';
 import { currentFontSize } from '../lib/fontSize';
+import { shaded } from '../lib/courseTheme';
+import { THEMES } from '../lib/themes';
+import globeImg from '../assets/images/class/globe.webp';
 import { BASE_COLS, gridFor, loadLayout, rangeFor, resolveLayout, saveLayout } from '../lib/homeLayout';
 
 // .hm-press: 押せるものは、押している間 0.95 倍に縮む(静かな動き)
@@ -28,31 +31,13 @@ const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 // ・編集中に画面の端へ指を寄せると、自動でスクロールする
 const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土'];
 // テスト用の仮のデータ(次の授業・予定のある曜日)。本物の時間割の取得先ができたら差し替える
-const NEXT_CLASS = { name: '数学Ⅲ', time: '08:40 - 09:35', room: '221教室' };
+// 背景の色は theme.js の THEMES のキーで指定する(例: green)
+const NEXT_CLASS = { name: '地理総合', time: '08:40 - 09:35', room: '221教室', theme: 'green' };
 // 予定のある曜日(テスト用)。予定が無い曜日は点を出さない
 const TEST_EVENT_DAYS = [1, 2, 3, 4, 6];
 
 const dateLabel = (d) => `${d.getMonth() + 1}月${d.getDate()}日（${WEEKDAYS[d.getDay()]}）`;
 const EVENT_RED = '#FF4D4D'; // 予定のある日の印(Figma の指定)
-
-// 次の授業カードの右の飾り(Figma の図形を、そのまま重ねたもの)
-const box = (w, h, l, t, extra) => ({ position: 'absolute', width: w, height: h, left: l, top: t, ...extra });
-const rot = { transform: 'rotate(-29deg)', transformOrigin: 'top left' };
-function ClassArt() {
-  return (
-    <div aria-hidden="true" style={{ position: 'absolute', width: 216, height: 216, right: -51, top: 14, opacity: 0.9, overflow: 'hidden', pointerEvents: 'none' }}>
-      <div style={box(153.62, 99.84, 31.46, 41.91, { outline: '2.03px #A4CCEF solid', outlineOffset: '-1.01px' })} />
-      <div style={box(126.9, 110.72, 23.72, 82.75, { ...rot, background: 'linear-gradient(153deg, #CFEAFF 0%, #75B3EE 40%, #3379CB 76%, #2455A6 100%)' })} />
-      <div style={box(67.51, 36.46, 60.82, 88.43, { ...rot, background: 'linear-gradient(168deg, #255BAA 0%, #77B4EA 100%)' })} />
-      <div style={box(126.9, 98.56, 23.72, 82.75, { ...rot, background: 'linear-gradient(163deg, #E3F4FF 0%, #ACD6FA 38%, #548ED5 100%)' })} />
-      <div style={box(108.01, 32.41, 31.59, 83.02, { ...rot, opacity: 0.75, outline: '1.62px #EDF8FF solid', outlineOffset: '-0.81px' })} />
-      <div style={box(58.04, 10.8, 83.87, 118.88, { ...rot, opacity: 0.65, outline: '1.35px #B9DEFB solid', outlineOffset: '-0.68px' })} />
-      <div style={box(146.13, 91.37, 39.16, 59.4, { outline: '2.3px #A6D3F7 solid', outlineOffset: '-1.15px' })} />
-      <div style={box(35.1, 31.05, 147.16, 143.1, { outline: '1.89px #699DD2 solid', outlineOffset: '-0.94px' })} />
-      <div style={box(5.4, 5.4, 153.91, 162, { background: '#427EC3' })} />
-    </div>
-  );
-}
 
 export default function Home() {
   // 今日の日付と、今日から7日分の日付
@@ -374,8 +359,8 @@ export default function Home() {
         <section style={{ padding: '0 1.143em', display: 'flex', flexDirection: 'column', gap: '0.857em', paddingBottom: '0.857em' }}>
           <div style={{
             position: 'relative', overflow: 'hidden', minHeight: 160, boxSizing: 'border-box',
-            background: 'linear-gradient(90deg, #CCEBFF 0%, #ffffff 100%)', borderRadius: R_XL, padding: '1.143em',
-            color: '#111827', display: 'flex', alignItems: 'center',
+            background: shaded(THEMES[NEXT_CLASS.theme].gradient), borderRadius: R_XL, padding: '1.143em',
+            color: THEMES[NEXT_CLASS.theme].textColor, display: 'flex', alignItems: 'center',
           }}>
             <div style={{ position: 'relative', zIndex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '0.714em' }}>
               <div style={{ fontSize: '1.714em', fontWeight: 800, fontFamily: 'Inter', lineHeight: 1.2 }}>{NEXT_CLASS.name}</div>
@@ -384,7 +369,16 @@ export default function Home() {
                 <div>{NEXT_CLASS.time}</div>
               </div>
             </div>
-            <ClassArt />
+            <img
+              src={globeImg}
+              alt=""
+              aria-hidden="true"
+              draggable={false}
+              style={{
+                position: 'absolute', right: '-6%', top: '50%', transform: 'translateY(-50%)',
+                width: '42%', height: 'auto', pointerEvents: 'none', userSelect: 'none',
+              }}
+            />
           </div>
 
           <div style={{ background: 'var(--surface-2)', borderRadius: R_XL, padding: '1.143em', display: 'flex', flexDirection: 'column', gap: '0.857em' }}>
