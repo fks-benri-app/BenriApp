@@ -55,8 +55,5 @@ export const courseThemeOrNull = (label) => {
 };
 export const courseTheme = (label) => courseThemeOrNull(label) || themeOf(DEFAULT_THEME);
 
-// グラデーションの最初の色を、単色として取り出す(グラデーションを使わない表示に使う)
-export const solidOf = (gradient) => (String(gradient).match(/#[0-9a-fA-F]{6}/) || ['#8792a6'])[0];
-
 // 授業の色の上に、ダークのときだけ薄く暗くする層を重ねる(色は変えず、明度だけ下げる)
 export const shaded = (gradient) => `linear-gradient(var(--tag-shade), var(--tag-shade)), ${gradient}`;
