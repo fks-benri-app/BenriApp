@@ -125,6 +125,12 @@ export function loadLayout(gadgets, cols) {
     items = gadgets
       .filter((g) => isObj(source[g.id]))
       .map((g) => clampItem({ ...source[g.id], id: g.id }, g, cols));
+    // 保存のあとに増えた初期のガジェット(initial: true)は、上に置いて、ほかを下へ送る。
+    // 保存に無いものは、次に保存されるまでこの処理で補う
+    gadgets.filter((g) => g.initial && !isObj(source[g.id])).forEach((g) => {
+      const r = rangeFor(g, cols);
+      items = resolveLayout([...items, { id: g.id, x: 0, y: 0, w: r.defaultW, h: r.defaultH }], g.id);
+    });
   } else {
     items = gadgets
       .filter((g) => g.initial)
