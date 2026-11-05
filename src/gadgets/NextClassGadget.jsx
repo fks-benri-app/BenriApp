@@ -42,8 +42,8 @@ export default function NextClassGadget() {
         aria-hidden="true"
         draggable={false}
         style={{
-          position: 'absolute', right: '12cqmin', top: '50%', transform: 'translateY(-50%)',
-          height: '84cqmin', width: 'auto', pointerEvents: 'none', userSelect: 'none',
+          position: 'absolute', right: '-6cqmin', bottom: '-22cqmin',
+          height: '116cqmin', width: 'auto', pointerEvents: 'none', userSelect: 'none',
         }}
       />
     </div>
