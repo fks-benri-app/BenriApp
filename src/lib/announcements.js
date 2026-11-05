@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { subscribe } from './firestoreLazy';
+import { loadFirestore, subscribe } from './firestoreLazy';
 import { storage } from './storage';
 import { markAnnouncementReadRemote } from './firestoreLazy';
 import { cleanTeacher, cleanText, courseKey, courseLabel, joinTitleAndBody, kindOf, shortCourse } from './filters';
@@ -171,4 +171,14 @@ export function useAnnouncements(studentId, { limitTo } = {}) {
   );
 
   return { status: state.status, items, markRead, markAllRead, readIds };
+}
+
+/**
+ * 一覧にまだ無いお知らせを、1件だけ直接読む(通知を押した直後など、キャッシュに入っていないとき)。
+ * 無ければ null。読み込みに失敗したときは例外を投げる。
+ */
+export async function fetchAnnouncementById(studentId, docId) {
+  const { fs, db } = await loadFirestore();
+  const snap = await fs.getDoc(fs.doc(db, 'users', studentId, 'announcements', docId));
+  return snap.exists() ? toAnnouncement(snap) : null;
 }

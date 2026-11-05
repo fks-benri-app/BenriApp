@@ -5,8 +5,12 @@ let bootOpen = (() => {
   try { return new URLSearchParams(window.location.search).get('open') || null; } catch { return null; }
 })();
 
-// 通知から開く途中(まだ詳細を開いていない)かどうか。起動画面をホームにしても、通知の詳細を開けるようにする
-export const bootOpenPending = () => bootOpen !== null;
+// 通知から起動したときに、ホームをお知らせ画面へ送るかどうか。
+// 起動の1回だけ true にする。以後はお知らせ画面を開いたかどうに関係なく、ホームへ行けるようにする
+// (以前は、詳細を開くまで毎回 /class へ戻されて、ホームに移れなくなっていた)
+let startRedirectUsed = false;
+export const startsFromNotification = () => !startRedirectUsed && bootOpen !== null;
+export const markStartRedirectUsed = () => { startRedirectUsed = true; };
 // 中身を見るだけ(消さない)
 export const peekBootOpen = () => bootOpen;
 // 中身を取り出して、消す(詳細を開くのは1回だけ)
