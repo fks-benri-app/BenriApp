@@ -411,6 +411,7 @@ export default function Home() {
                     height: '100%',
                     boxSizing: 'border-box',
                     position: 'relative',
+                    containerType: 'size', // 中のカプセルの大きさを、枠の小さいほうの辺(cqmin)で決める
                     padding: 0,
                     // 影は使わない。動かしている間は、面の色を変えて浮いて見せる
                     background: isMoving ? 'var(--surface)' : 'var(--surface-2)',
@@ -431,11 +432,11 @@ export default function Home() {
                   {/* タイトルはカプセルの中。右の > は、タップすると開く画面がある印。
                       flush の枠(授業カード)では、中身の上に重ねる */}
                   <div style={g.flush
-                    ? { position: 'absolute', top: '0.857em', left: '0.857em', right: '0.857em', zIndex: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.571em', pointerEvents: 'none' }
+                    ? { position: 'absolute', top: '7cqmin', left: '12cqmin', right: '12cqmin', zIndex: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.571em', pointerEvents: 'none' }
                     : { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.571em', padding: '0.857em 0.857em 0', flexShrink: 0 }}>
                     {/* 授業カードの上のカプセルは、半透明の灰色にして、下の緑がうっすら見えるようにする */}
                     <div style={g.flush
-                      ? { ...capsuleStyle, background: 'rgba(229, 231, 235, 0.5)', fontSize: '0.786em', padding: '0.3em 0.8em' }
+                      ? { ...capsuleStyle, background: 'rgba(229, 231, 235, 0.5)', fontSize: `${(8.8 * fontPx / 14).toFixed(2)}cqmin`, padding: '0.36em 0.9em' }
                       : capsuleStyle}>{g.title}</div>
                     {g.path && !editing && (
                       <div style={chevronStyle}>
