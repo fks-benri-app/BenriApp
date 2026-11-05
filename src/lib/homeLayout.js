@@ -32,13 +32,14 @@ export function gridFor(width, height) {
 // ガジェットの大きさの範囲と初期位置。マスの数はそのまま使う(列数に比例させない)
 // 幅だけは、画面の列数を超えないように抑える
 export function rangeFor(g, cols) {
-  const maxW = Math.min(g.maxW, cols);
-  const minW = Math.min(g.minW, maxW);
+  // fullWidth: 幅は画面の列数ちょうど(最小も最大もそこ)。高さだけ変えられる
+  const maxW = g.fullWidth ? cols : Math.min(g.maxW, cols);
+  const minW = g.fullWidth ? cols : Math.min(g.minW, maxW);
   const maxH = g.maxH;
   const minH = Math.min(g.minH, maxH);
-  const defaultW = clamp(g.defaultPos.w, minW, maxW);
+  const defaultW = g.fullWidth ? cols : clamp(g.defaultPos.w, minW, maxW);
   const defaultH = clamp(g.defaultPos.h, minH, maxH);
-  const defaultX = clamp(g.defaultPos.x, 0, cols - defaultW);
+  const defaultX = g.fullWidth ? 0 : clamp(g.defaultPos.x, 0, cols - defaultW);
   const defaultY = Math.max(0, g.defaultPos.y);
   return { minW, maxW, minH, maxH, defaultX, defaultY, defaultW, defaultH };
 }

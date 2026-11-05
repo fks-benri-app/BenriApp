@@ -9,6 +9,7 @@
 //   addable     true: ガジェットの追加画面から追加できる(その画面は今後作る。省略時は true)
 //   defaultPos  初めて置くときの位置と大きさ(x, y, w, h)
 //   min / max   大きさの範囲(w, h)。マスの数で書く(画面の列数まで)
+//   fullWidth   true: 横いっぱい(画面の列数)が最小で、それ以外には広げられない。高さだけ変えられる
 // 形式がおかしい項目は、読み飛ばして、コンソールに理由を出す(画面が壊れないように)。
 
 import gadgetsJson from './gadgets.json';
@@ -52,6 +53,7 @@ function normalize(raw, seen) {
     initial: raw.initial === true,
     addable: raw.addable !== false,
     defaultPos: { x, y, w, h },
+    fullWidth: raw.fullWidth === true,
     minW, maxW, minH, maxH,
     Component: COMPONENTS[raw.type],
   };

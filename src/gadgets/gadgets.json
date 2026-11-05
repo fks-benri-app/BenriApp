@@ -2,9 +2,10 @@
   {
     "id": "nextClass",
     "type": "nextClass",
-    "title": "次の授業",
+    "title": "次の授業は",
     "initial": true,
     "addable": true,
+    "fullWidth": true,
     "defaultPos": {
       "x": 0,
       "y": 0,
