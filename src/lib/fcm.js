@@ -1,9 +1,10 @@
 // FCM の登録トークンを取る(段階2の試験用)
-// 取ったトークンは、いまは画面に表示するだけ。GAS へ登録する処理は次の段階で入れる。
+// 取ったトークンは、ログイン済みなら users/{生徒ID}/fcmTokens に保存する(GAS が読む)。
 // 通知の許可は、ボタンを押したとき(ユーザーの操作の中)でしか求められない。ページを開いた時点では求めない。
 import { getMessaging, getToken, isSupported, onMessage } from 'firebase/messaging';
 import { app } from './firebase';
-import { CONFIG, isGasConfigured } from '../config';
+import { CONFIG } from '../config';
+import { saveFcmTokenRemote } from './firestoreLazy';
 
 const BASE = import.meta.env.BASE_URL; // 例: /BenriApp/
 
@@ -37,15 +38,10 @@ export async function requestFcmToken() {
   return token;
 }
 
-// 登録トークンを GAS に保存してもらう(GAS が、その生徒の所属授業のトピックへ購読させる)。
-// pushKey は、ログイン時に決まった値(users/{生徒ID}.pushKey)。GAS がこれを照合して、本人の端末だけを受け付ける。
-// GET で送るので、トークンは URL に入る。ログや画面には出さない。
-export async function registerFcmTokenToGas(studentId, pushKey, token) {
-  if (!isGasConfigured()) throw new Error('GAS_URL が未設定です');
-  const query = new URLSearchParams({ action: 'registerFcm', studentId, pushKey, token }).toString();
-  const res = await fetch(`${CONFIG.GAS_URL}?${query}`);
-  const json = await res.json().catch(() => null);
-  if (!json || !json.ok) throw new Error('GAS への登録に失敗しました');
+// 登録トークンを、本人の users/{生徒ID}/fcmTokens に保存する(GAS が読んで、授業のトピックへ購読させる)。
+// Firestore のルールで、ログイン中の本人の端末だけが書ける。GAS の URL も pushKey も使わない。
+export async function registerFcmToken(studentId, token) {
+  await saveFcmTokenRemote(studentId, token);
   return true;
 }
 

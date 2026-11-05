@@ -47,6 +47,25 @@ export async function updateUserDoc(studentId, data) {
   await fs.updateDoc(fs.doc(db, 'users', studentId), data);
 }
 
+/**
+ * 通知の登録トークンを、本人の users/{id}/fcmTokens/{ハッシュ} に保存する。
+ * ドキュメントIDは GAS 版と同じ(トークンの SHA-256 を URL 安全な Base64 にしたもの)。
+ * 書けるのは token と updatedAt だけ(ルールで制限している)。
+ */
+export async function saveFcmTokenRemote(studentId, token) {
+  const { fs, db } = await loadFirestore();
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token));
+  const bytes = new Uint8Array(digest);
+  let bin = '';
+  for (const b of bytes) bin += String.fromCharCode(b);
+  const docId = btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  await fs.setDoc(
+    fs.doc(db, 'users', studentId, 'fcmTokens', docId),
+    { token, updatedAt: fs.serverTimestamp() },
+    { merge: true },
+  );
+}
+
 /** お知らせを既読にする(本人が書けるのは、read と readAt の2つだけ。ルールで制限している) */
 export async function markAnnouncementReadRemote(studentId, docId) {
   const { fs, db } = await loadFirestore();
