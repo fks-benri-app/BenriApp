@@ -101,6 +101,56 @@ function fcmUnsubscribeTopic_(token, topic) {
   return code === 200;
 }
 
+// ----- 購読の同期(生徒の GAS が、所属授業に合わせて端末をトピックへ入れる) -----
+const FCM_SYNC_INTERVAL_MS = 60 * 60 * 1000; // 同期は1時間に1回まで(確認は1分ごとに走るため)
+
+// Firestore のコレクションの文書を、すべて取る(ページを分けて読む)
+function fsListDocs_(path) {
+  const docs = [];
+  let pageToken = '';
+  for (let i = 0; i < 10; i++) {
+    const res = fsRequest_(
+      fsDocUrl_(path) + '?pageSize=300' + (pageToken ? '&pageToken=' + encodeURIComponent(pageToken) : ''),
+      'get'
+    );
+    if (res.getResponseCode() !== 200) throw new Error('一覧の取得失敗(' + path + '): ' + res.getContentText());
+    const json = JSON.parse(res.getContentText());
+    (json.documents || []).forEach(function (d) { docs.push(d); });
+    pageToken = json.nextPageToken || '';
+    if (!pageToken) break;
+  }
+  return docs;
+}
+
+// 生徒の登録トークン(端末)を、所属授業のトピックすべてに購読させる。
+// 購読は冪等(すでにあれば 409 で成功扱い)なので、毎回全部を呼んでよい。
+// 解除(授業の通知オフ)は、ここでは扱わない(別の作業)。
+function fcmSyncStudent_(studentId) {
+  if (!USE_FCM) return;
+  const props = PropertiesService.getUserProperties();
+  const last = Number(props.getProperty('fcmSyncAt') || 0);
+  if (Date.now() - last < FCM_SYNC_INTERVAL_MS) return;
+
+  const base = '/users/' + encodeURIComponent(studentId);
+  const courses = fsListDocs_(base + '/courses').map(function (d) {
+    return decodeURIComponent(d.name.split('/').pop());
+  });
+  const tokens = fsListDocs_(base + '/fcmTokens')
+    .map(function (d) { return d.fields && d.fields.token ? d.fields.token.stringValue : ''; })
+    .filter(function (t) { return !!t; });
+
+  let ok = 0;
+  let ng = 0;
+  courses.forEach(function (courseId) {
+    tokens.forEach(function (token) {
+      if (fcmSubscribeTopic_(token, topicForCourse_(courseId))) ok++;
+      else ng++;
+    });
+  });
+  props.setProperty('fcmSyncAt', String(Date.now()));
+  console.log('FCM購読の同期: 授業' + courses.length + '件 × 端末' + tokens.length + '件 / 成功' + ok + ' 失敗' + ng);
+}
+
 // ----- 登録トークンの保存(アプリから呼ばれる) -----
 // アプリは GET で次を送る: ?action=registerFcm&studentId=…&pushKey=…&token=…
 // pushKey は、ログイン時に users/{生徒ID}.pushKey へ入っている値と同じものを使う(GAS が導出値と照合する)。
