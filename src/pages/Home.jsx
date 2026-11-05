@@ -7,6 +7,9 @@ import { currentFontSize } from '../lib/fontSize';
 import { shaded } from '../lib/courseTheme';
 import { THEMES } from '../lib/themes';
 import globeImg from '../assets/images/class/globe.webp';
+import bellIcon from '../assets/images/icons/bell.svg';
+import bellOffIcon from '../assets/images/icons/bell-off.svg';
+import { getDevicePushEnabled } from '../lib/onesignal';
 import { BASE_COLS, gridFor, loadLayout, rangeFor, resolveLayout, saveLayout } from '../lib/homeLayout';
 
 // .hm-press: 押せるものは、押している間 0.95 倍に縮む(静かな動き)
@@ -49,6 +52,13 @@ export default function Home() {
   });
 
   const navigate = useNavigate();
+  // この端末の通知がオンか(オフなら、ベルに斜線を付ける)。画面を開くたびに確かめる
+  const [devicePushOn, setDevicePushOn] = useState(true);
+  useEffect(() => {
+    let alive = true;
+    getDevicePushEnabled().then((v) => alive && setDevicePushOn(v)).catch(() => {});
+    return () => { alive = false; };
+  }, []);
   const { identity } = useIdentity();
   const fontPx = currentFontSize();
 
@@ -296,27 +306,20 @@ export default function Home() {
     >
       <style>{NO_SCROLLBAR_CSS}</style>
 
-      {/* ===== ヘッダー(他の画面と同じ形式。編集中は「完了」を出す) ===== */}
-      <header
-        style={{
-          flexShrink: 0,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '0.857em',
-          paddingTop: 'calc(2em + env(safe-area-inset-top))',
-          paddingBottom: '1.143em',
-          background: 'var(--surface)',
-          width: '100%',
-        }}
-      >
-        <div style={{ padding: '0 1.714em', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.857em', minHeight: 48 }}>
-          <div style={{ minWidth: 0 }}>
-            <div style={{ color: 'var(--text-muted)', fontSize: '0.929em', fontWeight: 600, userSelect: 'none' }}>
-              {editing ? 'ホームを編集中' : dateLabel(today)}
-            </div>
-            <div style={{ color: 'var(--text-strong)', fontSize: '1.571em', fontFamily: 'Inter', fontWeight: 800, userSelect: 'none', lineHeight: 1.25, marginTop: '0.2em' }}>
-              {editing ? 'ガジェットを並べ替え' : '今日は特曜日です！'}
-            </div>
+      {/* ===== ヘッダー(お知らせ画面と同じ形式。タイトルは「ホーム」。編集中は「完了」を出す) ===== */}
+      <header style={{
+        flexShrink: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0.857em',
+        paddingTop: 'calc(2em + env(safe-area-inset-top))',
+        paddingBottom: '1.143em',
+        background: 'var(--surface)',
+        width: '100%',
+      }}>
+        <div style={{ padding: '0 1.714em', height: '34px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.857em' }}>
+          <div style={{ color: 'var(--text-strong)', fontSize: '1.871em', fontFamily: 'Inter', fontWeight: 800, userSelect: 'none', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {editing ? 'ホームを編集' : 'ホーム'}
           </div>
           {editing ? (
             <button
@@ -331,14 +334,26 @@ export default function Home() {
               完了
             </button>
           ) : (
-            // 右: ユーザーのアイコン(今はアプリのアイコンを仮に使う)
-            <img
-              src={`${import.meta.env.BASE_URL}icon-192.png`}
-              alt="ユーザーのアイコン"
-              width={48}
-              height={48}
-              style={{ flexShrink: 0, width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', userSelect: 'none', border: '1px solid var(--line)' }}
-            />
+            <button
+              type="button"
+              onClick={() => navigate('/settings/notify', { state: { from: '/' } })}
+              aria-label={devicePushOn ? '通知設定' : '通知設定(この端末はオフ)'}
+              title={devicePushOn ? '通知設定' : '通知設定(この端末はオフ)'}
+              style={{
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                width: '2.5em', height: '1.571em', padding: 0, border: 'none', background: 'transparent',
+                fontSize: 'inherit', color: 'var(--text-body)', cursor: 'pointer', touchAction: 'manipulation', flexShrink: 0,
+              }}
+            >
+              <img
+                className="icon-ink"
+                src={devicePushOn ? bellIcon : bellOffIcon}
+                alt=""
+                aria-hidden="true"
+                draggable={false}
+                style={{ width: '1.571em', height: '1.571em', objectFit: 'contain', display: 'block' }}
+              />
+            </button>
           )}
         </div>
       </header>
@@ -358,13 +373,21 @@ export default function Home() {
         {/* 次の授業と一週間の予定。Figma の見た目(今は表示だけ。動かせない) */}
         <section style={{ padding: '0 1.143em', display: 'flex', flexDirection: 'column', gap: '0.857em', paddingBottom: '0.857em' }}>
           <div style={{
-            position: 'relative', overflow: 'hidden', minHeight: 160, boxSizing: 'border-box',
-            background: shaded(THEMES[NEXT_CLASS.theme].gradient), borderRadius: R_XL, padding: '1.143em',
-            color: THEMES[NEXT_CLASS.theme].textColor, display: 'flex', alignItems: 'center',
+            position: 'relative', overflow: 'hidden', boxSizing: 'border-box',
+            minHeight: 131, padding: '1.143em', borderRadius: R_XL,
+            background: shaded(THEMES[NEXT_CLASS.theme].gradient),
+            color: THEMES[NEXT_CLASS.theme].textColor,
+            display: 'flex', alignItems: 'center',
+            fontSize: `${currentFontSize()}px`, // 文字サイズの設定に合わせる。下の em は 14px を 1 とした比(14px で Figma と同じ大きさ)
           }}>
-            <div style={{ position: 'relative', zIndex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '0.714em' }}>
-              <div style={{ fontSize: '1.714em', fontWeight: 800, fontFamily: 'Inter', lineHeight: 1.2 }}>{NEXT_CLASS.name}</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.286em', fontSize: '1.071em', fontWeight: 700 }}>
+            <div style={{ position: 'relative', zIndex: 1, minWidth: 0, maxWidth: '62%', display: 'flex', flexDirection: 'column', gap: '0.286em' }}>
+              <div style={{
+                fontSize: '2.571em', fontWeight: 800, fontFamily: 'Inter', lineHeight: 1.2,
+                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+              }}>
+                {NEXT_CLASS.name}
+              </div>
+              <div style={{ fontSize: '1.071em', fontWeight: 700, fontFamily: 'Inter', lineHeight: 1.4, whiteSpace: 'nowrap' }}>
                 <div>{NEXT_CLASS.room}</div>
                 <div>{NEXT_CLASS.time}</div>
               </div>
@@ -375,8 +398,8 @@ export default function Home() {
               aria-hidden="true"
               draggable={false}
               style={{
-                position: 'absolute', right: '-6%', top: '50%', transform: 'translateY(-50%)',
-                width: '42%', height: 'auto', pointerEvents: 'none', userSelect: 'none',
+                position: 'absolute', right: '3%', top: '50%', transform: 'translateY(-50%)',
+                height: '86%', width: 'auto', pointerEvents: 'none', userSelect: 'none',
               }}
             />
           </div>
