@@ -35,7 +35,7 @@ Classroom の投稿を、授業のメンバーに1回だけ通知し、アプリ
 ```mermaid
 flowchart TD
   C["Classroom<br/>投稿・通知メール・対象(assigneeMode)"]
-  G["GAS(各生徒の権限で動く)<br/>取り込み・保存・FCM への送信<br/>トークン登録と購読の同期の受付"]
+  G["GAS(各生徒の権限で動く)<br/>取り込み・保存・FCM への送信<br/>fcmTokens の読み取りと購読の同期"]
   F["Firestore<br/>courses/…/posts(全員宛て・授業ごとに1件)<br/>users/…/announcements(個人宛て)<br/>readState・claims・classroomUsers"]
   M["FCM<br/>授業ごとのトピックへ1回で配信<br/>個人宛ては対象の端末へ直接送信<br/>本文は授業名と投稿タイトルだけ"]
   A["アプリ(PWA)<br/>キャッシュから表示し、差分だけ同期する<br/>GitHub Pages から配信。データは置かない"]
@@ -59,7 +59,8 @@ flowchart TD
 | claims/{投稿鍵} | 排他ロック(claimedBy・claimedAtMs・sentAtMs・expireAt)。現行の最上位 posts を改名 | GAS のみ | GAS |
 | users/{生徒ID}/announcements/{投稿ID} | 個人宛ての投稿 | 本人 | GAS |
 | users/{生徒ID}/readState/main | reads(投稿ID→既読時刻)と flags(送信済みの印) | 本人 | reads は本人、flags は GAS |
-| users/{生徒ID} | schoolEmail・name・notifyPrefs（登録トークンは users/{生徒ID}/fcmTokens/{ハッシュ} に1件ずつ） | 本人 | notifyPrefs は本人、ほかは GAS |
+| users/{生徒ID} | schoolEmail・name・notifyPrefs | 本人 | notifyPrefs は本人、ほかは GAS |
+| users/{生徒ID}/fcmTokens/{ハッシュ} | token・updatedAt（端末の登録トークン、1端末1件） | 本人（読み書き・削除） | 本人がアプリから書く。書けるのは token と updatedAt だけ。GAS は読む |
 | classroomUsers/{ClassroomユーザーID} | 生徒ID(対応表) | GAS のみ | GAS |
 
 旧構造(users/{生徒ID}/announcements に全員分を書く方式)との違いは、全員宛てを授業側の1件にまとめる点と、既読・リマインドの印を投稿から切り離して readState に移す点。投稿鍵 postKey は、投稿のリンクから作る「授業ID.種類.投稿ID」で、全員で同じ値になる。

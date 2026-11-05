@@ -21,6 +21,18 @@ service cloud.firestore {
       allow create, delete: if false;
     }
 
+    // 通知の登録トークン(端末ごとに1件)。本人だけが読み書き・削除できる。
+    // 書けるのは token と updatedAt だけ。token は文字列で512文字以下、updatedAt はサーバーの時刻に限る。
+    match /users/{studentId}/fcmTokens/{tokenId} {
+      allow read, delete: if request.auth != null && request.auth.uid == studentId;
+      allow create, update: if request.auth != null && request.auth.uid == studentId
+        && request.resource.data.keys().hasOnly(['token', 'updatedAt'])
+        && request.resource.data.token is string
+        && request.resource.data.token.size() > 0
+        && request.resource.data.token.size() <= 512
+        && request.resource.data.updatedAt == request.time;
+    }
+
     // ここに書いていないパスは、すべて拒否される(既定)。
   }
 }
