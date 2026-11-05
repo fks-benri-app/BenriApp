@@ -14,7 +14,7 @@ const NO_SCROLLBAR_CSS = '.no-scrollbar{scrollbar-width:none;-ms-overflow-style:
   + '.hm-press{transition:transform .18s ease}.hm-press:active{transform:scale(.95)}';
 // デザインの決まり(Apple 風): 色は青ひとつ、角丸は決まった段階、影は使わない、太さは 400 / 600 / 700 だけ
 const ACCENT = '#0066cc';   // Action Blue。押せるもの・今日の印はこの色だけ
-const R_XL = 24;            // 大きな面(カード・ガジェット)
+const R_XL = 16;            // 大きな面(カード・ガジェット)
 const HOLD_MS = 420;   // この時間さわり続けると、編集モードに入る
 const SLOP = 10;       // 長押しの前にこれ以上動いたら、スクロールとみなす
 const GAP = 10;        // 枠と枠のあいだ(px)
@@ -418,7 +418,7 @@ export default function Home() {
                   {/* 見出し帯(面より一段濃い)。右の > は、タップすると開く画面がある印 */}
                   <div style={{
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.857em',
-                    padding: '0.857em 1.143em', flexShrink: 0, background: 'var(--surface-3)',
+                    padding: '0.5em 1.143em', flexShrink: 0, background: 'var(--surface-3)',
                   }}>
                     <div style={{ color: 'var(--text-strong)', fontSize: '1.143em', fontWeight: 700, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{g.title}</div>
                     {g.path && !editing && (
@@ -427,7 +427,7 @@ export default function Home() {
                       </svg>
                     )}
                   </div>
-                  <div className="no-scrollbar" style={{ flex: 1, minHeight: 0, overflow: 'auto', display: 'flex', flexDirection: 'column', padding: '1.143em' }}>
+                  <div className="no-scrollbar" style={{ flex: 1, minHeight: 0, overflow: 'auto', display: 'flex', flexDirection: 'column', padding: g.flush ? 0 : '1.143em' }}>
                     <Component identity={identity} />
                   </div>
                 </section>
