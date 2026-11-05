@@ -195,6 +195,30 @@ function fcmSyncStudent_(studentId) {
     ' 解除' + stats.off + ' 削除' + stats.removed + ' 失敗' + stats.ng);
 }
 
+// ----- 送信(OneSignal と並行する移行期間の用)。USE_FCM が false の間は何もしない -----
+
+// 授業のトピックへ1件送る(授業の購読している全端末へ届く)。共有通知の送る役が、1回だけ呼ぶ
+function fcmSendToCourse_(courseId, title, body, url, data) {
+  if (!USE_FCM) return;
+  const r = fcmSend_({ topic: topicForCourse_(courseId) }, title, body, url, data);
+  if (!r.ok) console.error('FCMトピック送信失敗(' + r.code + '): ' + r.detail);
+}
+
+// 生徒の登録トークンすべてに、1件ずつ送る(個人宛て・まとめ通知)
+function fcmSendToStudent_(studentId, title, body, url, data) {
+  if (!USE_FCM) return;
+  fsListDocs_('/users/' + encodeURIComponent(studentId) + '/fcmTokens').forEach(function (d) {
+    const f = d.fields || {};
+    if (!f.token) return;
+    try {
+      const r = fcmSend_({ token: f.token.stringValue }, title, body, url, data);
+      if (!r.ok) console.error('FCM送信失敗(' + r.code + ')'); // 無効な端末は、購読の同期のときに消す
+    } catch (e) {
+      console.error('FCM送信に失敗: ' + e);
+    }
+  });
+}
+
 // ----- 登録トークンの保存(アプリから呼ばれる) -----
 // アプリは GET で次を送る: ?action=registerFcm&studentId=…&pushKey=…&token=…
 // pushKey は、ログイン時に users/{生徒ID}.pushKey へ入っている値と同じものを使う(GAS が導出値と照合する)。

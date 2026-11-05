@@ -248,6 +248,13 @@ function sendToCourse_(studentId, item, ref) {
   recordPushResult_(studentId, res);
   if (!res || !res.id) return false; // 送れなかった。自分には、これまでどおり送る(記録は未送信のまま → ほかの人は2分後に自分で送る)
 
+  // OneSignal が送れたあとで、授業のトピックへ1回だけ送る(送る役はこの1人だけ)
+  try {
+    fcmSendToCourse_(ref.courseId, msg.heading, msg.body, msg.url, msg.data);
+  } catch (e) {
+    console.error('FCMトピック送信に失敗: ' + e);
+  }
+
   try {
     markClaimSent_(ref.postKey, recipients);
   } catch (e) {

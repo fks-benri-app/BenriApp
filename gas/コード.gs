@@ -392,17 +392,16 @@ function notifyFresh_(studentId, fresh) {
         // タイトルは授業名だけにする(授業名が無いときは形式名)
         const heading = info.courseName || info.category;
         const body = info.title; // 本文は投稿タイトルだけ(期限・本文は通知に入れない)
-        const res = sendDirectNotification_(
-          pushTargets_(studentId), heading, body,
-          APP_URL + '?open=' + encodeURIComponent(docId),
-          {
-            docId: docId,
-            category: info.category,
-            courseName: info.courseName,
-            title: info.title
-          }
-        );
+        const url = APP_URL + '?open=' + encodeURIComponent(docId);
+        const data = {
+          docId: docId,
+          category: info.category,
+          courseName: info.courseName,
+          title: info.title
+        };
+        const res = sendDirectNotification_(pushTargets_(studentId), heading, body, url, data);
         recordPushResult_(studentId, res);
+        fcmSendToStudent_(studentId, heading, body, url, data);
       } catch (e) {
         console.error('通知の送信に失敗(' + docId + '): ' + e);
       }
@@ -433,13 +432,10 @@ function notifyFresh_(studentId, fresh) {
     : '新着のお知らせ';
   const titles = fallback.slice(0, 3).map(function (x) { return x.info.title; }).join(' / ');
   const more = fallback.length > 3 ? ' ほか' + (fallback.length - 3) + '件' : '';
-  const res = sendDirectNotification_(
-    pushTargets_(studentId),
-    heading,
-    fallback.length + '件の新着: ' + titles + more,
-    APP_URL
-  );
+  const body = fallback.length + '件の新着: ' + titles + more;
+  const res = sendDirectNotification_(pushTargets_(studentId), heading, body, APP_URL);
   recordPushResult_(studentId, res);
+  fcmSendToStudent_(studentId, heading, body, APP_URL);
 }
 
 // OneSignalAPIへリクエスト送信
