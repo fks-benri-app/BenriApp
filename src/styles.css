@@ -5,6 +5,7 @@
   --bg: #f5f5f7;
   --surface: #ffffff;        /* カードや一覧の背景 */
   --surface-2: #f3f4f6;      /* 一段へこんだ背景、入力欄など */
+  --surface-3: #e5e7eb;      /* ガジェットの見出し帯(面より一段濃い) */
   --line: #e5e7eb;
   --switch-off: #e5e7eb;
   --line-strong: #c4c7c5;
@@ -129,6 +130,7 @@ html[data-theme="dark"] {
   --bg: #121214;
   --surface: #1f1f23;
   --surface-2: #2b2b30;
+  --surface-3: #37373d;
   --line: #3d3d44;
   --switch-off: #6b6b74;
   --line-strong: #5a5a61;

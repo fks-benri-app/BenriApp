@@ -398,7 +398,7 @@ export default function Home() {
                     width: '100%',
                     height: '100%',
                     boxSizing: 'border-box',
-                    padding: '1.143em',
+                    padding: 0,
                     // 影は使わない。動かしている間は、面の色を変えて浮いて見せる
                     background: isMoving ? 'var(--surface)' : 'var(--surface-2)',
                     border: `1px solid ${isMoving ? 'var(--line-strong)' : 'transparent'}`,
@@ -415,11 +415,19 @@ export default function Home() {
                     WebkitTouchCallout: 'none',
                   }}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.857em', marginBottom: '0.857em', flexShrink: 0 }}>
-                    <div style={{ color: 'var(--text-strong)', fontSize: '1.143em', fontWeight: 700 }}>{g.title}</div>
-                    {g.path && !editing && <div style={{ color: 'var(--text-muted)', fontSize: '0.857em', fontWeight: 400 }}>すべて見る</div>}
+                  {/* 見出し帯(面より一段濃い)。右の > は、タップすると開く画面がある印 */}
+                  <div style={{
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.857em',
+                    padding: '0.857em 1.143em', flexShrink: 0, background: 'var(--surface-3)',
+                  }}>
+                    <div style={{ color: 'var(--text-strong)', fontSize: '1.143em', fontWeight: 700, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{g.title}</div>
+                    {g.path && !editing && (
+                      <svg width="8" height="14" viewBox="0 0 8 14" aria-hidden="true" style={{ flexShrink: 0 }}>
+                        <path d="M1.5 1.5l5.5 5.5-5.5 5.5" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    )}
                   </div>
-                  <div className="no-scrollbar" style={{ flex: 1, minHeight: 0, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
+                  <div className="no-scrollbar" style={{ flex: 1, minHeight: 0, overflow: 'auto', display: 'flex', flexDirection: 'column', padding: '1.143em' }}>
                     <Component identity={identity} />
                   </div>
                 </section>
