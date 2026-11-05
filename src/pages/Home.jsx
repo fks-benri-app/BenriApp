@@ -4,6 +4,7 @@ import { useIdentity } from '../auth/identity';
 import BottomNav from '../components/BottomNav';
 import { GADGETS, gadgetById } from '../gadgets';
 import { currentFontSize } from '../lib/fontSize';
+import { isDarkMode } from '../lib/themes';
 import bellIcon from '../assets/images/icons/bell.svg';
 import bellOffIcon from '../assets/images/icons/bell-off.svg';
 import { getDevicePushEnabled } from '../lib/onesignal';
@@ -22,6 +23,30 @@ const EDGE = 56;       // ドラッグ中、画面の上下の端からこの距
 const EDGE_STEP = 14;  // 自動で送る量(px)。16msごと
 const EXTRA_ROWS = 2;  // 編集中は、下に余白を作る(下へ動かせるように)
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+// 配色の試し(画像に寄せた、明るい白基調の配色)。グラデーションや演出はなし。ダークのときは使わない
+const HOME_TRIAL = {
+  '--page-bg': '#eef2f7',
+  '--card-bg': '#ffffff',
+  '--capsule-bg': '#eef2f7',
+  '--capsule-text': '#1b2a4a',
+  '--surface': '#ffffff',
+  '--text-strong': '#1b2a4a',
+  '--text-body': '#3a4760',
+  '--text-muted': '#8792a6',
+  '--line': '#e6ebf2',
+};
+// タイトルのカプセル(記号は付けない)と、> のカプセル
+const capsuleStyle = {
+  display: 'inline-flex', alignItems: 'center', minWidth: 0, maxWidth: '100%',
+  padding: '0.357em 0.929em', borderRadius: 999,
+  background: 'var(--capsule-bg)', color: 'var(--capsule-text)',
+  fontSize: '0.929em', fontWeight: 700, lineHeight: 1.3,
+  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+};
+const chevronStyle = {
+  width: '1.857em', height: '1.857em', borderRadius: 999, flexShrink: 0,
+  background: 'var(--capsule-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+};
 
 // ホーム画面: 画面の横幅に合わせた列数のマス目に、ガジェットを置く。
 // ・タップ: ガジェットの画面を開く
@@ -39,6 +64,7 @@ export default function Home() {
   }, []);
   const { identity } = useIdentity();
   const fontPx = currentFontSize();
+  const homeVars = isDarkMode() ? {} : HOME_TRIAL;
 
   const [size, setSize] = useState({ w: 0, h: 0 }); // 表示領域の大きさ(px)
   const grid = useMemo(
@@ -270,11 +296,12 @@ export default function Home() {
         inset: 0,
         margin: 0,
         padding: 0,
-        background: 'var(--surface)',
+        background: 'var(--page-bg)',
         display: 'flex',
         flexDirection: 'column',
         boxSizing: 'border-box',
         overflow: 'hidden',
+        ...homeVars,
         fontSize: `${fontPx}px`,
         userSelect: 'none',
         WebkitUserSelect: 'none',
@@ -398,9 +425,10 @@ export default function Home() {
                     width: '100%',
                     height: '100%',
                     boxSizing: 'border-box',
+                    position: 'relative',
                     padding: 0,
                     // 影は使わない。動かしている間は、面の色を変えて浮いて見せる
-                    background: isMoving ? 'var(--surface)' : 'var(--surface-2)',
+                    background: isMoving ? 'var(--surface)' : 'var(--card-bg)',
                     border: `1px solid ${isMoving ? 'var(--line-strong)' : 'transparent'}`,
                     borderRadius: R_XL,
                     overflow: 'hidden',
@@ -415,19 +443,21 @@ export default function Home() {
                     WebkitTouchCallout: 'none',
                   }}
                 >
-                  {/* 見出し帯(面より一段濃い)。右の > は、タップすると開く画面がある印 */}
-                  <div style={{
-                    display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.857em',
-                    padding: '0.5em 1.143em', flexShrink: 0, background: 'var(--surface-3)',
-                  }}>
-                    <div style={{ color: 'var(--text-strong)', fontSize: '1.143em', fontWeight: 700, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{g.title}</div>
+                  {/* タイトルはカプセルの中。右の > は、タップすると開く画面がある印。
+                      flush の枠(授業カード)では、中身の上に重ねる */}
+                  <div style={g.flush
+                    ? { position: 'absolute', top: '0.857em', left: '0.857em', right: '0.857em', zIndex: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.571em', pointerEvents: 'none' }
+                    : { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.571em', padding: '0.857em 0.857em 0', flexShrink: 0 }}>
+                    <div style={capsuleStyle}>{g.title}</div>
                     {g.path && !editing && (
-                      <svg width="8" height="14" viewBox="0 0 8 14" aria-hidden="true" style={{ flexShrink: 0 }}>
-                        <path d="M1.5 1.5l5.5 5.5-5.5 5.5" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
+                      <div style={chevronStyle}>
+                        <svg width="7" height="12" viewBox="0 0 8 14" aria-hidden="true">
+                          <path d="M1.5 1.5l5.5 5.5-5.5 5.5" fill="none" stroke="var(--capsule-text)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </div>
                     )}
                   </div>
-                  <div className="no-scrollbar" style={{ flex: 1, minHeight: 0, overflow: 'auto', display: 'flex', flexDirection: 'column', padding: g.flush ? 0 : '1.143em' }}>
+                  <div className="no-scrollbar" style={{ flex: 1, minHeight: 0, overflow: 'auto', display: 'flex', flexDirection: 'column', padding: g.flush ? 0 : '0.714em 1.143em 1.143em' }}>
                     <Component identity={identity} />
                   </div>
                 </section>

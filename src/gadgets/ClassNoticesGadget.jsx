@@ -2,7 +2,7 @@ import React, { useLayoutEffect, useRef, useState } from 'react';
 import { useAnnouncements } from '../lib/announcements';
 import { KIND_OPTIONS } from '../lib/filters';
 import { currentFontSize } from '../lib/fontSize';
-import { courseThemeOrNull, shaded } from '../lib/courseTheme';
+import { courseThemeOrNull, solidOf } from '../lib/courseTheme';
 
 const KIND_LABELS = Object.fromEntries(KIND_OPTIONS.map((k) => [k.id, k.label]));
 const MIN_ITEMS = 2;   // 枠が小さくても、これだけは出す
@@ -85,7 +85,7 @@ export default function ClassNoticesGadget({ identity }) {
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5em', minWidth: 0 }}>
-              <div style={{ padding: '0.2em 0.5em', background: shaded(theme?.gradient || 'var(--line)'), borderRadius: '0.4em', flexShrink: 0 }}>
+              <div style={{ padding: '0.2em 0.5em', background: theme ? solidOf(theme.gradient) : 'var(--line)', borderRadius: '0.4em', flexShrink: 0 }}>
                 <div style={{ color: theme?.textColor || 'var(--text-strong)', fontSize: '0.786em', fontWeight: 700 }}>{a.subject}</div>
               </div>
               {KIND_LABELS[a.kind] && (
@@ -96,7 +96,7 @@ export default function ClassNoticesGadget({ identity }) {
               <div style={{ flex: 1 }} />
               <div style={{ color: 'var(--text-muted)', fontSize: '0.786em', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>{a.time}</div>
               {/* 既読でも場所は空けておく(時刻の位置をそろえる) */}
-              <div style={{ width: '0.571em', height: '0.571em', background: 'linear-gradient(135deg, #FF4D4D 0%, #FF8A1B 100%)', borderRadius: '50%', flexShrink: 0, visibility: a.isUnread ? 'visible' : 'hidden' }} />
+              <div style={{ width: '0.571em', height: '0.571em', background: '#e5484d', borderRadius: '50%', flexShrink: 0, visibility: a.isUnread ? 'visible' : 'hidden' }} />
             </div>
             <div
               style={{

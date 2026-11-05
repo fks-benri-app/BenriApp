@@ -5,7 +5,11 @@
   --bg: #f5f5f7;
   --surface: #ffffff;        /* カードや一覧の背景 */
   --surface-2: #f3f4f6;      /* 一段へこんだ背景、入力欄など */
-  --surface-3: #e5e7eb;      /* ガジェットの見出し帯(面より一段濃い) */
+  --surface-3: #e5e7eb;      /* 一段濃い面(カプセルなど) */
+  --page-bg: var(--surface);      /* ホームの背景 */
+  --card-bg: var(--surface-2);    /* ガジェットの面 */
+  --capsule-bg: var(--surface-3); /* ガジェットのタイトルのカプセル */
+  --capsule-text: var(--text-strong);
   --line: #e5e7eb;
   --switch-off: #e5e7eb;
   --line-strong: #c4c7c5;
