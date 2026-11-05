@@ -1,6 +1,6 @@
 import React from 'react';
 import { currentFontSize } from '../lib/fontSize';
-import { solidOf } from '../lib/courseTheme';
+import { shaded } from '../lib/courseTheme';
 import { THEMES } from '../lib/themes';
 import globeImg from '../assets/images/class/globe.webp';
 
@@ -15,9 +15,9 @@ export default function NextClassGadget() {
     <div style={{
       position: 'relative', overflow: 'hidden', boxSizing: 'border-box',
       width: '100%', height: '100%', padding: '1.143em', borderRadius: 0,
-      background: solidOf(theme.gradient),
+      background: shaded(theme.gradient),
       color: theme.textColor,
-      display: 'flex', alignItems: 'flex-end',
+      display: 'flex', alignItems: 'flex-end', // タイトルのカプセルを上に重ねるので、文字は下に寄せる
       fontSize: `${currentFontSize()}px`, // 文字サイズの設定に合わせる(14px を 1 とした比。14px で Figma と同じ大きさ)
     }}>
       <div style={{ position: 'relative', zIndex: 1, minWidth: 0, maxWidth: '62%', display: 'flex', flexDirection: 'column', gap: '0.286em' }}>

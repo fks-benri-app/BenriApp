@@ -4,7 +4,6 @@ import { useIdentity } from '../auth/identity';
 import BottomNav from '../components/BottomNav';
 import { GADGETS, gadgetById } from '../gadgets';
 import { currentFontSize } from '../lib/fontSize';
-import { isDarkMode } from '../lib/themes';
 import bellIcon from '../assets/images/icons/bell.svg';
 import bellOffIcon from '../assets/images/icons/bell-off.svg';
 import { getDevicePushEnabled } from '../lib/onesignal';
@@ -23,29 +22,17 @@ const EDGE = 56;       // ドラッグ中、画面の上下の端からこの距
 const EDGE_STEP = 14;  // 自動で送る量(px)。16msごと
 const EXTRA_ROWS = 2;  // 編集中は、下に余白を作る(下へ動かせるように)
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
-// 配色の試し(画像に寄せた、明るい白基調の配色)。グラデーションや演出はなし。ダークのときは使わない
-const HOME_TRIAL = {
-  '--page-bg': '#eef2f7',
-  '--card-bg': '#ffffff',
-  '--capsule-bg': '#eef2f7',
-  '--capsule-text': '#1b2a4a',
-  '--surface': '#ffffff',
-  '--text-strong': '#1b2a4a',
-  '--text-body': '#3a4760',
-  '--text-muted': '#8792a6',
-  '--line': '#e6ebf2',
-};
-// タイトルのカプセル(記号は付けない)と、> のカプセル
+// タイトルのカプセル(記号は付けない)と、> のカプセル。色は今の面の色(--surface-3)と文字色を使う
 const capsuleStyle = {
   display: 'inline-flex', alignItems: 'center', minWidth: 0, maxWidth: '100%',
   padding: '0.357em 0.929em', borderRadius: 999,
-  background: 'var(--capsule-bg)', color: 'var(--capsule-text)',
+  background: 'var(--surface-3)', color: 'var(--text-strong)',
   fontSize: '0.929em', fontWeight: 700, lineHeight: 1.3,
   whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
 };
 const chevronStyle = {
   width: '1.857em', height: '1.857em', borderRadius: 999, flexShrink: 0,
-  background: 'var(--capsule-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+  background: 'var(--surface-3)', display: 'flex', alignItems: 'center', justifyContent: 'center',
 };
 
 // ホーム画面: 画面の横幅に合わせた列数のマス目に、ガジェットを置く。
@@ -64,7 +51,6 @@ export default function Home() {
   }, []);
   const { identity } = useIdentity();
   const fontPx = currentFontSize();
-  const homeVars = isDarkMode() ? {} : HOME_TRIAL;
 
   const [size, setSize] = useState({ w: 0, h: 0 }); // 表示領域の大きさ(px)
   const grid = useMemo(
@@ -296,12 +282,11 @@ export default function Home() {
         inset: 0,
         margin: 0,
         padding: 0,
-        background: 'var(--page-bg)',
+        background: 'var(--surface)',
         display: 'flex',
         flexDirection: 'column',
         boxSizing: 'border-box',
         overflow: 'hidden',
-        ...homeVars,
         fontSize: `${fontPx}px`,
         userSelect: 'none',
         WebkitUserSelect: 'none',
@@ -428,7 +413,7 @@ export default function Home() {
                     position: 'relative',
                     padding: 0,
                     // 影は使わない。動かしている間は、面の色を変えて浮いて見せる
-                    background: isMoving ? 'var(--surface)' : 'var(--card-bg)',
+                    background: isMoving ? 'var(--surface)' : 'var(--surface-2)',
                     border: `1px solid ${isMoving ? 'var(--line-strong)' : 'transparent'}`,
                     borderRadius: R_XL,
                     overflow: 'hidden',
@@ -452,7 +437,7 @@ export default function Home() {
                     {g.path && !editing && (
                       <div style={chevronStyle}>
                         <svg width="7" height="12" viewBox="0 0 8 14" aria-hidden="true">
-                          <path d="M1.5 1.5l5.5 5.5-5.5 5.5" fill="none" stroke="var(--capsule-text)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M1.5 1.5l5.5 5.5-5.5 5.5" fill="none" stroke="var(--text-strong)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                       </div>
                     )}
