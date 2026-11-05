@@ -4,9 +4,6 @@ import { useIdentity } from '../auth/identity';
 import BottomNav from '../components/BottomNav';
 import { GADGETS, gadgetById } from '../gadgets';
 import { currentFontSize } from '../lib/fontSize';
-import { shaded } from '../lib/courseTheme';
-import { THEMES } from '../lib/themes';
-import globeImg from '../assets/images/class/globe.webp';
 import bellIcon from '../assets/images/icons/bell.svg';
 import bellOffIcon from '../assets/images/icons/bell-off.svg';
 import { getDevicePushEnabled } from '../lib/onesignal';
@@ -17,7 +14,6 @@ const NO_SCROLLBAR_CSS = '.no-scrollbar{scrollbar-width:none;-ms-overflow-style:
   + '.hm-press{transition:transform .18s ease}.hm-press:active{transform:scale(.95)}';
 // デザインの決まり(Apple 風): 色は青ひとつ、角丸は決まった段階、影は使わない、太さは 400 / 600 / 700 だけ
 const ACCENT = '#0066cc';   // Action Blue。押せるもの・今日の印はこの色だけ
-const R_LG = 12;            // 面の中の小さなタイル(日付)
 const R_XL = 24;            // 大きな面(カード・ガジェット)
 const HOLD_MS = 420;   // この時間さわり続けると、編集モードに入る
 const SLOP = 10;       // 長押しの前にこれ以上動いたら、スクロールとみなす
@@ -32,25 +28,7 @@ const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 // ・長押し: 編集モード。ドラッグで動かせる。右下の角をドラッグで大きさを変えられる(最小・最大の範囲内)
 // ・重なったときは他を押し下げ、空いた隙間は上へ詰める
 // ・編集中に画面の端へ指を寄せると、自動でスクロールする
-const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土'];
-// テスト用の仮のデータ(次の授業・予定のある曜日)。本物の時間割の取得先ができたら差し替える
-// 背景の色は theme.js の THEMES のキーで指定する(例: green)
-const NEXT_CLASS = { name: '地理総合', time: '08:40 - 09:35', room: '221教室', theme: 'green' };
-// 予定のある曜日(テスト用)。予定が無い曜日は点を出さない
-const TEST_EVENT_DAYS = [1, 2, 3, 4, 6];
-
-const dateLabel = (d) => `${d.getMonth() + 1}月${d.getDate()}日（${WEEKDAYS[d.getDay()]}）`;
-const EVENT_RED = '#FF4D4D'; // 予定のある日の印(Figma の指定)
-
 export default function Home() {
-  // 今日の日付と、今日から7日分の日付
-  const today = new Date();
-  const weekDays = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(today);
-    d.setDate(today.getDate() + i);
-    return d;
-  });
-
   const navigate = useNavigate();
   // この端末の通知がオンか(オフなら、ベルに斜線を付ける)。画面を開くたびに確かめる
   const [devicePushOn, setDevicePushOn] = useState(true);
@@ -370,67 +348,6 @@ export default function Home() {
           WebkitOverflowScrolling: 'touch',
         }}
       >
-        {/* 次の授業と一週間の予定。Figma の見た目(今は表示だけ。動かせない) */}
-        <section style={{ padding: '0 1.143em', display: 'flex', flexDirection: 'column', gap: '0.857em', paddingBottom: '0.857em' }}>
-          <div style={{
-            position: 'relative', overflow: 'hidden', boxSizing: 'border-box',
-            minHeight: 131, padding: '1.143em', borderRadius: R_XL,
-            background: shaded(THEMES[NEXT_CLASS.theme].gradient),
-            color: THEMES[NEXT_CLASS.theme].textColor,
-            display: 'flex', alignItems: 'center',
-            fontSize: `${currentFontSize()}px`, // 文字サイズの設定に合わせる。下の em は 14px を 1 とした比(14px で Figma と同じ大きさ)
-          }}>
-            <div style={{ position: 'relative', zIndex: 1, minWidth: 0, maxWidth: '62%', display: 'flex', flexDirection: 'column', gap: '0.286em' }}>
-              <div style={{
-                fontSize: '2.571em', fontWeight: 800, fontFamily: 'Inter', lineHeight: 1.2,
-                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-              }}>
-                {NEXT_CLASS.name}
-              </div>
-              <div style={{ fontSize: '1.071em', fontWeight: 700, fontFamily: 'Inter', lineHeight: 1.4, whiteSpace: 'nowrap' }}>
-                <div>{NEXT_CLASS.room}</div>
-                <div>{NEXT_CLASS.time}</div>
-              </div>
-            </div>
-            <img
-              src={globeImg}
-              alt=""
-              aria-hidden="true"
-              draggable={false}
-              style={{
-                position: 'absolute', right: '3%', top: '50%', transform: 'translateY(-50%)',
-                height: '86%', width: 'auto', pointerEvents: 'none', userSelect: 'none',
-              }}
-            />
-          </div>
-
-          <div style={{ background: 'var(--surface-2)', borderRadius: R_XL, padding: '1.143em', display: 'flex', flexDirection: 'column', gap: '0.857em' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.857em' }}>
-              <div style={{ fontSize: '1.143em', fontWeight: 700, color: 'var(--text-strong)', userSelect: 'none' }}>一週間の予定</div>
-              <div style={{ fontSize: '0.857em', fontWeight: 400, color: 'var(--text-muted)', userSelect: 'none' }}>{dateLabel(today)}から</div>
-            </div>
-            <div style={{ display: 'flex', gap: '0.571em' }}>
-              {weekDays.map((d) => {
-                const hasEvent = TEST_EVENT_DAYS.includes(d.getDay());
-                return (
-                  <div
-                    key={d.toISOString()}
-                    style={{
-                      flex: '1 1 0', minWidth: 0, borderRadius: R_LG, background: 'var(--surface-2)',
-                      padding: '0.714em 0.571em',
-                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.286em',
-                      userSelect: 'none',
-                    }}
-                  >
-                    <div style={{ color: 'var(--text-muted)', fontSize: '0.786em', fontWeight: 700 }}>{WEEKDAYS[d.getDay()]}</div>
-                    <div style={{ color: 'var(--text-strong)', fontSize: '1em', fontWeight: 800 }}>{d.getDate()}</div>
-                    <div style={{ color: hasEvent ? EVENT_RED : 'var(--text-muted)', fontSize: '0.786em', fontWeight: 700, lineHeight: 1 }}>{hasEvent ? '●' : '·'}</div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </section>
         <div
           ref={gridRef}
           onClick={(e) => { if (editingRef.current && e.target === e.currentTarget) setEditing(false); }}
