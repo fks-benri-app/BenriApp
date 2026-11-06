@@ -51,8 +51,10 @@ export async function refreshFcmTokenIfGranted(studentId) {
   if (!studentId) return false;
   if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return false;
   if (!(await fcmSupported())) return false;
-  const registration = await navigator.serviceWorker.getRegistration(`${BASE}fcm/`);
-  if (!registration) return false;
+  // 許可済みなので、ここでは Service Worker を登録するだけ(許可のダイアログは出ない)
+  const registration = await navigator.serviceWorker.register(`${BASE}fcm/firebase-messaging-sw.js`, {
+    scope: `${BASE}fcm/`,
+  });
   const messaging = getMessaging(app);
   const token = await getToken(messaging, { vapidKey: CONFIG.FCM_VAPID_KEY, serviceWorkerRegistration: registration });
   if (!token) return false;
