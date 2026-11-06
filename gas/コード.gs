@@ -399,9 +399,11 @@ function notifyFresh_(studentId, fresh) {
           courseName: info.courseName,
           title: info.title
         };
-        const res = sendDirectNotification_(pushTargets_(studentId), heading, body, url, data);
-        recordPushResult_(studentId, res);
-        fcmSendToStudent_(studentId, heading, body, url, data);
+        // 登録トークンがあれば FCM だけで送る。なければ(FCM が1件も送れなければ)OneSignal で送る
+        if (fcmSendToStudent_(studentId, heading, body, url, data) === 0) {
+          const res = sendDirectNotification_(pushTargets_(studentId), heading, body, url, data);
+          recordPushResult_(studentId, res);
+        }
       } catch (e) {
         console.error('通知の送信に失敗(' + docId + '): ' + e);
       }
@@ -433,9 +435,10 @@ function notifyFresh_(studentId, fresh) {
   const titles = fallback.slice(0, 3).map(function (x) { return x.info.title; }).join(' / ');
   const more = fallback.length > 3 ? ' ほか' + (fallback.length - 3) + '件' : '';
   const body = fallback.length + '件の新着: ' + titles + more;
-  const res = sendDirectNotification_(pushTargets_(studentId), heading, body, APP_URL);
-  recordPushResult_(studentId, res);
-  fcmSendToStudent_(studentId, heading, body, APP_URL);
+  if (fcmSendToStudent_(studentId, heading, body, APP_URL) === 0) {
+    const res = sendDirectNotification_(pushTargets_(studentId), heading, body, APP_URL);
+    recordPushResult_(studentId, res);
+  }
 }
 
 // OneSignalAPIへリクエスト送信

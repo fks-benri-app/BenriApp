@@ -238,21 +238,27 @@ function sendToCourse_(studentId, item, ref) {
     return notifyAllowed_(prefsById[id] || NOTIFY_PREFS_DEFAULT, ref.courseId);
   }));
 
-  const targets = [];
-  recipients.forEach(function (id) {
-    targets.push(derivePushKey_(id));
-    if (INCLUDE_LEGACY_ID) targets.push(id);
-  });
   const msg = buildMessage_(item);
-  const res = sendDirectNotification_(targets, msg.heading, msg.body, msg.url, msg.data);
-  recordPushResult_(studentId, res);
-  if (!res || !res.id) return false; // 送れなかった。自分には、これまでどおり送る(記録は未送信のまま → ほかの人は2分後に自分で送る)
-
-  // OneSignal が送れたあとで、授業のトピックへ1回だけ送る(送る役はこの1人だけ)
-  try {
-    fcmSendToCourse_(ref.courseId, msg.heading, msg.body, msg.url, msg.data);
-  } catch (e) {
-    console.error('FCMトピック送信に失敗: ' + e);
+  // 生徒ごとに送り方を決める。登録トークンがあれば FCM へ。なければ(FCM が1件も送れなければ)OneSignal へ
+  const oneSignalIds = [];
+  recipients.forEach(function (id) {
+    let sent = 0;
+    try {
+      sent = fcmSendToStudent_(id, msg.heading, msg.body, msg.url, msg.data);
+    } catch (e) {
+      console.error('FCM送信に失敗(' + id + '): ' + e);
+    }
+    if (sent === 0) oneSignalIds.push(id);
+  });
+  if (oneSignalIds.length > 0) {
+    const targets = [];
+    oneSignalIds.forEach(function (id) {
+      targets.push(derivePushKey_(id));
+      if (INCLUDE_LEGACY_ID) targets.push(id);
+    });
+    const res = sendDirectNotification_(targets, msg.heading, msg.body, msg.url, msg.data);
+    recordPushResult_(studentId, res);
+    if (!res || !res.id) return false; // 送れなかった。自分には、これまでどおり送る(記録は未送信のまま → ほかの人は2分後に自分で送る)
   }
 
   try {

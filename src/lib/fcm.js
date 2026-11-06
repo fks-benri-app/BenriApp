@@ -4,7 +4,8 @@
 import { getMessaging, getToken, isSupported, onMessage } from 'firebase/messaging';
 import { app } from './firebase';
 import { CONFIG } from '../config';
-import { saveFcmTokenRemote } from './firestoreLazy';
+import { saveFcmTokenRemote, deleteFcmTokenRemote } from './firestoreLazy';
+import { isPushOffByUser } from './onesignal';
 
 const BASE = import.meta.env.BASE_URL; // 例: /BenriApp/
 
@@ -49,6 +50,7 @@ export async function registerFcmToken(studentId, token) {
 // 許可していない端末では、何もしない(許可のダイアログは出さない)。
 export async function refreshFcmTokenIfGranted(studentId) {
   if (!studentId) return false;
+  if (isPushOffByUser()) return false; // 利用者がこの端末の通知をオフにしている
   if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return false;
   if (!(await fcmSupported())) return false;
   // 許可済みなので、ここでは Service Worker を登録するだけ(許可のダイアログは出ない)
@@ -59,6 +61,17 @@ export async function refreshFcmTokenIfGranted(studentId) {
   const token = await getToken(messaging, { vapidKey: CONFIG.FCM_VAPID_KEY, serviceWorkerRegistration: registration });
   if (!token) return false;
   await registerFcmToken(studentId, token);
+  return true;
+}
+
+// この端末の登録トークンを消す(利用者が通知をオフにしたとき)。消すと、FCM はこの端末に送らない
+export async function removeFcmTokenForThisDevice(studentId) {
+  if (!studentId || !(await fcmSupported())) return false;
+  const registration = await navigator.serviceWorker.getRegistration(`${BASE}fcm/`);
+  if (!registration) return false;
+  const token = await getToken(getMessaging(app), { vapidKey: CONFIG.FCM_VAPID_KEY, serviceWorkerRegistration: registration });
+  if (!token) return false;
+  await deleteFcmTokenRemote(studentId, token);
   return true;
 }
 

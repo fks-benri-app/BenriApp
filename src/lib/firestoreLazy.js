@@ -52,18 +52,30 @@ export async function updateUserDoc(studentId, data) {
  * ドキュメントIDは GAS 版と同じ(トークンの SHA-256 を URL 安全な Base64 にしたもの)。
  * 書けるのは token と updatedAt だけ(ルールで制限している)。
  */
-export async function saveFcmTokenRemote(studentId, token) {
-  const { fs, db } = await loadFirestore();
+// 登録トークンの文書ID(トークンの SHA-256 を URL で使える Base64 にしたもの。GAS の計算と同じ)
+async function fcmTokenDocId(token) {
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token));
   const bytes = new Uint8Array(digest);
   let bin = '';
   for (const b of bytes) bin += String.fromCharCode(b);
-  const docId = btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+export async function saveFcmTokenRemote(studentId, token) {
+  const { fs, db } = await loadFirestore();
+  const docId = await fcmTokenDocId(token);
   await fs.setDoc(
     fs.doc(db, 'users', studentId, 'fcmTokens', docId),
     { token, updatedAt: fs.serverTimestamp() },
     { merge: true },
   );
+}
+
+/** この端末の登録トークンを消す(通知をオフにしたとき)。本人だけが消せる(ルールで制限している) */
+export async function deleteFcmTokenRemote(studentId, token) {
+  const { fs, db } = await loadFirestore();
+  const docId = await fcmTokenDocId(token);
+  await fs.deleteDoc(fs.doc(db, 'users', studentId, 'fcmTokens', docId));
 }
 
 /** お知らせを既読にする(本人が書けるのは、read と readAt の2つだけ。ルールで制限している) */

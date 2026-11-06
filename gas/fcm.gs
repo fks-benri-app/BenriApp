@@ -13,7 +13,7 @@
 //    そのためにスクリプトプロパティ TEST_FCM_TOKEN に、テスト端末の登録トークンを入れておく。
 //  ・登録トークンは、ログや画面に全文を出さない(末尾だけ出す)。
 // ==================================================
-const USE_FCM = false; // 実機で送受信が確認できるまで false のまま。切り替えは別のPRで行う
+const USE_FCM = true; // 送信: 登録トークンがある生徒は FCM、ない生徒は OneSignal(shared-notify.gs / コード.gs)
 const FCM_SCOPE = 'https://www.googleapis.com/auth/firebase.messaging';
 
 // 授業のトピック名(例: course_123456)。授業IDは数字なので、そのまま使える
@@ -204,19 +204,29 @@ function fcmSendToCourse_(courseId, title, body, url, data) {
   if (!r.ok) console.error('FCMトピック送信失敗(' + r.code + '): ' + r.detail);
 }
 
-// 生徒の登録トークンすべてに、1件ずつ送る(個人宛て・まとめ通知)
+// 生徒の登録トークンすべてに、1件ずつ送る(個人宛て・まとめ通知)。送れた数を返す。0 なら呼び出し側が OneSignal で送る
 function fcmSendToStudent_(studentId, title, body, url, data) {
-  if (!USE_FCM) return;
-  fsListDocs_('/users/' + encodeURIComponent(studentId) + '/fcmTokens').forEach(function (d) {
+  if (!USE_FCM) return 0;
+  let docs = [];
+  try {
+    docs = fsListDocs_('/users/' + encodeURIComponent(studentId) + '/fcmTokens');
+  } catch (e) {
+    console.error('FCMトークンの読み込みに失敗: ' + e);
+    return 0;
+  }
+  let sent = 0;
+  docs.forEach(function (d) {
     const f = d.fields || {};
     if (!f.token) return;
     try {
       const r = fcmSend_({ token: f.token.stringValue }, title, body, url, data);
-      if (!r.ok) console.error('FCM送信失敗(' + r.code + ')'); // 無効な端末は、購読の同期のときに消す
+      if (r.ok) sent++;
+      else console.error('FCM送信失敗(' + r.code + ')'); // 無効な端末は、購読の同期のときに消す
     } catch (e) {
       console.error('FCM送信に失敗: ' + e);
     }
   });
+  return sent;
 }
 
 // ----- 登録トークンの保存(アプリから呼ばれる) -----

@@ -4,7 +4,7 @@ Google Classroom のお知らせ・課題を、スマホのプッシュ通知で
 画面は GitHub Pages で配信する React アプリです。新着の検知と通知の送信は、Google Apps Script(GAS)が行います。
 
 > **現在の状態**
-> 通知の送信は、まだ OneSignal を使っています。FCM への移行と、お知らせの授業単位での保存は進行中です。
+> 通知の送信は、登録トークンがある端末は FCM、ない端末は OneSignal です。OneSignal の廃止と、お知らせの授業単位での保存は進行中です。
 > 計画の詳細は [通知の仕様(改訂版)](docs/notification-spec.md) を見てください。
 
 ## 目次

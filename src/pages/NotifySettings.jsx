@@ -50,7 +50,12 @@ export default function NotifySettings() {
     if (deviceOn === null) return;
     setNote('');
     try {
-      setDeviceOn(await setDevicePushEnabled(!deviceOn));
+      const on = await setDevicePushEnabled(!deviceOn);
+      setDeviceOn(on);
+      // FCM も同じ設定に合わせる。オフなら、この端末の登録トークンを消す。オンなら、取り直して保存する
+      const fcm = await import('../lib/fcm');
+      if (on) fcm.refreshFcmTokenIfGranted(studentId).catch(() => {});
+      else fcm.removeFcmTokenForThisDevice(studentId).catch(() => {});
     } catch {
       setNote('この端末の通知を切り替えられませんでした。通知の許可を確かめてください。');
     }
