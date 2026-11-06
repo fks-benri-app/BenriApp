@@ -3,7 +3,7 @@
 // gadgets.json の項目(大きさ・位置は、マスの数で書く。画面が広くても、マスの大きさは変わらない):
 //   id          保存に使う名前。変えない。重複不可
 //   type        部品の名前(components.js にあるもの)
-//   title       枠の見出し
+//   title       枠の見出し(flush の枠は省略できる。見出しは中身の部品が自分で描く)
 //   path        タップしたときに開く画面(省略すると、タップしても何も起きない)
 //   initial     true: 初めて開いたときから置く
 //   addable     true: ガジェットの追加画面から追加できる(その画面は今後作る。省略時は true)
@@ -29,7 +29,7 @@ function normalize(raw, seen) {
   if (typeof raw.id !== 'string' || !raw.id) return fail('id がない');
   if (seen.has(raw.id)) return fail('id が重複している');
   if (!COMPONENTS[raw.type]) return fail(`type「${raw.type}」は未対応`);
-  if (typeof raw.title !== 'string' || !raw.title) return fail('title がない');
+  if (raw.flush !== true && (typeof raw.title !== 'string' || !raw.title)) return fail('title がない');
 
   const min = raw.min || {};
   const max = raw.max || {};
@@ -49,7 +49,7 @@ function normalize(raw, seen) {
 
   return {
     id: raw.id,
-    title: raw.title,
+    title: typeof raw.title === 'string' ? raw.title : '',
     path: typeof raw.path === 'string' && raw.path ? raw.path : null,
     initial: raw.initial === true,
     addable: raw.addable !== false,
