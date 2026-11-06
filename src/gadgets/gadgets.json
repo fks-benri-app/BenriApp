@@ -2,7 +2,6 @@
   {
     "id": "nextClass",
     "type": "nextClass",
-    "title": "次の授業は",
     "initial": true,
     "addable": true,
     "fullWidth": true,

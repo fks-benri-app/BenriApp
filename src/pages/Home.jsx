@@ -398,7 +398,7 @@ export default function Home() {
                 <section
                   role={editing ? undefined : 'link'}
                   tabIndex={editing ? -1 : 0}
-                  aria-label={g.title}
+                  aria-label={g.title || g.type}
                   onPointerDown={(e) => onGadgetPointerDown(e, it.id)}
                   onPointerMove={onGadgetPointerMove}
                   onPointerUp={onGadgetPointerUp}
@@ -435,9 +435,9 @@ export default function Home() {
                     ? { position: 'absolute', top: '11cqmin', left: '12cqmin', right: '12cqmin', zIndex: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.571em', pointerEvents: 'none' }
                     : { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.571em', padding: '0.857em 0.857em 0', flexShrink: 0 }}>
                     {/* 授業カードの上のカプセルは、半透明の灰色にして、下の緑がうっすら見えるようにする */}
-                    <div style={g.flush
+                    {(!g.flush || g.title) && <div style={g.flush
                       ? { ...capsuleStyle, background: 'rgba(229, 231, 235, 0.5)', fontSize: '7cqmin', padding: '0.3em 0.8em' }
-                      : capsuleStyle}>{g.title}</div>
+                      : capsuleStyle}>{g.title}</div>}
                     {g.path && !editing && (
                       <div style={chevronStyle}>
                         <svg width="7" height="12" viewBox="0 0 8 14" aria-hidden="true">
