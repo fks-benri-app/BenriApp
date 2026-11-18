@@ -1,14 +1,5 @@
 import { CONFIG } from '../config';
-import { storage } from './storage';
-
-// この端末の通知を、利用者が自分でオフにしたかどうか(オフの間は、自動でオンに戻さない)
-const PUSH_OFF_KEY = 'pushOffByUser';
-export function isPushOffByUser() {
-  return storage.get(PUSH_OFF_KEY) === '1';
-}
-function setPushOffByUser(off) {
-  storage.set(PUSH_OFF_KEY, off ? '1' : '0');
-}
+import { isPushOffByUser, setPushOffByUser } from './pushOffFlag';
 
 window.OneSignalDeferred = window.OneSignalDeferred || [];
 

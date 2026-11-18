@@ -7,8 +7,7 @@ import { isDarkMode, toggleDarkMode } from '../lib/themes';
 import { useAccountName } from '../lib/account';
 import pkg from '../../package.json';
 import Switch from '../components/Switch';
-import { useNotifyPrefs } from '../lib/notifyPrefs';
-import { isPushOffByUser } from '../lib/onesignal';
+import { useNotifyPrefs, isPushOffByUser } from '../lib/notifications';
 
 // フィードバックのフォームのURL。ここに入れると押せるようになる(空の間は灰色で押せない)
 const FEEDBACK_FORM_URL = 'https://forms.gle/pmiB1KdWofSkPgrd8';
