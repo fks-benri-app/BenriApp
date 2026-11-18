@@ -1,10 +1,11 @@
+import { watchUser } from './liveStore';
 // 通知の設定(users/{生徒ID}.notifyPrefs)。
 // ・offCourses: オフの授業ID
 // ・remindAssignment: 課題の期限の知らせ。何日前に知らせるか(daysBefore)
 // ・remindUnread: 未読のお知らせの再通知。受け取ってから何時間後に知らせるか(afterHours)
 // 全体のオン/オフは端末ごとに、OneSignal の購読で決める(lib/onesignal.js)。
 import { useEffect, useState } from 'react';
-import { subscribe, updateUserDoc, userDoc } from './firestoreLazy';
+import { updateUserDoc } from './firestoreLazy';
 
 export const DAY_OPTIONS = [1, 2, 3];
 export const HOUR_OPTIONS = [12, 24, 72];
@@ -42,8 +43,7 @@ export function useNotifyPrefs(studentId) {
   const [state, setState] = useState({ loaded: false, prefs: DEFAULT_PREFS });
   useEffect(() => {
     if (!studentId) return undefined;
-    return subscribe(
-      userDoc(studentId),
+    return watchUser(studentId,
       (snap) => setState({ loaded: true, prefs: normalizePrefs(snap.exists() ? snap.data().notifyPrefs : null) }),
       () => setState({ loaded: true, prefs: DEFAULT_PREFS })
     );

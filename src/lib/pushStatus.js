@@ -1,5 +1,5 @@
+import { watchUser } from './liveStore';
 import { useEffect, useState } from 'react';
-import { subscribe, userDoc } from './firestoreLazy';
 import { getSubscriptionId } from './onesignal';
 
 /**
@@ -11,8 +11,7 @@ export function usePushBroken(studentId) {
   const [broken, setBroken] = useState(false);
   useEffect(() => {
     if (!studentId) return undefined;
-    return subscribe(
-      userDoc(studentId),
+    return watchUser(studentId,
       (snap) => setBroken(!!(snap.exists() && snap.data().pushBroken === true)),
       () => setBroken(false)
     );
@@ -34,46 +33,23 @@ export function usePushKey(studentId) {
       setKey('');
       return undefined;
     }
-    // 読み込みが一度失敗すると、onSnapshot の監視はそこで終わってしまい、キーが永遠に届かなくなる。
-    // 通信の不調や、ログイン直後の一時的な失敗のことがあるため、間隔をあけて監視をやり直す。
-    let stopped = false;
-    let timer = null;
-    let unsubscribe = () => {};
-    let attempt = 0;
-
-    const listen = () => {
-      unsubscribe = subscribe(
-        userDoc(studentId),
-        (snap) => {
-          attempt = 0;
-          const v = snap.exists() ? snap.data().pushKey : '';
-          if (typeof v === 'string' && v) {
-            setKey(v);
-            return;
-          }
-          setKey('');
-          // サーバーから読めているのにキーが無い = GAS が保存に失敗している(ログインし直すと再保存される)
-          if (!snap.metadata.fromCache) {
-            console.warn('[usePushKey] users/' + studentId + ' に pushKey がありません(GAS の保存失敗の可能性)');
-          }
-        },
-        (err) => {
-          console.warn('[usePushKey] pushKey を読めませんでした。やり直します', err && err.code);
-          // すでに届いているキーは、そのまま残す
-          if (stopped) return;
-          const wait = Math.min(30000, 2000 * 2 ** attempt);
-          attempt += 1;
-          timer = setTimeout(listen, wait);
+    // 読み込みの失敗は liveStore が間隔をあけてやり直す。届いたキーは、失敗の間も残す
+    return watchUser(
+      studentId,
+      (snap) => {
+        const v = snap.exists() ? snap.data().pushKey : '';
+        if (typeof v === 'string' && v) {
+          setKey(v);
+          return;
         }
-      );
-    };
-    listen();
-
-    return () => {
-      stopped = true;
-      clearTimeout(timer);
-      unsubscribe();
-    };
+        setKey('');
+        // サーバーから読めているのにキーが無い = GAS が保存に失敗している(ログインし直すと再保存される)
+        if (!snap.metadata.fromCache) {
+          console.warn('[usePushKey] users/' + studentId + ' に pushKey がありません(GAS の保存失敗の可能性)');
+        }
+      },
+      (err) => console.warn('[usePushKey] pushKey を読めませんでした。やり直します', err && err.code)
+    );
   }, [studentId]);
   return key;
 }
@@ -89,8 +65,7 @@ export function usePushSubs(studentId) {
       setSubs(null);
       return undefined;
     }
-    return subscribe(
-      userDoc(studentId),
+    return watchUser(studentId,
       (snap) => {
         const v = snap.exists() ? snap.data().pushSubs : null;
         setSubs(Array.isArray(v) ? v.filter((s) => s && typeof s.id === 'string').map((s) => ({ id: s.id, enabled: s.enabled === true })) : null);

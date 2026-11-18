@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { loadFirestore, subscribe } from './firestoreLazy';
+import { loadFirestore } from './firestoreLazy';
+import { watchLive } from './liveStore';
 import { storage } from './storage';
 import { markAnnouncementReadRemote } from './firestoreLazy';
 import { cleanTeacher, cleanText, courseKey, courseLabel, joinTitleAndBody, kindOf, shortCourse } from './filters';
 
 const READ_KEY = 'readIds';
+const ANNOUNCEMENT_LIMIT = 100; // 一覧は1つの購読で持つ。ホームは先頭だけを表示する
 
 // 前回取得したお知らせを覚えておき、開いた瞬間に表示する(あとで最新に差し替える)。
 // 端末ごとの保存なので、他の人には出ない。保存は新しい順に30件まで(本文の全文は保存しない)。
@@ -111,27 +113,29 @@ export function useAnnouncements(studentId, { limitTo } = {}) {
   useEffect(() => {
     if (!studentId) return undefined;
     const cached = loadCache(studentId);
-    setState(cached ? { status: 'ready', items: cached } : { status: 'loading', items: [] });
-    // subscribe は Firestore を必要になったときに読み込んでから購読する。新しい通知が保存されると画面が自動で更新される
-    return subscribe(
+    setState((prev) => (prev.items.length || prev.status === 'ready' ? prev : cached ? { status: 'ready', items: cached } : { status: 'loading', items: [] }));
+    // 購読は端末で1つだけ。画面を開き直しても読み直さず、覚えてある値をすぐ出す。変わったところだけ届く
+    return watchLive(
+      'announcements:' + studentId,
       ({ fs, db }) => fs.query(
         fs.collection(db, 'users', studentId, 'announcements'),
         fs.orderBy('receivedAt', 'desc'),
-        fs.limit(limitTo || 100)
+        fs.limit(ANNOUNCEMENT_LIMIT)
       ),
-      (snap) => {
-        const items = snap.docs.map(toAnnouncement).filter((a) => !a.deleted);
-        // 件数を絞った取得(ホーム)は、保存がまだ無いときだけ保存する(お知らせ画面の保存を、少ない件数で上書きしない)
-        if (!limitTo || !loadCache(studentId)) saveCache(studentId, items);
-        setState({ status: 'ready', items });
-      },
-      (error) => {
-        console.error(error);
-        // 前回の内容が表示できているなら、それを消さない(オフラインなど)
-        setState((prev) => (prev.items.length ? prev : { status: 'error', items: [] }));
+      {
+        onSnap: (snap) => {
+          const items = snap.docs.map(toAnnouncement).filter((a) => !a.deleted);
+          saveCache(studentId, items);
+          setState({ status: 'ready', items });
+        },
+        onError: (error) => {
+          console.error(error);
+          // 前回の内容が表示できているなら、それを消さない(オフラインなど)
+          setState((prev) => (prev.items.length ? prev : { status: 'error', items: [] }));
+        },
       }
     );
-  }, [studentId, limitTo]);
+  }, [studentId]);
 
   // 既読は端末にも、Firestore にも書く(サーバーが未読の再通知を判断するため)
   const syncRead = useCallback((ids) => {
@@ -166,8 +170,8 @@ export function useAnnouncements(studentId, { limitTo } = {}) {
   }, [syncRead]);
 
   const items = useMemo(
-    () => state.items.map((a) => ({ ...a, isUnread: !readIds.has(a.id) })),
-    [state.items, readIds]
+    () => (limitTo ? state.items.slice(0, limitTo) : state.items).map((a) => ({ ...a, isUnread: !readIds.has(a.id) })),
+    [state.items, readIds, limitTo]
   );
 
   return { status: state.status, items, markRead, markAllRead, readIds };
