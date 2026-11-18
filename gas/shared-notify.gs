@@ -239,27 +239,9 @@ function sendToCourse_(studentId, item, ref) {
   }));
 
   const msg = buildMessage_(item);
-  // 生徒ごとに送り方を決める。登録トークンがあれば FCM へ。なければ(FCM が1件も送れなければ)OneSignal へ
-  const oneSignalIds = [];
-  recipients.forEach(function (id) {
-    let sent = 0;
-    try {
-      sent = fcmSendToStudent_(id, msg.heading, msg.body, msg.url, msg.data);
-    } catch (e) {
-      console.error('FCM送信に失敗(' + id + '): ' + e);
-    }
-    if (sent === 0) oneSignalIds.push(id);
-  });
-  if (oneSignalIds.length > 0) {
-    const targets = [];
-    oneSignalIds.forEach(function (id) {
-      targets.push(derivePushKey_(id));
-      if (INCLUDE_LEGACY_ID) targets.push(id);
-    });
-    const res = sendDirectNotification_(targets, msg.heading, msg.body, msg.url, msg.data);
-    recordPushResult_(studentId, res);
-    if (!res || !res.id) return false; // 送れなかった。自分には、これまでどおり送る(記録は未送信のまま → ほかの人は2分後に自分で送る)
-  }
+  // 送り方は push.gs に任せる(FCM へ。送れなかった生徒だけ OneSignal へ)
+  const sent = sendPushToStudents_(recipients, msg.heading, msg.body, msg.url, msg.data, studentId);
+  if (!sent.ok) return false; // 送れなかった。自分には、これまでどおり送る(記録は未送信のまま → ほかの人は2分後に自分で送る)
 
   try {
     markClaimSent_(ref.postKey, recipients);
@@ -307,7 +289,7 @@ function flushPendingShared_(studentId) {
     }
     if (selfSend) {
       try {
-        recordPushResult_(studentId, sendDirectNotification_(pushTargets_(studentId), p.heading, p.body, p.url, p.data));
+        sendPushToStudent_(studentId, p.heading, p.body, p.url, p.data);
       } catch (e) {
         console.error('待っていた通知の送信に失敗: ' + e);
         keep.push(p);
