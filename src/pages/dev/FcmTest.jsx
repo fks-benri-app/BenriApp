@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { requestFcmToken, registerFcmToken } from '../lib/fcm';
-import { useIdentity } from '../auth/identity';
+import { requestFcmToken, registerFcmToken } from '../../lib/push/fcm';
+import { useIdentity } from '../../auth/identity';
 
 // 通知(FCM)の試験画面。開き方: アプリの「#/fcm-test」へ行く
 // 使い方: 「通知を許可してトークンを取る」を押す → 表示されたトークンを、

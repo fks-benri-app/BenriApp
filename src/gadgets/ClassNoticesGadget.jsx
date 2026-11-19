@@ -1,8 +1,8 @@
 import React, { useLayoutEffect, useRef, useState } from 'react';
-import { useAnnouncements } from '../lib/announcements';
-import { KIND_OPTIONS } from '../lib/filters';
-import { currentFontSize } from '../lib/fontSize';
-import { courseThemeOrNull, shaded } from '../lib/courseTheme';
+import { useAnnouncements } from '../lib/announce/announcements';
+import { KIND_OPTIONS } from '../lib/announce/filters';
+import { currentFontSize } from '../lib/ui/fontSize';
+import { courseThemeOrNull, shaded } from '../lib/ui/courseTheme';
 
 const KIND_LABELS = Object.fromEntries(KIND_OPTIONS.map((k) => [k.id, k.label]));
 const MIN_ITEMS = 2;   // 枠が小さくても、これだけは出す

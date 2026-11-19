@@ -13,8 +13,8 @@
  */
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { onAuthStateChanged, signInWithCustomToken, signOut as firebaseSignOut } from 'firebase/auth';
-import { auth } from '../lib/firebase';
-import { KEYS, storage } from '../lib/storage';
+import { auth } from '../lib/data/firebase';
+import { KEYS, storage } from '../lib/data/storage';
 
 // 学年コード3桁 + 組1桁 + 出席番号2桁 = 6桁
 const STUDENT_ID_PATTERN = /^\d{6}$/;

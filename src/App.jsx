@@ -1,17 +1,17 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useIdentity } from './auth/identity';
-import { markStartRedirectUsed, startsFromNotification } from './lib/bootOpen';
-import { loadFirestore } from './lib/firestoreLazy';
-import { listenForegroundMessages } from './lib/fcm';
+import { markStartRedirectUsed, startsFromNotification } from './lib/announce/bootOpen';
+import { loadFirestore } from './lib/data/firestoreLazy';
+import { listenForegroundMessages } from './lib/push/fcm';
 
 // 連携画面と設定画面は、開いたときに読み込む(最初の表示に必要な JS を減らす)
 const LinkPage = lazy(() => import('./pages/LinkPage'));
 const Settings = lazy(() => import('./pages/Settings'));
 // 時間割の読み取りのテスト画面(開発中。開いたときだけ読み込む)
-const OcrTest = lazy(() => import('./pages/OcrTest'));
+const OcrTest = lazy(() => import('./pages/dev/OcrTest'));
 // 通知(FCM)の試験画面(開発中。開いたときだけ読み込む)
-const FcmTest = lazy(() => import('./pages/FcmTest'));
+const FcmTest = lazy(() => import('./pages/dev/FcmTest'));
 // お知らせ画面も、開いたときに読み込む(ホームの起動では読まない)
 const Class = lazy(() => import('./pages/Class'));
 // 通知の詳細設定は、ベルから開く大事な画面。オフラインでも開けるよう、遅延読み込みにしない

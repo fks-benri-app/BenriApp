@@ -4,7 +4,7 @@ import { HashRouter } from 'react-router-dom';
 import App from './App';
 import { IdentityProvider } from './auth/identity';
 import './styles.css';
-import { applyTheme } from './lib/themes';
+import { applyTheme } from './lib/ui/themes';
 
 applyTheme(); // 描画の前に、保存されたテーマを反映する
 

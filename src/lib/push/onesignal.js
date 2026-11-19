@@ -1,4 +1,4 @@
-import { CONFIG } from '../config';
+import { CONFIG } from '../../config';
 import { isPushOffByUser, setPushOffByUser } from './pushOffFlag';
 
 window.OneSignalDeferred = window.OneSignalDeferred || [];

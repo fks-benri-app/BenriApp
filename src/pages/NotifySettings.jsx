@@ -2,9 +2,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useIdentity } from '../auth/identity';
 import Switch from '../components/Switch';
-import { currentFontSize } from '../lib/fontSize';
-import { useAnnouncements } from '../lib/announcements';
-import { DAY_OPTIONS, HOUR_OPTIONS, courseIdOf, saveNotifyPrefs, useNotifyPrefs, getDevicePushEnabled, setDevicePushEnabled } from '../lib/notifications';
+import { currentFontSize } from '../lib/ui/fontSize';
+import { useAnnouncements } from '../lib/announce/announcements';
+import { DAY_OPTIONS, HOUR_OPTIONS, courseIdOf, saveNotifyPrefs, useNotifyPrefs, getDevicePushEnabled, setDevicePushEnabled } from '../lib/push/notifications';
 
 // 通知の詳細設定。ベル・設定の「クラスルーム通知」から開く
 export default function NotifySettings() {

@@ -1,4 +1,4 @@
-import { watchUser } from './liveStore';
+import { watchUser } from '../data/liveStore';
 // 通知の設定(users/{生徒ID}.notifyPrefs)。
 // ・offCourses: オフの授業ID
 // ・remindAssignment: 課題の期限の知らせ。何日前に知らせるか(daysBefore)
@@ -9,7 +9,7 @@ import { watchUser } from './liveStore';
 //   2. この端末のオン/オフ(OneSignal の購読 + FCM の登録トークン)  … getDevicePushEnabled / setDevicePushEnabled
 // OneSignal は移行が終わったら消す。そのときは、2. の中の OneSignal の呼び出しを外すだけで済む。
 import { useEffect, useState } from 'react';
-import { updateUserDoc } from './firestoreLazy';
+import { updateUserDoc } from '../data/firestoreLazy';
 import { getDevicePushEnabled as getOneSignalEnabled, setDevicePushEnabled as setOneSignalEnabled } from './onesignal';
 import { isPushOffByUser } from './pushOffFlag';
 

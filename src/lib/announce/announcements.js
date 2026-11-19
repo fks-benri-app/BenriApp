@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { loadFirestore } from './firestoreLazy';
-import { watchLive, peekLive } from './liveStore';
-import { storage } from './storage';
-import { markAnnouncementReadRemote } from './firestoreLazy';
+import { loadFirestore } from '../data/firestoreLazy';
+import { watchLive, peekLive } from '../data/liveStore';
+import { storage } from '../data/storage';
+import { markAnnouncementReadRemote } from '../data/firestoreLazy';
 import { cleanTeacher, cleanText, courseKey, courseLabel, joinTitleAndBody, kindOf, shortCourse } from './filters';
 
 const READ_KEY = 'readIds';

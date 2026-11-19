@@ -3,11 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { useIdentity } from '../auth/identity';
 import BottomNav from '../components/BottomNav';
 import { GADGETS, gadgetById } from '../gadgets';
-import { currentFontSize } from '../lib/fontSize';
+import { currentFontSize } from '../lib/ui/fontSize';
 import bellIcon from '../assets/images/icons/bell.svg';
 import bellOffIcon from '../assets/images/icons/bell-off.svg';
-import { getDevicePushEnabled } from '../lib/notifications';
-import { BASE_COLS, gridFor, loadLayout, rangeFor, resolveLayout, saveLayout } from '../lib/homeLayout';
+import { getDevicePushEnabled } from '../lib/push/notifications';
+import { BASE_COLS, gridFor, loadLayout, rangeFor, resolveLayout, saveLayout } from '../lib/ui/homeLayout';
 
 // .hm-press: 押せるものは、押している間 0.95 倍に縮む(静かな動き)
 const NO_SCROLLBAR_CSS = '.no-scrollbar{scrollbar-width:none;-ms-overflow-style:none}.no-scrollbar::-webkit-scrollbar{display:none}'

@@ -1,5 +1,5 @@
 // 文字サイズ(px)の設定。Class.jsx と Settings.jsx の両方が、ここから基準の大きさを読む
-import { storage } from './storage';
+import { storage } from '../data/storage';
 
 export const FONT_SIZE_MIN = 10;
 export const FONT_SIZE_MAX = 20;

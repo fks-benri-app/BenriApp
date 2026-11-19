@@ -1,4 +1,4 @@
-import { storage } from './storage';
+import { storage } from '../data/storage';
 
 // 色のテーマ(グラデーション+その上の文字色)。LinkPage と Class で共通に使う
 // 新しい色を足すときは、ここに1行足すだけ

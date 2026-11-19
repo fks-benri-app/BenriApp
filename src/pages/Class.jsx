@@ -1,18 +1,18 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fetchAnnouncementById, useAnnouncements } from '../lib/announcements';
-import { goRepairNotifications, isPushRecentlyFixed } from '../lib/pushStatus';
+import { fetchAnnouncementById, useAnnouncements } from '../lib/announce/announcements';
+import { goRepairNotifications, isPushRecentlyFixed } from '../lib/push/pushStatus';
 import { useDevicePushState } from './class/useDevicePushState';
 import FilterSelect from './class/FilterSelect';
 import { DetailView, KIND_LABELS, GOOGLE_FONT } from './class/DetailView';
 import { useSchoolEmail, classroomUrl, openExternal, withAuthuser } from './class/schoolEmail';
 import { useIdentity } from '../auth/identity';
-import { THEMES } from '../lib/themes';
-import { currentFontSize } from '../lib/fontSize';
-import { KIND_OPTIONS, buildCourseOptions, filterAnnouncements } from '../lib/filters';
-import { peekBootOpen, takeBootOpen } from '../lib/bootOpen';
-import { courseTheme, courseThemeOrNull, shaded } from '../lib/courseTheme';
+import { THEMES } from '../lib/ui/themes';
+import { currentFontSize } from '../lib/ui/fontSize';
+import { KIND_OPTIONS, buildCourseOptions, filterAnnouncements } from '../lib/announce/filters';
+import { peekBootOpen, takeBootOpen } from '../lib/announce/bootOpen';
+import { courseTheme, courseThemeOrNull, shaded } from '../lib/ui/courseTheme';
 
 // ★ assets 内の通常アイコン
 import homeIcon from '../assets/images/icons/home.svg';

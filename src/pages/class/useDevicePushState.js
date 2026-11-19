@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { ensureSubscription } from '../../lib/onesignal';
-import { getDevicePushEnabled } from '../../lib/notifications';
-import { usePushBroken, usePushKey, usePushSubs, useDeviceSubscriptionId, judgeDeviceBroken, markPushFixed } from '../../lib/pushStatus';
+import { ensureSubscription } from '../../lib/push/onesignal';
+import { getDevicePushEnabled } from '../../lib/push/notifications';
+import { usePushBroken, usePushKey, usePushSubs, useDeviceSubscriptionId, judgeDeviceBroken, markPushFixed } from '../../lib/push/pushStatus';
 
 /**
  * お知らせ画面が使う、通知の状態。
@@ -25,7 +25,7 @@ export function useDevicePushState(studentId) {
   // fcm の読み込みは、ここで必要になったときだけ行う(起動時の JS を増やさない)
   useEffect(() => {
     if (!studentId) return;
-    import('../../lib/fcm').then((m) => m.refreshFcmTokenIfGranted(studentId)).catch(() => {});
+    import('../../lib/push/fcm').then((m) => m.refreshFcmTokenIfGranted(studentId)).catch(() => {});
   }, [studentId]);
 
   const [devicePushOn, setDevicePushOn] = useState(true);

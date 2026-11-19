@@ -1,4 +1,4 @@
-import { watchUser } from './liveStore';
+import { watchUser } from '../data/liveStore';
 import { useEffect, useState } from 'react';
 import { getSubscriptionId } from './onesignal';
 

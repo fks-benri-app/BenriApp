@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { KIND_OPTIONS } from '../../lib/filters';
+import { KIND_OPTIONS } from '../../lib/announce/filters';
 
 // 詳細画面(カードを押すと開く小窓。Classroom の投稿ページの見た目に合わせてある)
 

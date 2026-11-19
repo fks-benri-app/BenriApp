@@ -1,4 +1,4 @@
-import { storage } from './storage';
+import { storage } from '../data/storage';
 
 // この端末の通知を、利用者が自分でオフにしたかどうか(オフの間は、自動でオンに戻さない)。
 // OneSignal・FCM のどちらからも読むので、ここに独立させている。画面からは lib/notifications.js 経由で使う。

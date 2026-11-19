@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { watchUser } from '../../lib/liveStore';
+import { watchUser } from '../../lib/data/liveStore';
 
 // 学校のメールアドレス(Classroom を学校アカウントで開くために使う)と、Classroom を開く処理
 // Classroom の投稿ページを開くURL。

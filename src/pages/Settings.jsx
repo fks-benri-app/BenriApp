@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useIdentity } from '../auth/identity';
 import BottomNav from '../components/BottomNav';
-import { currentFontSize, setFontSize, FONT_SIZE_MIN, FONT_SIZE_MAX, FONT_SIZE_DEFAULT } from '../lib/fontSize';
-import { isDarkMode, toggleDarkMode } from '../lib/themes';
-import { useAccountName } from '../lib/account';
+import { currentFontSize, setFontSize, FONT_SIZE_MIN, FONT_SIZE_MAX, FONT_SIZE_DEFAULT } from '../lib/ui/fontSize';
+import { isDarkMode, toggleDarkMode } from '../lib/ui/themes';
+import { useAccountName } from '../lib/data/account';
 import pkg from '../../package.json';
 import Switch from '../components/Switch';
-import { useNotifyPrefs, isPushOffByUser } from '../lib/notifications';
+import { useNotifyPrefs, isPushOffByUser } from '../lib/push/notifications';
 
 // フィードバックのフォームのURL。ここに入れると押せるようになる(空の間は灰色で押せない)
 const FEEDBACK_FORM_URL = 'https://forms.gle/pmiB1KdWofSkPgrd8';

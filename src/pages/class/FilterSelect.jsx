@@ -1,5 +1,5 @@
 import React from 'react';
-import { shaded } from '../../lib/courseTheme';
+import { shaded } from '../../lib/ui/courseTheme';
 
 
 

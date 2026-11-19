@@ -1,5 +1,5 @@
 import React from 'react';
-import { currentFontSize } from '../lib/fontSize';
+import { currentFontSize } from '../lib/ui/fontSize';
 
 // ★ assets 内の通常アイコン(Class.jsx と同じ)
 import homeIcon from '../assets/images/icons/home.svg';
