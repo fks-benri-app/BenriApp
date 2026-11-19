@@ -5,7 +5,8 @@ import { buildGasLoginUrl, isGasConfigured } from '../config';
 import { initOneSignal, subscribeAs } from '../lib/push/onesignal';
 import { usePushKey, markPushFixed } from '../lib/push/pushStatus';
 import { isNotifyDone, markNotifyDone, KEYS, storage } from '../lib/data/storage';
-import ClassBackdrop, { BottomNav, TitleHeader } from '../components/ClassBackdrop';
+import ClassBackdrop, { TitleHeader } from '../components/ClassBackdrop';
+import BottomNav from '../components/BottomNav';
 import loginIllustration from '../assets/images/other_svgs/login.svg';
 import InstallGuide, { InstallSteps, isIos, isStandalone, needsInstall } from '../components/InstallGuide';
 
@@ -248,7 +249,7 @@ export default function LinkPage() {
         </main>
 
         {/* 下のアイコンバー: 設定を光らせる */}
-        <BottomNav activeTab="settings" />
+        <BottomNav active="settings" />
       </div>
     );
   }
