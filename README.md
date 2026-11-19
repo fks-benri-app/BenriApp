@@ -100,7 +100,12 @@ src/gadgets/index.js          gadgets.json を読み込み、形式を確かめ�
 src/gadgets/components.js     gadgets.json の type と、中身の部品の対応表
 src/gadgets/ClassNoticesGadget.jsx  「お知らせ」ガジェットの中身
 src/pages/Home.jsx            ホーム画面(ガジェットを並べる・編集する)
-src/pages/Class.jsx           お知らせの一覧(部品は src/pages/class/)
+src/pages/Class.jsx           お知らせ画面(部品は src/pages/class/)
+src/pages/Home.jsx            ホーム画面(ガジェット1枚の描画は src/pages/home/)
+src/data/                     画面に出す値のまとめ(JSON)。変えたいときはここを直す
+                                text.json(文章)/ icons.json(アイコンの形)/ themes.json・courseThemes.json(色)
+                                tagFilters.json(絞り込み)/ homeConfig.json(ホームの動きの数値)
+src/components/               複数の画面で使う部品(タブバー・Icon など)
 src/pages/dev/                開発用のテスト画面(OCR・FCM)
 src/pages/Settings.jsx        設定画面
 src/pages/NotifySettings.jsx  通知の詳細設定(授業ごとのオン・オフ)
