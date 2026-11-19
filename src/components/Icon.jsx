@@ -1,3 +1,4 @@
+// アイコンの表示部品。形は src/data/icons.json にある。
 import React from 'react';
 import icons from '../data/icons.json';
 

@@ -1,3 +1,4 @@
+// 通知が届いていない可能性の判定と、購読の状態の読み取り。
 import { watchUser } from '../data/liveStore';
 import { useEffect, useState } from 'react';
 import { getSubscriptionId } from './onesignal';

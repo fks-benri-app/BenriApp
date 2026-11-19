@@ -1,3 +1,4 @@
+// Firebase の初期化(アプリ本体と認証)。
 import { initializeApp } from 'firebase/app';
 import { initializeAuth, indexedDBLocalPersistence, browserLocalPersistence } from 'firebase/auth';
 // config.js から firebaseConfig をしっかりインポートします

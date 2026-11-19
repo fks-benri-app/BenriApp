@@ -1,3 +1,4 @@
+// 「すべて・未読・既読…」の絞り込みボタンの行。
 import React from 'react';
 import tagFilters from '../../data/tagFilters.json';
 import { shaded } from '../../lib/ui/courseTheme';

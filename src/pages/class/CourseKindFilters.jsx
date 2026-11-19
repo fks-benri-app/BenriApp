@@ -1,3 +1,4 @@
+// 授業・形式のプルダウンの行。
 import React from 'react';
 import FilterSelect from './FilterSelect';
 import { KIND_OPTIONS } from '../../lib/announce/filters';

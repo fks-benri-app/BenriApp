@@ -1,3 +1,4 @@
+// アプリの入り口。配色を反映して、App を画面に出す。
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { HashRouter } from 'react-router-dom';

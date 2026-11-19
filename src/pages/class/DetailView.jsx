@@ -1,3 +1,4 @@
+// お知らせの詳細画面(Classroom の投稿ページに合わせた見た目)。
 import React, { useState } from 'react';
 import Icon from '../../components/Icon';
 import { KIND_OPTIONS } from '../../lib/announce/filters';

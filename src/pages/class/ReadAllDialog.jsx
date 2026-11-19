@@ -1,3 +1,4 @@
+// 一斉既読の確認ダイアログ。
 import React from 'react';
 import { GOOGLE_FONT } from './DetailView';
 

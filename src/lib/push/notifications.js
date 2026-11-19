@@ -1,3 +1,4 @@
+// 通知の設定の窓口。授業ごとの設定と、この端末のオン/オフをここで扱う。
 import { watchUser } from '../data/liveStore';
 // 通知の設定(users/{生徒ID}.notifyPrefs)。
 // ・offCourses: オフの授業ID

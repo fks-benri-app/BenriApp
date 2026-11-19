@@ -1,3 +1,4 @@
+// お知らせ画面が使う、通知の状態(届いていない可能性・端末のオン/オフ)。
 import { useEffect, useState } from 'react';
 import { ensureSubscription } from '../../lib/push/onesignal';
 import { getDevicePushEnabled } from '../../lib/push/notifications';

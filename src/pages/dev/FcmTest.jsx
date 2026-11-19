@@ -1,3 +1,4 @@
+// 開発用: FCM の登録トークンを取って保存する試験画面。
 import { useState } from 'react';
 import { requestFcmToken, registerFcmToken } from '../../lib/push/fcm';
 import { useIdentity } from '../../auth/identity';

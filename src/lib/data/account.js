@@ -1,3 +1,4 @@
+// ログイン中の生徒の氏名を取り出す。
 import { useEffect, useState } from 'react';
 import { watchUser, peekLive } from './liveStore';
 

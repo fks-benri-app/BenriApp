@@ -1,3 +1,4 @@
+// ホームに置く「次の授業」のガジェット(授業カード)。
 import React, { useLayoutEffect, useRef, useState } from 'react';
 import { shaded } from '../lib/ui/courseTheme';
 import { THEMES } from '../lib/ui/themes';

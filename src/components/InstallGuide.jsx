@@ -1,3 +1,4 @@
+// ホーム画面に追加する手順の案内(iPhone / Android)。
 import React, { useEffect, useState } from 'react';
 import { t } from '../lib/ui/text';
 

@@ -1,3 +1,4 @@
+// お知らせの取得(liveStore 経由)と、既読の管理。
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { loadFirestore } from '../data/firestoreLazy';
 import { watchLive, peekLive } from '../data/liveStore';

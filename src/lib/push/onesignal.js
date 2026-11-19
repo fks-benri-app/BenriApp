@@ -1,3 +1,4 @@
+// OneSignal の操作(購読・ログイン・購読の付け直し)。移行が終わったら、このファイルごと消す。
 import { CONFIG } from '../../config';
 import { isPushOffByUser, setPushOffByUser } from './pushOffFlag';
 

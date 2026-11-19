@@ -1,3 +1,4 @@
+// ログインと、通知の連携(再連携)の画面。
 import React, { useEffect, useRef, useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useIdentity } from '../auth/identity';

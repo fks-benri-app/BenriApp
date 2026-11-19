@@ -1,3 +1,4 @@
+// 設定画面。アカウント・通知・ダークモード・フィードバック。
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useIdentity } from '../auth/identity';

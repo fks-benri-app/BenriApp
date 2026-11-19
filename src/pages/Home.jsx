@@ -1,3 +1,4 @@
+// ホーム画面。ガジェットを並べ、長押しで並べ替え・大きさの変更ができる。
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useIdentity } from '../auth/identity';

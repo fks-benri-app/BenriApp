@@ -1,3 +1,4 @@
+// お知らせ画面の上の行(タイトル・検索・一斉既読・通知設定)。
 import React from 'react';
 import { t } from '../../lib/ui/text';
 import searchIcon from '../../assets/images/icons/search.svg';

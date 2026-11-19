@@ -1,3 +1,4 @@
+// 画面の下のタブバー(ホーム・お知らせ・設定)。
 import React from 'react';
 
 import homeIcon from '../assets/images/icons/home.svg';

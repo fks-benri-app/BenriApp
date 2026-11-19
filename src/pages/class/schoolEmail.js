@@ -1,3 +1,4 @@
+// 学校のメールアドレスの取得と、Classroom を学校アカウントで開く処理。
 import { useEffect, useState } from 'react';
 import { watchUser } from '../../lib/data/liveStore';
 

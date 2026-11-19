@@ -1,3 +1,4 @@
+// 通知の設定画面。この端末のオン/オフと、授業ごとの設定。
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useIdentity } from '../auth/identity';

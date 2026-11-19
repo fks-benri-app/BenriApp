@@ -1,3 +1,4 @@
+// 開発用: 時間割の画像から授業を読み取る試験画面。
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import { coverage, matchLines } from '../../lib/timetable/timetableMatch';
 import { buildGrid } from '../../lib/timetable/timetableGrid';

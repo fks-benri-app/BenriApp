@@ -1,3 +1,4 @@
+// 色つきのプルダウン(授業・形式の絞り込みに使う)。
 import React from 'react';
 import { shaded } from '../../lib/ui/courseTheme';
 

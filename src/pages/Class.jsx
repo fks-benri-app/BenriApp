@@ -1,3 +1,4 @@
+// お知らせ画面。一覧・絞り込み・詳細を組み合わせる(部品は class/ にある)。
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';

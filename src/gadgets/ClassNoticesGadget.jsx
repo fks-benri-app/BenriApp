@@ -1,3 +1,4 @@
+// ホームに置く「お知らせ」のガジェット(最新の数件を出す)。
 import React, { useLayoutEffect, useRef, useState } from 'react';
 import { useAnnouncements } from '../lib/announce/announcements';
 import { KIND_OPTIONS } from '../lib/announce/filters';

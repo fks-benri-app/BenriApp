@@ -1,3 +1,4 @@
+// 画面の切り替え(ルーティング)。ログインの有無と、通知から開いたときの行き先をここで決める。
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useIdentity } from './auth/identity';

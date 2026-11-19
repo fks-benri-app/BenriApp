@@ -1,3 +1,4 @@
+// お知らせ一覧の1枚のカード。
 import React from 'react';
 import { KIND_LABELS } from './DetailView';
 import { courseThemeOrNull, shaded } from '../../lib/ui/courseTheme';

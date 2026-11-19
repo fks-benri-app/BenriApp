@@ -1,3 +1,4 @@
+// ログイン前に、お知らせ画面の背景として出す見た目だけの画面(動かない)。
 import React from 'react';
 import { currentFontSize } from '../lib/ui/fontSize';
 
