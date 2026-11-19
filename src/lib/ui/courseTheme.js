@@ -1,51 +1,16 @@
 // 授業・形式の色。Class 画面と、ホームのお知らせガジェットで共有する。
 // ガジェットはここだけを読む(以前は Class 画面の本体を読み込んでいたため、ホームの起動が遅かった)。
 import { THEMES } from './themes';
+import courseThemes from '../../data/courseThemes.json';
 
-// ===== プルダウンを選んだときの色 =====
-// 存在するテーマ名（orangeRed等）を指定してエラーを防ぐ
-const DEFAULT_THEME = 'gray';
+// 色の対応表は src/data/courseThemes.json(テーマ名は themes.json にあるもの)
+const DEFAULT_THEME = courseThemes.default;
 
 // 形式ごと
-const KIND_THEMES = {
-  announcement: 'orangeRed',
-  assignment: 'orangeRed',
-  material: 'orangeRed',
-};
+const KIND_THEMES = courseThemes.kinds;
 
 // 授業ごと: 授業名に match の文字が含まれていたら、その色にする
-const COURSE_THEMES = [
-  { match: '化学', theme: 'blue' },
-  { match: '物理', theme: 'indigo' },
-  { match: '生物', theme: 'teal' },
-  { match: '地学', theme: 'cyan' },
-  { match: '数学', theme: 'indigo' },
-  { match: '古典', theme: 'red' },
-  { match: '英語', theme: 'cyan' },
-  { match: 'コミュ', theme: 'shuiro' },
-  { match: '論理表現', theme: 'pink' },
-  { match: '論表', theme: 'pink' },
-  { match: '論理国語', theme: 'red' },
-  { match: '論国', theme: 'red' },
-  { match: '国語', theme: 'red' },
-  { match: '保健', theme: 'green' },
-  { match: '体育', theme: 'emerald' },
-  { match: '情報', theme: 'blue' },
-  { match: '家庭', theme: 'lime' },
-  { match: '美術', theme: 'violet' },
-  { match: '書道', theme: 'violet' },
-  { match: '音楽', theme: 'pink' },
-  { match: '地理', theme: 'amber' },
-  { match: '史', theme: 'orange' },
-  { match: '公共', theme: 'yellow' },
-  { match: '政経', theme: 'amber' },
-  { match: '落とし物', theme: 'red' },
-  { match: '学年', theme: 'teal' },
-  { match: '探究', theme: 'emerald' },
-  { match: '生徒会', theme: 'green' },
-  { match: 'とんぼ祭', theme: 'orangeRed' },
-  { match: '組', theme: 'gray' },
-];
+const COURSE_THEMES = courseThemes.courses;
 
 const themeOf = (name) => THEMES[name] || THEMES[DEFAULT_THEME];
 // 当てはまる色がなければ null

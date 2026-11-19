@@ -4,7 +4,7 @@ import { useIdentity } from '../auth/identity';
 import Icon from '../components/Icon';
 import BottomNav from '../components/BottomNav';
 import { currentFontSize, setFontSize, FONT_SIZE_MIN, FONT_SIZE_MAX, FONT_SIZE_DEFAULT } from '../lib/ui/fontSize';
-import { isDarkMode, toggleDarkMode } from '../lib/ui/themes';
+import { isDarkMode, toggleDarkMode } from '../lib/ui/darkMode';
 import { useAccountName } from '../lib/data/account';
 import pkg from '../../package.json';
 import Switch from '../components/Switch';
