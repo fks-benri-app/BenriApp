@@ -5,7 +5,7 @@ import { getMessaging, getToken, isSupported, onMessage } from 'firebase/messagi
 import { app } from './firebase';
 import { CONFIG } from '../config';
 import { saveFcmTokenRemote, deleteFcmTokenRemote } from './firestoreLazy';
-import { isPushOffByUser } from './onesignal';
+import { isPushOffByUser } from './pushOffFlag';
 
 const BASE = import.meta.env.BASE_URL; // 例: /BenriApp/
 

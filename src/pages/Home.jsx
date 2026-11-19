@@ -6,7 +6,7 @@ import { GADGETS, gadgetById } from '../gadgets';
 import { currentFontSize } from '../lib/fontSize';
 import bellIcon from '../assets/images/icons/bell.svg';
 import bellOffIcon from '../assets/images/icons/bell-off.svg';
-import { getDevicePushEnabled } from '../lib/onesignal';
+import { getDevicePushEnabled } from '../lib/notifications';
 import { BASE_COLS, gridFor, loadLayout, rangeFor, resolveLayout, saveLayout } from '../lib/homeLayout';
 
 // .hm-press: 押せるものは、押している間 0.95 倍に縮む(静かな動き)

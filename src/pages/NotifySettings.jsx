@@ -4,8 +4,7 @@ import { useIdentity } from '../auth/identity';
 import Switch from '../components/Switch';
 import { currentFontSize } from '../lib/fontSize';
 import { useAnnouncements } from '../lib/announcements';
-import { DAY_OPTIONS, HOUR_OPTIONS, courseIdOf, saveNotifyPrefs, useNotifyPrefs } from '../lib/notifyPrefs';
-import { getDevicePushEnabled, setDevicePushEnabled } from '../lib/onesignal';
+import { DAY_OPTIONS, HOUR_OPTIONS, courseIdOf, saveNotifyPrefs, useNotifyPrefs, getDevicePushEnabled, setDevicePushEnabled } from '../lib/notifications';
 
 // 通知の詳細設定。ベル・設定の「クラスルーム通知」から開く
 export default function NotifySettings() {
@@ -50,12 +49,7 @@ export default function NotifySettings() {
     if (deviceOn === null) return;
     setNote('');
     try {
-      const on = await setDevicePushEnabled(!deviceOn);
-      setDeviceOn(on);
-      // FCM も同じ設定に合わせる。オフなら、この端末の登録トークンを消す。オンなら、取り直して保存する
-      const fcm = await import('../lib/fcm');
-      if (on) fcm.refreshFcmTokenIfGranted(studentId).catch(() => {});
-      else fcm.removeFcmTokenForThisDevice(studentId).catch(() => {});
+      setDeviceOn(await setDevicePushEnabled(studentId, !deviceOn));
     } catch {
       setNote('この端末の通知を切り替えられませんでした。通知の許可を確かめてください。');
     }
