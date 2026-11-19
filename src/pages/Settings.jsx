@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useIdentity } from '../auth/identity';
+import Icon from '../components/Icon';
 import BottomNav from '../components/BottomNav';
 import { currentFontSize, setFontSize, FONT_SIZE_MIN, FONT_SIZE_MAX, FONT_SIZE_DEFAULT } from '../lib/ui/fontSize';
 import { isDarkMode, toggleDarkMode } from '../lib/ui/themes';
@@ -28,9 +29,7 @@ function classOf(id) {
 }
 
 const Chevron = ({ dim }) => (
-  <svg width="1.143em" height="1.143em" viewBox="0 0 20 20" fill="none" aria-hidden="true" style={{ flexShrink: 0 }}>
-    <path d="M7.5 5l5 5-5 5" style={{ stroke: dim ? GREY : 'var(--text-muted)' }} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
+  <Icon name="chevronRight" size="1.143em" color={dim ? GREY : 'var(--text-muted)'} />
 );
 
 function Section({ title, children }) {
@@ -211,10 +210,7 @@ export default function Settings() {
                 flexShrink: 0,
               }}
             >
-              <svg width="1.8em" height="1.8em" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <circle cx="12" cy="8" r="4" style={{ stroke: GREY }} strokeWidth="2" />
-                <path d="M4 20c1-4 4-6 8-6s7 2 8 6" style={{ stroke: GREY }} strokeWidth="2" strokeLinecap="round" />
-              </svg>
+              <Icon name="account" size="1.8em" color={GREY} />
             </div>
             <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '0.286em' }}>
               <div style={{ color: 'var(--text-strong)', fontSize: '1.286em', fontFamily: 'Inter', fontWeight: 700 }}>

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useIdentity } from '../auth/identity';
+import Icon from '../components/Icon';
 import BottomNav from '../components/BottomNav';
 import { GADGETS, gadgetById } from '../gadgets';
 import { currentFontSize } from '../lib/ui/fontSize';
@@ -440,9 +441,7 @@ export default function Home() {
                       : capsuleStyle}>{g.title}</div>}
                     {g.path && !editing && (
                       <div style={chevronStyle}>
-                        <svg width="7" height="12" viewBox="0 0 8 14" aria-hidden="true">
-                          <path d="M1.5 1.5l5.5 5.5-5.5 5.5" fill="none" stroke="var(--text-strong)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
+                        <Icon name="chevronRightSmall" width={7} height={12} color="var(--text-strong)" />
                       </div>
                     )}
                   </div>
@@ -499,9 +498,7 @@ export default function Home() {
                       zIndex: 4,
                     }}
                   >
-                    <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
-                      <path d="M12 2L2 12M12 7L7 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" fill="none" />
-                    </svg>
+                    <Icon name="closeSmall" size={14} />
                   </div>
                 )}
               </div>

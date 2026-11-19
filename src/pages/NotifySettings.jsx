@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useIdentity } from '../auth/identity';
+import Icon from '../components/Icon';
 import Switch from '../components/Switch';
 import { currentFontSize } from '../lib/ui/fontSize';
 import { useAnnouncements } from '../lib/announce/announcements';
@@ -105,9 +106,7 @@ export default function NotifySettings() {
             style={{ width: '48px', height: '48px', margin: '0 -12px 0 -12px', border: 'none', background: 'transparent', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', touchAction: 'manipulation', flexShrink: 0 }}
           >
             {/* 設定画面の矢印(Chevron)と同じ線の太さ・形を、向きだけ反転させる */}
-            <svg width="1.143em" height="1.143em" viewBox="0 0 20 20" fill="none" aria-hidden="true" style={{ transform: 'scaleX(-1)' }}>
-              <path d="M7.5 5l5 5-5 5" style={{ stroke: 'var(--text-strong)' }} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            <Icon name="chevronRight" size="1.143em" color="var(--text-strong)" style={{ transform: 'scaleX(-1)' }} />
           </button>
           <div style={{ color: 'var(--text-strong)', fontSize: '1.571em', fontFamily: 'Inter', fontWeight: 800 }}>通知設定</div>
         </div>
