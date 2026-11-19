@@ -3,27 +3,22 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fetchAnnouncementById, useAnnouncements } from '../lib/announce/announcements';
 import { goRepairNotifications, isPushRecentlyFixed } from '../lib/push/pushStatus';
+import TitleRow from './class/TitleRow';
+import TagChips from './class/TagChips';
+import CourseKindFilters from './class/CourseKindFilters';
 import { useDevicePushState } from './class/useDevicePushState';
-import FilterSelect from './class/FilterSelect';
 import { DetailView, KIND_LABELS, GOOGLE_FONT } from './class/DetailView';
 import { useSchoolEmail, classroomUrl, openExternal, withAuthuser } from './class/schoolEmail';
 import { useIdentity } from '../auth/identity';
 import BottomNav from '../components/BottomNav';
-import tagFilters from '../data/tagFilters.json';
-import { THEMES } from '../lib/ui/themes';
 import { currentFontSize } from '../lib/ui/fontSize';
-import { KIND_OPTIONS, buildCourseOptions, filterAnnouncements } from '../lib/announce/filters';
+import { buildCourseOptions, filterAnnouncements } from '../lib/announce/filters';
 import { peekBootOpen, takeBootOpen } from '../lib/announce/bootOpen';
 import { courseTheme, courseThemeOrNull, shaded } from '../lib/ui/courseTheme';
 
 // ヘッダー用アイコン
-import searchIcon from '../assets/images/icons/search.svg';
-import bellIcon from '../assets/images/icons/bell.svg';
-import bellOffIcon from '../assets/images/icons/bell-off.svg';
-import readAllIcon from '../assets/images/icons/read-all.svg';
 import { t } from '../lib/ui/text';
 
-const FILTERS = tagFilters;
 
 // ===== 開発用モック(コード上のスイッチ。false なら一切表示されず、本番に影響しない) =====
 const DEV_MOCK = false;
@@ -224,196 +219,13 @@ export default function Class() {
         background: 'var(--surface)',
         width: '100%'
       }}>
-        <div style={{
-          padding: '0 1.714em',
-          height: '34px', // 検索を開いても高さが変わらないよう固定
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          gap: '0.857em'
-        }}>
-          {searchOpen ? (
-            <>
-              <input
-                ref={searchInputRef}
-                type="text"
-                inputMode="search"
-                autoComplete="off"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Escape') closeSearch(); }}
-                placeholder={t('class.searchPlaceholder')}
-                aria-label={t('class.searchLabel')}
-                enterKeyHint="search"
-                style={{
-                  flex: 1,
-                  minWidth: 0,
-                  height: '40px',
-                  padding: '0 1em',
-                  border: 'none',
-                  outline: 'none',
-                  borderRadius: '0.857em',
-                  background: 'var(--surface-2)',
-                  color: 'var(--text-strong)',
-                  fontSize: '16px', // 16px未満だと iPhone でフォーカス時に画面が拡大される
-                  fontFamily: 'inherit',
-                  boxSizing: 'border-box',
-                  WebkitAppearance: 'none'
-                }}
-              />
-              <div
-                role="button"
-                tabIndex={0}
-                onClick={closeSearch}
-                onKeyDown={(e) => { if (e.key === 'Enter') closeSearch(); }}
-                style={{
-                  flexShrink: 0,
-                  color: 'var(--text-muted)',
-                  fontSize: '1em',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  userSelect: 'none',
-                  WebkitUserSelect: 'none',
-                  touchAction: 'manipulation'
-                }}
-              >
-                キャンセル
-              </div>
-            </>
-          ) : (
-            <>
-              <div style={{
-                color: 'var(--text-strong)',
-                fontSize: '1.871em',
-                fontFamily: 'Inter',
-                fontWeight: '800',
-                userSelect: 'none'
-              }}>
-                お知らせ
-              </div>
-
-              {/* 右上アイコン */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.9em', flexShrink: 0 }}>
-                {/* 一斉既読(ベル・検索と同じ並び。未読がないときは薄くして押せなくする) */}
-                <button
-                  type="button"
-                  onClick={readAllShown}
-                  disabled={unreadShown.length === 0}
-                  aria-label={t('class.readAll')}
-                  title={t('class.readAll')}
-                  style={{
-                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                    width: '1.571em', height: '1.571em', padding: 0, border: 'none', background: 'transparent',
-                    fontSize: 'inherit', opacity: unreadShown.length === 0 ? 0.35 : 1,
-                    cursor: unreadShown.length === 0 ? 'default' : 'pointer', touchAction: 'manipulation'
-                  }}
-                >
-                  <img className="icon-ink" src={readAllIcon} alt="" aria-hidden="true" draggable={false} style={{ width: '100%', height: '100%' }} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => navigate('/settings/notify', { state: { from: '/class' } })}
-                  aria-label={devicePushOn ? '通知設定' : t('common.bellOff')}
-                  title={devicePushOn ? '通知設定' : t('common.bellOff')}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: '2.5em',
-                    height: '1.571em',
-                    padding: 0,
-                    border: 'none',
-                    background: 'transparent',
-                    fontSize: 'inherit', // ボタンは既定で文字サイズを継承しないため、em の基準を揃える
-                    color: 'var(--text-body)',
-                    cursor: 'pointer',
-                    touchAction: 'manipulation'
-                  }}
-                >
-                  <img
-                    className="icon-ink"
-                    src={devicePushOn ? bellIcon : bellOffIcon}
-                    alt=""
-                    aria-hidden="true"
-                    draggable={false}
-                    style={{ width: '1.571em', height: '1.571em', objectFit: 'contain', display: 'block' }}
-                  />
-                </button>
-                <img
-                  draggable={false}
-                  role="button"
-                  tabIndex={0}
-                  onClick={openSearch}
-                  onKeyDown={(e) => { if (e.key === 'Enter') openSearch(); }}
-                  style={{
-                    width: '1.571em',
-                    height: '1.571em',
-                    cursor: 'pointer',
-                    userSelect: 'none',
-                    WebkitUserSelect: 'none',
-                    touchAction: 'manipulation'
-                  }}
-                  className="icon-ink"
-                  src={searchIcon}
-                  alt="検索"
-                />
-              </div>
-            </>
-          )}
-        </div>
+        <TitleRow searchOpen={searchOpen} searchInputRef={searchInputRef} query={query} setQuery={setQuery} closeSearch={closeSearch} readAllShown={readAllShown} unreadShown={unreadShown} devicePushOn={devicePushOn} openSearch={openSearch} />
 
         {/* フィルターボタン */}
-        <div className="no-scrollbar" style={{ padding: '0.571em 1.714em', display: 'flex', gap: '0.571em', overflowX: 'auto' }}>
-          {FILTERS.map((filter) => {
-            const isActive = activeFilter === filter.id;
-            return (
-              <div
-                key={filter.id}
-                onClick={() => setActiveFilter(filter.id)}
-                style={{
-                  padding: '0.571em 1.143em',
-                  borderRadius: '0.857em',
-                  flexShrink: 0,
-                  cursor: 'pointer',
-                  backgroundImage: isActive ? shaded('linear-gradient(135deg, #FF4D4D 0%, #FF8A1B 100%)') : 'none',
-                  backgroundColor: isActive ? 'transparent' : 'var(--surface)',
-                  outline: isActive ? 'none' : '1px var(--line) solid',
-                  outlineOffset: '-1px',
-                  color: isActive ? 'white' : 'var(--text-muted)',
-                  fontSize: '1em',
-                  fontWeight: isActive ? '700' : '400',
-                  whiteSpace: 'nowrap',
-                  boxSizing: 'border-box',
-                  userSelect: 'none',
-                  WebkitUserSelect: 'none',
-                  touchAction: 'manipulation'
-                }}
-              >
-                {filter.label}
-              </div>
-            );
-          })}
-        </div>
+        <TagChips activeFilter={activeFilter} setActiveFilter={setActiveFilter} />
 
         {/* プルダウン: 授業・形式 */}
-        <div style={{ padding: '0 1.714em', display: 'flex', gap: '0.571em', marginTop: '-0.476em' }}>
-          <FilterSelect fontPx={baseFontSize}
-            label={t('class.courseFilter')}
-            value={courseValue}
-            onChange={setCourse}
-            allLabel={t('class.allCourses')}
-            theme={courseColor}
-            options={courseOptions}
-          />
-          <FilterSelect fontPx={baseFontSize}
-            label={t('class.kindFilter')}
-            value={kind}
-            onChange={setKind}
-            allLabel={t('class.allKinds')}
-            theme={kindColor}
-            options={KIND_OPTIONS}
-          />
-        </div>
+        <CourseKindFilters baseFontSize={baseFontSize} courseValue={courseValue} setCourse={setCourse} courseColor={courseColor} courseOptions={courseOptions} kind={kind} setKind={setKind} kindColor={kindColor} />
       </header>
 
       {/* ===== メインコンテンツ部分（ここだけスクロールする） ===== */}
