@@ -1,7 +1,8 @@
+// 開発用: 時間割の画像から授業を読み取る試験画面。
 import { Fragment, useEffect, useMemo, useState } from 'react';
-import { coverage, matchLines } from '../lib/timetableMatch';
-import { buildGrid } from '../lib/timetableGrid';
-import { recognizeWithPaddle } from '../lib/paddleOcr';
+import { coverage, matchLines } from '../../lib/timetable/timetableMatch';
+import { buildGrid } from '../../lib/timetable/timetableGrid';
+import { recognizeWithPaddle } from '../../lib/timetable/paddleOcr';
 
 // 時間割の読み取りのテスト画面(保存はしない。写真は端末の中だけで読む)
 // 開き方: アプリの「#/ocr-test」へ行く

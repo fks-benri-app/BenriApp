@@ -3,7 +3,7 @@
 // ・ガジェットの大きさ・位置(gadgets.json)は、マスの数で指定する。画面が広くても、マスの大きさは変わらない(rangeFor)
 // ・配置は列数ごとに保存する。まだ保存が無い列数は、近い列数の保存をそのまま使う(範囲外は clampItem で収める)
 // ・保存するのは「ガジェットIDごとの x / y / w / h(マス)」だけ。中身は src/gadgets/index.js にある
-import { storage } from './storage';
+import { storage } from '../data/storage';
 
 export const BASE_COLS = 5;   // gadgets.json の基準の列数
 export const BASE_ROWS = 10;  // gadgets.json の基準の行数

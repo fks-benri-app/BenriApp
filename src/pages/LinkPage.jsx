@@ -1,13 +1,17 @@
+// ログインと、通知の連携(再連携)の画面。
 import React, { useEffect, useRef, useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useIdentity } from '../auth/identity';
 import { buildGasLoginUrl, isGasConfigured } from '../config';
-import { initOneSignal, subscribeAs } from '../lib/onesignal';
-import { usePushKey, markPushFixed } from '../lib/pushStatus';
-import { isNotifyDone, markNotifyDone, KEYS, storage } from '../lib/storage';
-import ClassBackdrop, { BottomNav, TitleHeader } from '../components/ClassBackdrop';
+import { initOneSignal, subscribeAs } from '../lib/push/onesignal';
+import { usePushKey, markPushFixed } from '../lib/push/pushStatus';
+import { isNotifyDone, markNotifyDone, KEYS, storage } from '../lib/data/storage';
+import ClassBackdrop, { TitleHeader } from '../components/ClassBackdrop';
+import Icon from '../components/Icon';
+import BottomNav from '../components/BottomNav';
 import loginIllustration from '../assets/images/other_svgs/login.svg';
 import InstallGuide, { InstallSteps, isIos, isStandalone, needsInstall } from '../components/InstallGuide';
+import { t } from '../lib/ui/text';
 
 const GOOGLE_FONT = "'Google Sans', Roboto, 'Hiragino Sans', 'Noto Sans JP', 'Yu Gothic UI', Arial, sans-serif";
 
@@ -17,17 +21,6 @@ const dialogBody = { fontSize: '1em', lineHeight: '1.43em', color: 'var(--text-m
 const dialogActions = { display: 'flex', justifyContent: 'flex-end', gap: '8px', flexWrap: 'wrap' };
 const textBtn = (busy) => ({ padding: '0.714em 1.143em', border: 'none', background: 'transparent', color: 'var(--text-muted)', borderRadius: '999px', fontFamily: 'inherit', fontSize: '1em', fontWeight: 600, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.5 : 1 });
 const darkBtn = (busy) => ({ padding: '0.714em 1.143em', border: 'none', background: 'var(--ink)', color: 'var(--on-ink)', borderRadius: '999px', fontFamily: 'inherit', fontSize: '1em', fontWeight: 600, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.85 : 1, display: 'inline-flex', alignItems: 'center', gap: '8px' });
-
-function GoogleG() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 48 48" aria-hidden="true">
-      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
-      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
-      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
-      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
-    </svg>
-  );
-}
 
 function Spinner() {
   return (
@@ -68,7 +61,7 @@ export default function LinkPage() {
 
   function startLink() {
     if (!isGasConfigured()) {
-      setMessage('src/config.js の GAS_URL がまだ設定されていません。');
+      setMessage(t('link.gasUrlMissing'));
       return;
     }
     window.location.href = buildGasLoginUrl();
@@ -76,11 +69,11 @@ export default function LinkPage() {
 
   async function confirmRestartLink() {
     if (!identity) {
-      setMessage('連携情報を確認できません。いったんログインし直してください。');
+      setMessage(t('link.noLinkInfo'));
       return;
     }
     if (!isGasConfigured()) {
-      setMessage('src/config.js の GAS_URL がまだ設定されていません。');
+      setMessage(t('link.gasUrlMissing'));
       return;
     }
     setBusy(true);
@@ -93,7 +86,7 @@ export default function LinkPage() {
       storage.set('relinking', '1');
       window.location.href = buildGasLoginUrl();
     } catch (e) {
-      setMessage('再連携の準備に失敗しました: ' + e.message);
+      setMessage(t('link.relinkFailed') + e.message);
       setBusy(false);
     }
   }
@@ -118,8 +111,8 @@ export default function LinkPage() {
       }
       setMessage(
         result.reason === 'denied'
-          ? '通知が許可されませんでした。ブラウザの設定から許可してください。'
-          : '登録の確認に時間がかかっています。少し待ってから、もう一度お試しください。'
+          ? t('link.permissionDenied')
+          : t('link.timeout')
       );
     } catch (e) {
       setMessage('エラー: ' + e.message);
@@ -156,7 +149,7 @@ export default function LinkPage() {
     </div>
   );
 
-  // ================= step 1: ログイン画面 =================
+  // step 1: ログイン画面
   if (!identity) {
     return (
       <div onCopy={(e) => e.preventDefault()} style={{ ...rootStyle, display: 'flex', flexDirection: 'column' }}>
@@ -182,7 +175,7 @@ export default function LinkPage() {
               <InstallGuide onSkip={() => setGuideOpen(false)} />
             ) : (
               <>
-                {offline && notice('#FEF2F2', '#FECACA', '#DC2626', 'インターネットに接続されていません。接続してからもう一度お試しください。')}
+                {offline && notice('#FEF2F2', '#FECACA', '#DC2626', t('link.offline'))}
                 {needsRelogin && notice('var(--warn-bg)', 'var(--warn-line)', 'var(--warn-fg)', (
                   <>
                     <div style={{ fontWeight: 700, marginBottom: '0.3em' }}>ログイン方法が変わりました</div>
@@ -223,7 +216,7 @@ export default function LinkPage() {
                     touchAction: 'manipulation',
                   }}
                 >
-                  <GoogleG />
+                  <Icon name="google" size={22} />
                   Googleでログイン
                 </button>
 
@@ -248,12 +241,12 @@ export default function LinkPage() {
         </main>
 
         {/* 下のアイコンバー: 設定を光らせる */}
-        <BottomNav activeTab="settings" />
+        <BottomNav active="settings" />
       </div>
     );
   }
 
-  // ================= step 2: お知らせ画面の上にダイアログ =================
+  // step 2: お知らせ画面の上にダイアログ
   const iosNeedsHome = isIos && !isStandalone;
 
   return (
@@ -279,7 +272,7 @@ export default function LinkPage() {
               <div style={dialogBody}>インターネットに接続されていません。接続してからもう一度お試しください。</div>
             </>
           ) : notifyDone ? (
-            /* 連携済み(再連携) */
+            // 連携済み(再連携)
             <>
               <div id="link-dialog-title" style={dialogTitle}>連携済みです</div>
               <div style={dialogBody}>
@@ -289,12 +282,12 @@ export default function LinkPage() {
               <div style={dialogActions}>
                 <button type="button" onClick={() => navigate('/class')} disabled={busy} style={textBtn(busy)}>戻る</button>
                 <button type="button" onClick={confirmRestartLink} disabled={busy} style={darkBtn(busy)}>
-                  {busy ? '準備しています...' : '再連携する'}
+                  {busy ? t('link.preparing') : '再連携する'}
                 </button>
               </div>
             </>
           ) : iosNeedsHome ? (
-            /* 通知未許可: iPhone でホーム画面に追加していない */
+            // 通知未許可: iPhone でホーム画面に追加していない
             <>
               <div id="link-dialog-title" style={dialogTitle}>ホーム画面に追加してください</div>
               <div style={dialogBody}>iPhoneで通知を受け取るには、ホーム画面に追加したアイコンから開き直す必要があります。</div>
@@ -304,10 +297,10 @@ export default function LinkPage() {
               </div>
             </>
           ) : (
-            /* 通知未許可 */
+            // 通知未許可
             <>
               <div id="link-dialog-title" style={dialogTitle}>
-                {storage.get('relinking') === '1' ? '通知を許可すると再連携が完了します' : '連携が完了しました'}
+                {storage.get('relinking') === '1' ? t('link.relinkWaiting') : t('link.linked')}
               </div>
               <div style={dialogBody}>最後に、通知を許可してください。</div>
               {message && <div style={{ ...dialogBody, color: 'var(--warn-fg)' }}>{message}</div>}
@@ -316,7 +309,7 @@ export default function LinkPage() {
                 <button type="button" onClick={() => navigate('/class')} disabled={busy} style={textBtn(busy)}>あとで設定する</button>
                 <button type="button" onClick={enableNotifications} disabled={busy} aria-busy={busy} style={darkBtn(busy)}>
                   {busy && <Spinner />}
-                  {busy ? '設定中...' : '通知を有効にする'}
+                  {busy ? '設定中...' : t('link.enableNotify')}
                 </button>
               </div>
             </>

@@ -1,7 +1,8 @@
+// ホームに置く「次の授業」のガジェット(授業カード)。
 import React, { useLayoutEffect, useRef, useState } from 'react';
-import { shaded } from '../lib/courseTheme';
-import { THEMES } from '../lib/themes';
-import { currentFontSize } from '../lib/fontSize';
+import { shaded } from '../lib/ui/courseTheme';
+import { THEMES } from '../lib/ui/themes';
+import { currentFontSize } from '../lib/ui/fontSize';
 import globeImg from '../assets/images/class/globe.webp';
 
 // 次の授業のガジェット(授業カード)。枠いっぱいに、授業の色の面を出す。

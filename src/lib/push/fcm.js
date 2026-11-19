@@ -2,10 +2,10 @@
 // 取ったトークンは、ログイン済みなら users/{生徒ID}/fcmTokens に保存する(GAS が読む)。
 // 通知の許可は、ボタンを押したとき(ユーザーの操作の中)でしか求められない。ページを開いた時点では求めない。
 import { getMessaging, getToken, isSupported, onMessage } from 'firebase/messaging';
-import { app } from './firebase';
-import { CONFIG } from '../config';
-import { saveFcmTokenRemote, deleteFcmTokenRemote } from './firestoreLazy';
-import { isPushOffByUser } from './onesignal';
+import { app } from '../data/firebase';
+import { CONFIG } from '../../config';
+import { saveFcmTokenRemote, deleteFcmTokenRemote } from '../data/firestoreLazy';
+import { isPushOffByUser } from './pushOffFlag';
 
 const BASE = import.meta.env.BASE_URL; // 例: /BenriApp/
 

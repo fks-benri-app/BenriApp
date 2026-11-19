@@ -1,12 +1,11 @@
-import { watchUser } from './liveStore';
+// 通知が届いていない可能性の判定と、購読の状態の読み取り。
+import { watchUser } from '../data/liveStore';
 import { useEffect, useState } from 'react';
 import { getSubscriptionId } from './onesignal';
 
-/**
- * 通知が端末に届いていない可能性があるか。
- * GAS が通知を送ったとき、送り先が見つからなければ users/{studentId}.pushBroken を true にし、
- * 送れたら false に戻す。ここではそれを読むだけ(書き込みは GAS だけ)。
- */
+// 通知が端末に届いていない可能性があるか。
+// GAS が通知を送ったとき、送り先が見つからなければ users/{studentId}.pushBroken を true にし、
+// 送れたら false に戻す。ここではそれを読むだけ(書き込みは GAS だけ)。
 export function usePushBroken(studentId) {
   const [broken, setBroken] = useState(false);
   useEffect(() => {
@@ -19,13 +18,11 @@ export function usePushBroken(studentId) {
   return broken;
 }
 
-/**
- * OneSignal の External ID に使う、推測できない値(users/{studentId}.pushKey)。
- * GAS が「秘密の文字列 + 生徒ID」から作って保存する。生徒IDそのものを External ID にすると、
- * 他人のIDを指定するだけで他人の通知を受け取れてしまうため。
- * ※ Firestore のルールで、本人だけが読めることが前提(users/{id} は本人のみ)。
- * 値がまだ無いときは空文字を返す(GAS の保存待ち)。
- */
+// OneSignal の External ID に使う、推測できない値(users/{studentId}.pushKey)。
+// GAS が「秘密の文字列 + 生徒ID」から作って保存する。生徒IDそのものを External ID にすると、
+// 他人のIDを指定するだけで他人の通知を受け取れてしまうため。
+// ※ Firestore のルールで、本人だけが読めることが前提(users/{id} は本人のみ)。
+// 値がまだ無いときは空文字を返す(GAS の保存待ち)。
 export function usePushKey(studentId) {
   const [key, setKey] = useState('');
   useEffect(() => {
@@ -54,10 +51,8 @@ export function usePushKey(studentId) {
   return key;
 }
 
-/**
- * OneSignal 側の購読の一覧(users/{studentId}.pushSubs。GAS が30分に1回まで確認して保存する)。
- * [{ id, enabled }] を返す。まだ確認データが無いときは null。
- */
+// OneSignal 側の購読の一覧(users/{studentId}.pushSubs。GAS が30分に1回まで確認して保存する)。
+// [{ id, enabled }] を返す。まだ確認データが無いときは null。
 export function usePushSubs(studentId) {
   const [subs, setSubs] = useState(null);
   useEffect(() => {
@@ -76,7 +71,7 @@ export function usePushSubs(studentId) {
   return subs;
 }
 
-/** この端末の購読ID。一覧が更新されたときにも読み直す(付け直しで変わることがあるため) */
+// この端末の購読ID。一覧が更新されたときにも読み直す(付け直しで変わることがあるため)
 export function useDeviceSubscriptionId(subs) {
   const [id, setId] = useState(null);
   useEffect(() => {
@@ -89,13 +84,11 @@ export function useDeviceSubscriptionId(subs) {
   return id;
 }
 
-/**
- * この端末の通知が届いていない可能性があるか(端末ごとの判定)。
- * - 確認データ(pushSubs)がまだ無い → 従来どおり、GAS の送信結果(pushBroken)で判断する。
- * - この端末が購読していない(通知を許可していない)→ ここでは判断しない。
- * - この端末の購読が、一覧に無い・無効 → 届いていない可能性がある。
- * - 他の端末や、古い購読が無効でも、この端末には関係しない。
- */
+// この端末の通知が届いていない可能性があるか(端末ごとの判定)。
+// - 確認データ(pushSubs)がまだ無い → 従来どおり、GAS の送信結果(pushBroken)で判断する。
+// - この端末が購読していない(通知を許可していない)→ ここでは判断しない。
+// - この端末の購読が、一覧に無い・無効 → 届いていない可能性がある。
+// - 他の端末や、古い購読が無効でも、この端末には関係しない。
 export function judgeDeviceBroken(subs, ownId, sendBroken) {
   if (!subs) return sendBroken;
   if (!ownId) return false;

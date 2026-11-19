@@ -21,7 +21,7 @@ export function buildGasLoginUrl() {
   );
 }
 
-// ★ ここで必ず export const firebaseConfig としてエクスポートします
+// ここで必ず export const firebaseConfig としてエクスポートします
 export const firebaseConfig = {
   apiKey: "AIzaSyB6FxgxqrCvcGQavTVJ05PIDN4wqXXWv18",
   authDomain: "fks-benri-application.firebaseapp.com",

@@ -1,41 +1,24 @@
+// お知らせの取得(liveStore 経由)と、既読の管理。
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { loadFirestore } from './firestoreLazy';
-import { watchLive } from './liveStore';
-import { storage } from './storage';
-import { markAnnouncementReadRemote } from './firestoreLazy';
+import { loadFirestore } from '../data/firestoreLazy';
+import { watchLive, peekLive } from '../data/liveStore';
+import { storage } from '../data/storage';
+import { markAnnouncementReadRemote } from '../data/firestoreLazy';
 import { cleanTeacher, cleanText, courseKey, courseLabel, joinTitleAndBody, kindOf, shortCourse } from './filters';
 
 const READ_KEY = 'readIds';
 const ANNOUNCEMENT_LIMIT = 100; // 一覧は1つの購読で持つ。ホームは先頭だけを表示する
 
-// 前回取得したお知らせを覚えておき、開いた瞬間に表示する(あとで最新に差し替える)。
-// 端末ごとの保存なので、他の人には出ない。保存は新しい順に30件まで(本文の全文は保存しない)。
-const CACHE_KEY = 'announcementsCache';
+// 前回取得したお知らせは liveStore が覚えており、開いた瞬間に表示する(あとで最新に差し替える)。
+// 端末にも保存する(新しい順に30件まで。本文の全文は保存しない)。
 const CACHE_SAVE_MAX = 30;
-const memoryCache = new Map(); // studentId → 直近のお知らせ(この画面の中で再利用)
+const cacheKey = (studentId) => 'announcements:' + studentId;
 
-function loadCache(studentId) {
-  if (!studentId) return null;
-  if (memoryCache.has(studentId)) return memoryCache.get(studentId);
-  try {
-    const raw = JSON.parse(storage.get(CACHE_KEY) || 'null');
-    if (raw && raw.studentId === studentId && Array.isArray(raw.items)) {
-      // 「今日・昨日」の表示は、読んだ時点の日付で作り直す
-      const items = raw.items.map((a) => (a.receivedAtMs ? { ...a, time: formatTime(new Date(a.receivedAtMs)) } : a));
-      memoryCache.set(studentId, items);
-      return items;
-    }
-  } catch { /* 壊れていたら無視して読み直す */ }
-  return null;
-}
-
-function saveCache(studentId, items) {
-  memoryCache.set(studentId, items);
-  try {
-    const light = items.slice(0, CACHE_SAVE_MAX).map(({ body, rawBody, ...rest }) => rest);
-    storage.set(CACHE_KEY, JSON.stringify({ studentId, items: light }));
-  } catch { /* 保存できなくても表示は続ける */ }
-}
+// 保存した形 → 画面の形。「今日・昨日」の表示は、読んだ時点の日付で作り直す
+const reviveItems = (raw) => (Array.isArray(raw)
+  ? raw.map((a) => (a.receivedAtMs ? { ...a, time: formatTime(new Date(a.receivedAtMs)) } : a))
+  : []);
+const itemsToStored = (items) => items.slice(0, CACHE_SAVE_MAX).map(({ body, rawBody, ...rest }) => rest);
 
 function loadReadIds() {
   try {
@@ -98,42 +81,37 @@ function toAnnouncement(doc) {
   };
 }
 
-/**
- * 画面が使うのはこのフックだけ。
- * 将来ログインを入れて保存先のパスが変わっても、ここだけ直せば画面は変わらない。
- * @returns {{ status: 'loading'|'ready'|'error', items: Array, markRead: (id: string) => void, markAllRead: (ids: string[]) => void }}
- */
+// 画面が使うのはこのフックだけ。
+// 将来ログインを入れて保存先のパスが変わっても、ここだけ直せば画面は変わらない。
+// @returns {{ status: 'loading'|'ready'|'error', items: Array, markRead: (id: string) => void, markAllRead: (ids: string[]) => void }}
 export function useAnnouncements(studentId, { limitTo } = {}) {
   const [state, setState] = useState(() => {
-    const cached = loadCache(studentId);
+    const cached = studentId ? peekLive(cacheKey(studentId), reviveItems) : null;
     return cached ? { status: 'ready', items: cached } : { status: 'loading', items: [] };
   });
   const [readIds, setReadIds] = useState(loadReadIds);
 
   useEffect(() => {
     if (!studentId) return undefined;
-    const cached = loadCache(studentId);
+    const cached = peekLive(cacheKey(studentId), reviveItems);
     setState((prev) => (prev.items.length || prev.status === 'ready' ? prev : cached ? { status: 'ready', items: cached } : { status: 'loading', items: [] }));
     // 購読は端末で1つだけ。画面を開き直しても読み直さず、覚えてある値をすぐ出す。変わったところだけ届く
     return watchLive(
-      'announcements:' + studentId,
+      cacheKey(studentId),
       ({ fs, db }) => fs.query(
         fs.collection(db, 'users', studentId, 'announcements'),
         fs.orderBy('receivedAt', 'desc'),
         fs.limit(ANNOUNCEMENT_LIMIT)
       ),
       {
-        onSnap: (snap) => {
-          const items = snap.docs.map(toAnnouncement).filter((a) => !a.deleted);
-          saveCache(studentId, items);
-          setState({ status: 'ready', items });
-        },
+        onValue: (items) => setState({ status: 'ready', items }),
         onError: (error) => {
           console.error(error);
           // 前回の内容が表示できているなら、それを消さない(オフラインなど)
           setState((prev) => (prev.items.length ? prev : { status: 'error', items: [] }));
         },
-      }
+      },
+      { derive: (snap) => snap.docs.map(toAnnouncement).filter((a) => !a.deleted), toStored: itemsToStored }
     );
   }, [studentId]);
 
@@ -177,10 +155,8 @@ export function useAnnouncements(studentId, { limitTo } = {}) {
   return { status: state.status, items, markRead, markAllRead, readIds };
 }
 
-/**
- * 一覧にまだ無いお知らせを、1件だけ直接読む(通知を押した直後など、キャッシュに入っていないとき)。
- * 無ければ null。読み込みに失敗したときは例外を投げる。
- */
+// 一覧にまだ無いお知らせを、1件だけ直接読む(通知を押した直後など、キャッシュに入っていないとき)。
+// 無ければ null。読み込みに失敗したときは例外を投げる。
 export async function fetchAnnouncementById(studentId, docId) {
   const { fs, db } = await loadFirestore();
   const snap = await fs.getDoc(fs.doc(db, 'users', studentId, 'announcements', docId));

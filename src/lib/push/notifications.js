@@ -1,11 +1,20 @@
-import { watchUser } from './liveStore';
+// 通知の設定の窓口。授業ごとの設定と、この端末のオン/オフをここで扱う。
+import { watchUser } from '../data/liveStore';
 // 通知の設定(users/{生徒ID}.notifyPrefs)。
 // ・offCourses: オフの授業ID
 // ・remindAssignment: 課題の期限の知らせ。何日前に知らせるか(daysBefore)
 // ・remindUnread: 未読のお知らせの再通知。受け取ってから何時間後に知らせるか(afterHours)
-// 全体のオン/オフは端末ごとに、OneSignal の購読で決める(lib/onesignal.js)。
+//
+// 通知の設定は、このファイルが唯一の入口。
+//   1. 授業ごとの設定(Firestore の notifyPrefs)  … useNotifyPrefs / saveNotifyPrefs
+//   2. この端末のオン/オフ(OneSignal の購読 + FCM の登録トークン)  … getDevicePushEnabled / setDevicePushEnabled
+// OneSignal は移行が終わったら消す。そのときは、2. の中の OneSignal の呼び出しを外すだけで済む。
 import { useEffect, useState } from 'react';
-import { updateUserDoc } from './firestoreLazy';
+import { updateUserDoc } from '../data/firestoreLazy';
+import { getDevicePushEnabled as getOneSignalEnabled, setDevicePushEnabled as setOneSignalEnabled } from './onesignal';
+import { isPushOffByUser } from './pushOffFlag';
+
+export { isPushOffByUser };
 
 export const DAY_OPTIONS = [1, 2, 3];
 export const HOUR_OPTIONS = [12, 24, 72];
@@ -54,4 +63,19 @@ export function useNotifyPrefs(studentId) {
 // 通知の設定を保存する。本人だけが書けるように、Firestore のルールで notifyPrefs に限っている
 export async function saveNotifyPrefs(studentId, prefs) {
   await updateUserDoc(studentId, { notifyPrefs: normalizePrefs(prefs) });
+}
+
+// この端末のオン/オフ
+// 今オンかどうか
+export const getDevicePushEnabled = getOneSignalEnabled;
+
+// オン/オフを切り替える。OneSignal と FCM を同じ状態にそろえる。戻り値は、切り替えたあとの状態(オンなら true)。
+// オフ: FCM の登録トークンを消す(消すと FCM はこの端末に送らない)。
+// オン: FCM の登録トークンを取り直して保存する。
+export async function setDevicePushEnabled(studentId, on) {
+  const result = await setOneSignalEnabled(on);
+  const fcm = await import('./fcm');
+  if (result) fcm.refreshFcmTokenIfGranted(studentId).catch(() => {});
+  else fcm.removeFcmTokenForThisDevice(studentId).catch(() => {});
+  return result;
 }

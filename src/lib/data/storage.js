@@ -19,14 +19,14 @@ export const storage = {
     try {
       localStorage.setItem(PREFIX + key, value);
     } catch {
-      /* 保存できなくても動作は続ける */
+      // 保存できなくても動作は続ける
     }
   },
   remove(key) {
     try {
       localStorage.removeItem(PREFIX + key);
     } catch {
-      /* noop */
+      // noop
     }
   },
   clearAll() {
@@ -35,7 +35,7 @@ export const storage = {
         .filter((k) => k.startsWith(PREFIX))
         .forEach((k) => localStorage.removeItem(k));
     } catch {
-      /* noop */
+      // noop
     }
   },
 };

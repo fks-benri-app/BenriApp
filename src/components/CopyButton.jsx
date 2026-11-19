@@ -1,3 +1,4 @@
+// 文字をクリップボードにコピーするボタン。
 import React from 'react';
 import copyIcon from '../assets/images/icons/copy.svg';
 

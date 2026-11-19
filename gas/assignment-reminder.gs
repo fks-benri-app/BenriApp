@@ -138,14 +138,13 @@ function sendDueReminders() {
       return;
     }
     try {
-      const res = sendDirectNotification_(
-        pushTargets_(r.studentId),
+      const sent = sendPushToStudent_(
+        r.studentId,
         r.courseName || '課題',
         '明日が期限: ' + r.title,
         APP_URL + '?open=' + encodeURIComponent(r.docId)
       );
-      recordPushResult_(r.studentId, res);
-      if (res && res.id) markFlag_(r, 'reminded'); // 送れたときだけ印を立てる
+      if (sent.ok) markFlag_(r, 'reminded'); // 送れたときだけ印を立てる
     } catch (e) {
       console.error('期限の知らせに失敗(' + r.docId + '): ' + e);
     }
@@ -172,14 +171,13 @@ function sendUnreadReminders() {
       return;
     }
     try {
-      const res = sendDirectNotification_(
-        pushTargets_(r.studentId),
+      const sent = sendPushToStudent_(
+        r.studentId,
         r.courseName || 'お知らせ',
         '未読のお知らせ: ' + r.title,
         APP_URL + '?open=' + encodeURIComponent(r.docId)
       );
-      recordPushResult_(r.studentId, res);
-      if (res && res.id) markFlag_(r, 'unreadNotified');
+      if (sent.ok) markFlag_(r, 'unreadNotified');
     } catch (e) {
       console.error('未読の再通知に失敗(' + r.docId + '): ' + e);
     }

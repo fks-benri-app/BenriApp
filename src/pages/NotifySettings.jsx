@@ -1,11 +1,13 @@
+// 通知の設定画面。この端末のオン/オフと、授業ごとの設定。
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useIdentity } from '../auth/identity';
+import Icon from '../components/Icon';
 import Switch from '../components/Switch';
-import { currentFontSize } from '../lib/fontSize';
-import { useAnnouncements } from '../lib/announcements';
-import { DAY_OPTIONS, HOUR_OPTIONS, courseIdOf, saveNotifyPrefs, useNotifyPrefs } from '../lib/notifyPrefs';
-import { getDevicePushEnabled, setDevicePushEnabled } from '../lib/onesignal';
+import { currentFontSize } from '../lib/ui/fontSize';
+import { useAnnouncements } from '../lib/announce/announcements';
+import { DAY_OPTIONS, HOUR_OPTIONS, courseIdOf, saveNotifyPrefs, useNotifyPrefs, getDevicePushEnabled, setDevicePushEnabled } from '../lib/push/notifications';
+import { t } from '../lib/ui/text';
 
 // 通知の詳細設定。ベル・設定の「クラスルーム通知」から開く
 export default function NotifySettings() {
@@ -50,14 +52,9 @@ export default function NotifySettings() {
     if (deviceOn === null) return;
     setNote('');
     try {
-      const on = await setDevicePushEnabled(!deviceOn);
-      setDeviceOn(on);
-      // FCM も同じ設定に合わせる。オフなら、この端末の登録トークンを消す。オンなら、取り直して保存する
-      const fcm = await import('../lib/fcm');
-      if (on) fcm.refreshFcmTokenIfGranted(studentId).catch(() => {});
-      else fcm.removeFcmTokenForThisDevice(studentId).catch(() => {});
+      setDeviceOn(await setDevicePushEnabled(studentId, !deviceOn));
     } catch {
-      setNote('この端末の通知を切り替えられませんでした。通知の許可を確かめてください。');
+      setNote(t('notifySettings.toggleFailed'));
     }
   }
 
@@ -71,7 +68,7 @@ export default function NotifySettings() {
     } catch (e) {
       console.error('通知設定の保存に失敗', e);
       setOffOverride(null);
-      setNote('保存できませんでした(' + (e && e.code ? e.code : '不明なエラー') + ')。もう一度押してください。');
+      setNote(t('notifySettings.saveFailed', { code: e && e.code ? e.code : '不明なエラー' }));
     }
   }
   const offCourses = offOverride || prefs.offCourses;
@@ -83,7 +80,7 @@ export default function NotifySettings() {
       await saveNotifyPrefs(studentId, { ...prefs, ...patch });
     } catch (e) {
       console.error('リマインドの設定の保存に失敗', e);
-      setNote('保存できませんでした(' + (e && e.code ? e.code : '不明なエラー') + ')。もう一度押してください。');
+      setNote(t('notifySettings.saveFailed', { code: e && e.code ? e.code : '不明なエラー' }));
     }
   }
 
@@ -111,9 +108,7 @@ export default function NotifySettings() {
             style={{ width: '48px', height: '48px', margin: '0 -12px 0 -12px', border: 'none', background: 'transparent', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', touchAction: 'manipulation', flexShrink: 0 }}
           >
             {/* 設定画面の矢印(Chevron)と同じ線の太さ・形を、向きだけ反転させる */}
-            <svg width="1.143em" height="1.143em" viewBox="0 0 20 20" fill="none" aria-hidden="true" style={{ transform: 'scaleX(-1)' }}>
-              <path d="M7.5 5l5 5-5 5" style={{ stroke: 'var(--text-strong)' }} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            <Icon name="chevronRight" size="1.143em" color="var(--text-strong)" style={{ transform: 'scaleX(-1)' }} />
           </button>
           <div style={{ color: 'var(--text-strong)', fontSize: '1.571em', fontFamily: 'Inter', fontWeight: 800 }}>通知設定</div>
         </div>
@@ -131,7 +126,7 @@ export default function NotifySettings() {
               onClick={toggleDevice}
               disabled={deviceOn === null}
               aria-pressed={!!deviceOn}
-              aria-label="この端末で通知を受け取る"
+              aria-label={t('notifySettings.deviceToggle')}
               style={{ border: 'none', background: 'transparent', padding: 0, cursor: deviceOn === null ? 'default' : 'pointer', flexShrink: 0 }}
             >
               <Switch on={!!deviceOn} disabled={deviceOn === null} />
@@ -182,7 +177,7 @@ export default function NotifySettings() {
               onClick={() => saveRemind({ remindAssignment: { ...prefs.remindAssignment, on: !prefs.remindAssignment.on } })}
               disabled={!loaded}
               aria-pressed={prefs.remindAssignment.on}
-              aria-label="課題の期限を知らせる"
+              aria-label={t('notifySettings.assignmentRemind')}
               style={{ border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', flexShrink: 0 }}
             >
               <Switch on={prefs.remindAssignment.on} disabled={!loaded} />
@@ -215,7 +210,7 @@ export default function NotifySettings() {
               onClick={() => saveRemind({ remindUnread: { ...prefs.remindUnread, on: !prefs.remindUnread.on } })}
               disabled={!loaded}
               aria-pressed={prefs.remindUnread.on}
-              aria-label="未読のお知らせを知らせる"
+              aria-label={t('notifySettings.unreadRemind')}
               style={{ border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', flexShrink: 0 }}
             >
               <Switch on={prefs.remindUnread.on} disabled={!loaded} />

@@ -198,6 +198,7 @@ function fcmSyncStudent_(studentId) {
 // ----- 送信(OneSignal と並行する移行期間の用)。USE_FCM が false の間は何もしない -----
 
 // 授業のトピックへ1件送る(授業の購読している全端末へ届く)。共有通知の送る役が、1回だけ呼ぶ
+// 授業のトピックへ送る。いまは使っていない(目標の授業ごとの保存に移ったときに使う)
 function fcmSendToCourse_(courseId, title, body, url, data) {
   if (!USE_FCM) return;
   const r = fcmSend_({ topic: topicForCourse_(courseId) }, title, body, url, data);

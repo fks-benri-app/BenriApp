@@ -1,19 +1,20 @@
+// 設定画面。アカウント・通知・ダークモード・フィードバック。
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useIdentity } from '../auth/identity';
+import Icon from '../components/Icon';
 import BottomNav from '../components/BottomNav';
-import { currentFontSize, setFontSize, FONT_SIZE_MIN, FONT_SIZE_MAX, FONT_SIZE_DEFAULT } from '../lib/fontSize';
-import { isDarkMode, toggleDarkMode } from '../lib/themes';
-import { useAccountName } from '../lib/account';
+import { currentFontSize, setFontSize, FONT_SIZE_MIN, FONT_SIZE_MAX, FONT_SIZE_DEFAULT } from '../lib/ui/fontSize';
+import { isDarkMode, toggleDarkMode } from '../lib/ui/darkMode';
+import { useAccountName } from '../lib/data/account';
 import pkg from '../../package.json';
 import Switch from '../components/Switch';
-import { useNotifyPrefs } from '../lib/notifyPrefs';
-import { isPushOffByUser } from '../lib/onesignal';
+import { useNotifyPrefs, isPushOffByUser } from '../lib/push/notifications';
+import { t } from '../lib/ui/text';
 
 // フィードバックのフォームのURL。ここに入れると押せるようになる(空の間は灰色で押せない)
 const FEEDBACK_FORM_URL = 'https://forms.gle/pmiB1KdWofSkPgrd8';
 
-const NO_SCROLLBAR_CSS = '.no-scrollbar{scrollbar-width:none;-ms-overflow-style:none}.no-scrollbar::-webkit-scrollbar{display:none}';
 const GREY = 'var(--text-faint)';
 
 // 生徒ID(6桁)から学年・組・番号を読み取る。例: 250710 → 2025年入学の7組10番 → 今年度は2年7組10番
@@ -29,9 +30,7 @@ function classOf(id) {
 }
 
 const Chevron = ({ dim }) => (
-  <svg width="1.143em" height="1.143em" viewBox="0 0 20 20" fill="none" aria-hidden="true" style={{ flexShrink: 0 }}>
-    <path d="M7.5 5l5 5-5 5" style={{ stroke: dim ? GREY : 'var(--text-muted)' }} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
+  <Icon name="chevronRight" size="1.143em" color={dim ? GREY : 'var(--text-muted)'} />
 );
 
 function Section({ title, children }) {
@@ -151,9 +150,8 @@ export default function Settings() {
         WebkitTouchCallout: 'none',
       }}
     >
-      <style>{NO_SCROLLBAR_CSS}</style>
 
-      {/* ===== ヘッダー(Class.jsx と同じ形式) ===== */}
+      {/* ヘッダー(Class.jsx と同じ形式) */}
       <header
         style={{
           flexShrink: 0,
@@ -173,7 +171,7 @@ export default function Settings() {
         </div>
       </header>
 
-      {/* ===== 本体 ===== */}
+      {/* 本体 */}
       <main
         className="no-scrollbar"
         style={{
@@ -212,14 +210,11 @@ export default function Settings() {
                 flexShrink: 0,
               }}
             >
-              <svg width="1.8em" height="1.8em" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <circle cx="12" cy="8" r="4" style={{ stroke: GREY }} strokeWidth="2" />
-                <path d="M4 20c1-4 4-6 8-6s7 2 8 6" style={{ stroke: GREY }} strokeWidth="2" strokeLinecap="round" />
-              </svg>
+              <Icon name="account" size="1.8em" color={GREY} />
             </div>
             <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '0.286em' }}>
               <div style={{ color: 'var(--text-strong)', fontSize: '1.286em', fontFamily: 'Inter', fontWeight: 700 }}>
-                {accountName || 'ログイン中のアカウント'}
+                {accountName || t('settings.account')}
               </div>
               <div style={{ color: 'var(--text-muted)', fontSize: '0.929em' }}>
                 {studentClass ? studentClass : `生徒ID ${identity ? identity.id : '-'}`}
@@ -229,13 +224,13 @@ export default function Settings() {
           </div>
 
           <Section title="通知設定">
-            <Row label="クラスルーム通知" value={isPushOffByUser() ? 'オフ' : notifyPrefs.offCourses.length ? `${notifyPrefs.offCourses.length}件の授業がオフ` : 'すべてオン'} onClick={() => navigate('/settings/notify', { state: { from: '/settings' } })} />
+            <Row label={t('settings.notify')} value={isPushOffByUser() ? 'オフ' : notifyPrefs.offCourses.length ? `${notifyPrefs.offCourses.length}件の授業がオフ` : 'すべてオン'} onClick={() => navigate('/settings/notify', { state: { from: '/settings' } })} />
             <Divider />
             <Row label="授業前通知" disabled />
           </Section>
 
           <Section title="画面表示">
-            <Row label="ダークモード" chevron={false} onClick={() => setDark(toggleDarkMode())} value={<Switch on={dark} />} />
+            <Row label={t('settings.darkMode')} chevron={false} onClick={() => setDark(toggleDarkMode())} value={<Switch on={dark} />} />
             <Divider />
             <div
               style={{
@@ -286,16 +281,16 @@ export default function Settings() {
           </Section>
 
           <Section title="サポート">
-            <Row label="フィードバックを送る" disabled={!FEEDBACK_FORM_URL} onClick={FEEDBACK_FORM_URL ? openFeedback : undefined} />
+            <Row label={t('settings.feedback')} disabled={!FEEDBACK_FORM_URL} onClick={FEEDBACK_FORM_URL ? openFeedback : undefined} />
             <Divider />
-            <Row label="アプリのバージョン" value={`v${pkg.version}`} />
+            <Row label={t('settings.version')} value={`v${pkg.version}`} />
           </Section>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.857em' }}>
             <OutlineButton color="var(--text-strong)" bg="var(--surface)" border="var(--line)" onClick={() => navigate('/link?relink=1')}>
               再連携する
             </OutlineButton>
-            <OutlineButton color="var(--danger-fg)" bg="var(--danger-bg)" border={null} onClick={() => setNote('アカウントの削除は準備中です。')}>
+            <OutlineButton color="var(--danger-fg)" bg="var(--danger-bg)" border={null} onClick={() => setNote(t('settings.deleteSoon'))}>
               アカウントを削除する
             </OutlineButton>
             {note && (
@@ -307,7 +302,7 @@ export default function Settings() {
         </div>
       </main>
 
-      {/* ===== 下のバー(Class.jsx と同じ形式) ===== */}
+      {/* 下のバー(Class.jsx と同じ形式) */}
       <BottomNav active="settings" onSelect={onSelectTab} />
     </div>
   );

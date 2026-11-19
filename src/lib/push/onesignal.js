@@ -1,14 +1,6 @@
-import { CONFIG } from '../config';
-import { storage } from './storage';
-
-// この端末の通知を、利用者が自分でオフにしたかどうか(オフの間は、自動でオンに戻さない)
-const PUSH_OFF_KEY = 'pushOffByUser';
-export function isPushOffByUser() {
-  return storage.get(PUSH_OFF_KEY) === '1';
-}
-function setPushOffByUser(off) {
-  storage.set(PUSH_OFF_KEY, off ? '1' : '0');
-}
+// OneSignal の操作(購読・ログイン・購読の付け直し)。移行が終わったら、このファイルごと消す。
+import { CONFIG } from '../../config';
+import { isPushOffByUser, setPushOffByUser } from './pushOffFlag';
 
 window.OneSignalDeferred = window.OneSignalDeferred || [];
 
@@ -45,14 +37,12 @@ export function initOneSignal() {
   return initPromise;
 }
 
-/**
- * 通知を許可してもらい、externalId にこの端末をひもづける。
- * externalId は生徒IDではなく、GAS が作った推測できない値(users/{id}.pushKey)を渡すこと。
- * externalId が空(キーがまだ届いていない)ときは、許可と購読の作成だけ行う。
- * ひもづけは、キーが届いたあとに、お知らせ画面が ensureSubscription で自動で行う。
- * @param {() => void} [onPermissionDone] 許可の画面が終わって、登録の待ちに入るときに呼ばれる
- * @returns {{ ok: true, synced: boolean } | { ok: false, reason: 'denied' | 'timeout' }}
- */
+// 通知を許可してもらい、externalId にこの端末をひもづける。
+// externalId は生徒IDではなく、GAS が作った推測できない値(users/{id}.pushKey)を渡すこと。
+// externalId が空(キーがまだ届いていない)ときは、許可と購読の作成だけ行う。
+// ひもづけは、キーが届いたあとに、お知らせ画面が ensureSubscription で自動で行う。
+// @param {() => void} [onPermissionDone] 許可の画面が終わって、登録の待ちに入るときに呼ばれる
+// @returns {{ ok: true, synced: boolean } | { ok: false, reason: 'denied' | 'timeout' }}
 export async function subscribeAs(externalId, onPermissionDone) {
   await initOneSignal();
   return withOneSignal(async (OneSignal) => {
@@ -103,13 +93,11 @@ export async function subscribeAs(externalId, onPermissionDone) {
   });
 }
 
-/**
- * 通知を許可ずみの端末で、購読の状態を確認し、ずれていれば付け直す(アプリを開くたびに呼ぶ)。
- * - 通知を許可していない端末には何もしない。
- * - External ID が違う / 空なら、正しい生徒IDでつなぎ直す。
- * - 購読が OFF になっていれば ON に戻す。
- * ※ サーバー側だけで無効になっている場合は、ここでは直せない(GAS が検知して「通知を直す」カードを出す)。
- */
+// 通知を許可ずみの端末で、購読の状態を確認し、ずれていれば付け直す(アプリを開くたびに呼ぶ)。
+// - 通知を許可していない端末には何もしない。
+// - External ID が違う / 空なら、正しい生徒IDでつなぎ直す。
+// - 購読が OFF になっていれば ON に戻す。
+// ※ サーバー側だけで無効になっている場合は、ここでは直せない(GAS が検知して「通知を直す」カードを出す)。
 export async function ensureSubscription(externalId) {
   await initOneSignal();
   return withOneSignal(async (OneSignal) => {

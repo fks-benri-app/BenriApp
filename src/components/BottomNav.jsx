@@ -1,3 +1,4 @@
+// 画面の下のタブバー(ホーム・お知らせ・設定)。
 import React from 'react';
 
 import homeIcon from '../assets/images/icons/home.svg';
@@ -16,7 +17,7 @@ export const TABS = [
   { id: 'settings', label: '設定', icon: settingsIcon, activeIcon: settingsActiveIcon },
 ];
 
-// Class.jsx の下のバーと同じ見た目。押したタブの扱いは、使う側(onSelect)で決める。
+// 画面の下のタブバー。押したタブの扱いは、使う側(onSelect)で決める(省略すると、押しても何も起きない)。
 export default function BottomNav({ active, onSelect }) {
   return (
     <nav
@@ -37,7 +38,7 @@ export default function BottomNav({ active, onSelect }) {
         return (
           <div
             key={tab.id}
-            onClick={() => onSelect(tab.id)}
+            onClick={onSelect ? () => onSelect(tab.id) : undefined}
             style={{
               display: 'flex',
               flexDirection: 'column',

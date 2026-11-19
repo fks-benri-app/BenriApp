@@ -81,7 +81,7 @@ npm run preview # ビルド結果の確認
 - `main` に push すると、GitHub Actions(`.github/workflows/deploy.yml`)がビルドして、GitHub Pages に公開します。
 - `vite.config.js` の `base` は、リポジトリ名(`/BenriApp/`)に合わせてあります。変えると、JS・CSS が読み込めず、画面が真っ白になります。
 - ライブラリは、チャンクに分けて配信します(`vite.config.js` の `manualChunks`)。`vendor-react` と `vendor-firebase` は起動時に読み、`vendor-firestore` は必要になったときに読みます。
-- Firestore は直接 import しないでください。`src/lib/firestoreLazy.js` から使います。購読は `subscribe`、保存は `updateUserDoc` を使います。
+- Firestore は直接 import しないでください。`src/lib/data/firestoreLazy.js` から使います。購読は `subscribe`、保存は `updateUserDoc` を使います。
 - 設定値(GAS の URL、OneSignal の App ID)は `src/config.js` にあります。
 
 ## リポジトリの構成
@@ -90,23 +90,23 @@ npm run preview # ビルド結果の確認
 public/                       そのまま配信されるファイル(manifest、OneSignal の Service Worker、修復ページ repair.html)
 src/config.js                 GAS_URL、OneSignal App ID、Firebase の設定
 src/auth/identity.jsx         ログイン状態の窓口(GAS のトークンで Firebase にログイン)
-src/lib/firebase.js           Firebase App と Auth(Firestore は含まない)
-src/lib/firestoreLazy.js      Firestore を必要になったときに読み込む
-src/lib/onesignal.js          OneSignal の初期化・購読・購読状態の確認
-src/lib/pushStatus.js         pushKey の取得、「通知を直す」の表示の判定
-src/lib/notifyPrefs.js        授業ごとの通知設定(users/{生徒ID}.notifyPrefs)
-src/lib/announcements.js      お知らせの取得・既読の管理・端末へのキャッシュ
-src/lib/account.js            アカウント名の取得(端末に保存して、次回すぐ表示)
-src/lib/homeLayout.js         ホームのマス目、ガジェットの配置(重なりの解消・保存)
-src/lib/bootOpen.js           通知から開いたときの画面の判定
-src/lib/storage.js            localStorage のラッパー
-src/lib/timetable*.js         時間割読み取り(テスト機能)。OCR・表の組み立て・授業名との照合
+src/lib/data/                 Firebase・Firestore・購読の共有(liveStore)・localStorage・アカウント名
+src/lib/announce/             お知らせの取得と既読、絞り込み、通知から開いたときの判定
+src/lib/push/                 通知。OneSignal・FCM・購読の状態・端末のオン/オフと授業ごとの設定(notifications.js が窓口)
+src/lib/ui/                   テーマの色、文字サイズ、ホームのマス目と配置
+src/lib/timetable/            時間割読み取り(テスト機能)。OCR・表の組み立て・授業名との照合
 src/gadgets/gadgets.json      ホームに置けるガジェットの設定
 src/gadgets/index.js          gadgets.json を読み込み、形式を確かめる
 src/gadgets/components.js     gadgets.json の type と、中身の部品の対応表
 src/gadgets/ClassNoticesGadget.jsx  「お知らせ」ガジェットの中身
 src/pages/Home.jsx            ホーム画面(ガジェットを並べる・編集する)
-src/pages/Class.jsx           お知らせの一覧と詳細
+src/pages/Class.jsx           お知らせ画面(部品は src/pages/class/)
+src/pages/Home.jsx            ホーム画面(ガジェット1枚の描画は src/pages/home/)
+src/data/                     画面に出す値のまとめ(JSON)。変えたいときはここを直す
+                                text.json(文章)/ icons.json(アイコンの形)/ themes.json・courseThemes.json(色)
+                                tagFilters.json(絞り込み)/ homeConfig.json(ホームの動きの数値)
+src/components/               複数の画面で使う部品(タブバー・Icon など)
+src/pages/dev/                開発用のテスト画面(OCR・FCM)
 src/pages/Settings.jsx        設定画面
 src/pages/NotifySettings.jsx  通知の詳細設定(授業ごとのオン・オフ)
 src/pages/LinkPage.jsx        ログイン画面と、通知許可・再連携のダイアログ

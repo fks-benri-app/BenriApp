@@ -1,0 +1,7 @@
+[
+  { "id": "all", "label": "すべて" },
+  { "id": "unread", "label": "未読" },
+  { "id": "read", "label": "既読" },
+  { "id": "test", "label": "テスト関連" },
+  { "id": "festival", "label": "とんぼ祭関連" }
+]

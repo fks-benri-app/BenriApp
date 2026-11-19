@@ -3,7 +3,7 @@
 // 全角/半角・大文字/小文字の違いを無視して検索できるようにそろえる
 export const normalize = (s) => String(s || '').normalize('NFKC').toLowerCase();
 
-// ===== 授業 =====
+// 授業
 // メールの授業名「２-CF②　体育　2026」→ 表示名「２-CF② 体育」
 // (空白を1つにそろえ、末尾の年(2026 / 2026年度)は外す。年が変わっても同じ授業としてまとめるため)
 export function courseLabel(courseName) {
@@ -18,7 +18,7 @@ export function courseKey(courseName) {
   return normalize(shortCourse(courseName));
 }
 
-// ===== 形式 =====
+// 形式
 export const KIND_OPTIONS = [
   { id: 'announcement', label: 'お知らせ' },
   { id: 'assignment', label: '課題' },
@@ -35,7 +35,7 @@ export function kindOf(category) {
   return 'other';
 }
 
-// ===== 絞り込みメニュー用 =====
+// 絞り込みメニュー用
 // 手元のお知らせから、授業の選択肢を作る(件数つき、名前順)
 export function buildCourseOptions(items) {
   const map = new Map();
@@ -48,10 +48,8 @@ export function buildCourseOptions(items) {
   return [...map.values()].sort((a, b) => a.label.localeCompare(b.label, 'ja'));
 }
 
-/**
- * @param items   useAnnouncements() の items
- * @param filters { tag: 'all'|'unread'|'read'|'test'|'festival', course: ''|キー, kind: ''|形式id, query: string }
- */
+// @param items   useAnnouncements() の items
+// @param filters { tag: 'all'|'unread'|'read'|'test'|'festival', course: ''|キー, kind: ''|形式id, query: string }
 export function filterAnnouncements(items, { tag = 'all', course = '', kind = '', query = '' }) {
   const q = normalize(String(query).trim());
   return items.filter((a) => {
@@ -65,7 +63,7 @@ export function filterAnnouncements(items, { tag = 'all', course = '', kind = ''
   });
 }
 
-// ===== 表示用の文章の整え =====
+// 表示用の文章の整え
 const CJK = '\\u3000-\\u303f\\u3040-\\u30ff\\u3400-\\u9fff\\uff00-\\uffef';
 const CJK_GAP = new RegExp(`([${CJK}])[ \\t\\u3000]+(?=[${CJK}])`, 'g');
 const wideChar = new RegExp(`[${CJK}]`);

@@ -1,0 +1,130 @@
+{
+ "default": "gray",
+ "kinds": {
+  "announcement": "orangeRed",
+  "assignment": "orangeRed",
+  "material": "orangeRed"
+ },
+ "courses": [
+  {
+   "match": "化学",
+   "theme": "blue"
+  },
+  {
+   "match": "物理",
+   "theme": "indigo"
+  },
+  {
+   "match": "生物",
+   "theme": "teal"
+  },
+  {
+   "match": "地学",
+   "theme": "cyan"
+  },
+  {
+   "match": "数学",
+   "theme": "indigo"
+  },
+  {
+   "match": "古典",
+   "theme": "red"
+  },
+  {
+   "match": "英語",
+   "theme": "cyan"
+  },
+  {
+   "match": "コミュ",
+   "theme": "shuiro"
+  },
+  {
+   "match": "論理表現",
+   "theme": "pink"
+  },
+  {
+   "match": "論表",
+   "theme": "pink"
+  },
+  {
+   "match": "論理国語",
+   "theme": "red"
+  },
+  {
+   "match": "論国",
+   "theme": "red"
+  },
+  {
+   "match": "国語",
+   "theme": "red"
+  },
+  {
+   "match": "保健",
+   "theme": "green"
+  },
+  {
+   "match": "体育",
+   "theme": "emerald"
+  },
+  {
+   "match": "情報",
+   "theme": "blue"
+  },
+  {
+   "match": "家庭",
+   "theme": "lime"
+  },
+  {
+   "match": "美術",
+   "theme": "violet"
+  },
+  {
+   "match": "書道",
+   "theme": "violet"
+  },
+  {
+   "match": "音楽",
+   "theme": "pink"
+  },
+  {
+   "match": "地理",
+   "theme": "amber"
+  },
+  {
+   "match": "史",
+   "theme": "orange"
+  },
+  {
+   "match": "公共",
+   "theme": "yellow"
+  },
+  {
+   "match": "政経",
+   "theme": "amber"
+  },
+  {
+   "match": "落とし物",
+   "theme": "red"
+  },
+  {
+   "match": "学年",
+   "theme": "teal"
+  },
+  {
+   "match": "探究",
+   "theme": "emerald"
+  },
+  {
+   "match": "生徒会",
+   "theme": "green"
+  },
+  {
+   "match": "とんぼ祭",
+   "theme": "orangeRed"
+  },
+  {
+   "match": "組",
+   "theme": "gray"
+  }
+ ]
+}

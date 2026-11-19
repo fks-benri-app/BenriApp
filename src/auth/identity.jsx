@@ -1,20 +1,18 @@
-/**
- * 「このアプリを使っているのは誰か」を一手に引き受けるモジュール。
- *
- * 現在: GAS(学校アカウントで動く)が発行した Firebase のカスタムトークンでログインする。
- *       トークンは連携画面から戻るときに、URL の #token=… で渡される。uid = 生徒ID(6桁)。
- *       ログインの状態は Firebase Auth が端末に保存するので、毎回の再ログインは要らない。
- * 他の部分は useIdentity() しか使わないので、ここだけ差し替えれば済む。
- *
- * useIdentity() が返す形:
- *   ready: boolean  … ログイン状態の確認が終わったか(終わるまで画面を出さない)
- *   identity: null | { id: string, source: 'firebase' }
- *   signOut(): Promise<void>
- */
+// 「このアプリを使っているのは誰か」を一手に引き受けるモジュール。
+//
+// 現在: GAS(学校アカウントで動く)が発行した Firebase のカスタムトークンでログインする。
+//       トークンは連携画面から戻るときに、URL の #token=… で渡される。uid = 生徒ID(6桁)。
+//       ログインの状態は Firebase Auth が端末に保存するので、毎回の再ログインは要らない。
+// 他の部分は useIdentity() しか使わないので、ここだけ差し替えれば済む。
+//
+// useIdentity() が返す形:
+//   ready: boolean  … ログイン状態の確認が終わったか(終わるまで画面を出さない)
+//   identity: null | { id: string, source: 'firebase' }
+//   signOut(): Promise<void>
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { onAuthStateChanged, signInWithCustomToken, signOut as firebaseSignOut } from 'firebase/auth';
-import { auth } from '../lib/firebase';
-import { KEYS, storage } from '../lib/storage';
+import { auth } from '../lib/data/firebase';
+import { KEYS, storage } from '../lib/data/storage';
 
 // 学年コード3桁 + 組1桁 + 出席番号2桁 = 6桁
 const STUDENT_ID_PATTERN = /^\d{6}$/;
