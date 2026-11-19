@@ -21,6 +21,7 @@ import searchIcon from '../assets/images/icons/search.svg';
 import bellIcon from '../assets/images/icons/bell.svg';
 import bellOffIcon from '../assets/images/icons/bell-off.svg';
 import readAllIcon from '../assets/images/icons/read-all.svg';
+import { t } from '../lib/ui/text';
 
 const FILTERS = tagFilters;
 
@@ -188,10 +189,10 @@ export default function Class() {
     status === 'loading'
       ? ''
       : status === 'error'
-        ? '読み込みに失敗しました'
+        ? t('class.loadFailed')
         : query.trim()
-          ? `「${query.trim()}」に一致するお知らせはありません`
-          : '該当するお知らせはありません';
+          ? t('class.noMatch', { query: query.trim() })
+          : t('class.none');
 
   return (
     <div style={{
@@ -241,8 +242,8 @@ export default function Class() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Escape') closeSearch(); }}
-                placeholder="教科・先生・本文で検索"
-                aria-label="お知らせを検索"
+                placeholder={t('class.searchPlaceholder')}
+                aria-label={t('class.searchLabel')}
                 enterKeyHint="search"
                 style={{
                   flex: 1,
@@ -298,8 +299,8 @@ export default function Class() {
                   type="button"
                   onClick={readAllShown}
                   disabled={unreadShown.length === 0}
-                  aria-label="表示中の未読をすべて既読にする"
-                  title="表示中の未読をすべて既読にする"
+                  aria-label={t('class.readAll')}
+                  title={t('class.readAll')}
                   style={{
                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                     width: '1.571em', height: '1.571em', padding: 0, border: 'none', background: 'transparent',
@@ -312,8 +313,8 @@ export default function Class() {
                 <button
                   type="button"
                   onClick={() => navigate('/settings/notify', { state: { from: '/class' } })}
-                  aria-label={devicePushOn ? '通知設定' : '通知設定(この端末はオフ)'}
-                  title={devicePushOn ? '通知設定' : '通知設定(この端末はオフ)'}
+                  aria-label={devicePushOn ? '通知設定' : t('common.bellOff')}
+                  title={devicePushOn ? '通知設定' : t('common.bellOff')}
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
@@ -397,18 +398,18 @@ export default function Class() {
         {/* プルダウン: 授業・形式 */}
         <div style={{ padding: '0 1.714em', display: 'flex', gap: '0.571em', marginTop: '-0.476em' }}>
           <FilterSelect fontPx={baseFontSize}
-            label="授業で絞り込み"
+            label={t('class.courseFilter')}
             value={courseValue}
             onChange={setCourse}
-            allLabel="すべての授業"
+            allLabel={t('class.allCourses')}
             theme={courseColor}
             options={courseOptions}
           />
           <FilterSelect fontPx={baseFontSize}
-            label="形式で絞り込み"
+            label={t('class.kindFilter')}
             value={kind}
             onChange={setKind}
-            allLabel="すべての形式"
+            allLabel={t('class.allKinds')}
             theme={kindColor}
             options={KIND_OPTIONS}
           />

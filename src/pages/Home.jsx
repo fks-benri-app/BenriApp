@@ -9,6 +9,7 @@ import bellIcon from '../assets/images/icons/bell.svg';
 import bellOffIcon from '../assets/images/icons/bell-off.svg';
 import { getDevicePushEnabled } from '../lib/push/notifications';
 import { BASE_COLS, gridFor, loadLayout, rangeFor, resolveLayout, saveLayout } from '../lib/ui/homeLayout';
+import { t } from '../lib/ui/text';
 
 // .hm-press: 押せるものは、押している間 0.95 倍に縮む(静かな動き)
 const NO_SCROLLBAR_CSS = '.no-scrollbar{scrollbar-width:none;-ms-overflow-style:none}.no-scrollbar::-webkit-scrollbar{display:none}'
@@ -310,7 +311,7 @@ export default function Home() {
       }}>
         <div style={{ padding: '0 1.714em', height: '34px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.857em' }}>
           <div style={{ color: 'var(--text-strong)', fontSize: '1.871em', fontFamily: 'Inter', fontWeight: 800, userSelect: 'none', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {editing ? 'ホームを編集' : 'ホーム'}
+            {editing ? t('home.edit') : 'ホーム'}
           </div>
           {editing ? (
             <button
@@ -328,8 +329,8 @@ export default function Home() {
             <button
               type="button"
               onClick={() => navigate('/settings/notify', { state: { from: '/' } })}
-              aria-label={devicePushOn ? '通知設定' : '通知設定(この端末はオフ)'}
-              title={devicePushOn ? '通知設定' : '通知設定(この端末はオフ)'}
+              aria-label={devicePushOn ? '通知設定' : t('common.bellOff')}
+              title={devicePushOn ? '通知設定' : t('common.bellOff')}
               style={{
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                 width: '2.5em', height: '1.571em', padding: 0, border: 'none', background: 'transparent',
@@ -475,7 +476,7 @@ export default function Home() {
                 {editing && (
                   <div
                     role="button"
-                    aria-label={`${g.title}の大きさを変える`}
+                    aria-label={t('home.resize', { title: g.title })}
                     onPointerDown={(e) => {
                       e.stopPropagation();
                       e.preventDefault();

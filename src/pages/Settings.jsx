@@ -9,6 +9,7 @@ import { useAccountName } from '../lib/data/account';
 import pkg from '../../package.json';
 import Switch from '../components/Switch';
 import { useNotifyPrefs, isPushOffByUser } from '../lib/push/notifications';
+import { t } from '../lib/ui/text';
 
 // フィードバックのフォームのURL。ここに入れると押せるようになる(空の間は灰色で押せない)
 const FEEDBACK_FORM_URL = 'https://forms.gle/pmiB1KdWofSkPgrd8';
@@ -214,7 +215,7 @@ export default function Settings() {
             </div>
             <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '0.286em' }}>
               <div style={{ color: 'var(--text-strong)', fontSize: '1.286em', fontFamily: 'Inter', fontWeight: 700 }}>
-                {accountName || 'ログイン中のアカウント'}
+                {accountName || t('settings.account')}
               </div>
               <div style={{ color: 'var(--text-muted)', fontSize: '0.929em' }}>
                 {studentClass ? studentClass : `生徒ID ${identity ? identity.id : '-'}`}
@@ -224,13 +225,13 @@ export default function Settings() {
           </div>
 
           <Section title="通知設定">
-            <Row label="クラスルーム通知" value={isPushOffByUser() ? 'オフ' : notifyPrefs.offCourses.length ? `${notifyPrefs.offCourses.length}件の授業がオフ` : 'すべてオン'} onClick={() => navigate('/settings/notify', { state: { from: '/settings' } })} />
+            <Row label={t('settings.notify')} value={isPushOffByUser() ? 'オフ' : notifyPrefs.offCourses.length ? `${notifyPrefs.offCourses.length}件の授業がオフ` : 'すべてオン'} onClick={() => navigate('/settings/notify', { state: { from: '/settings' } })} />
             <Divider />
             <Row label="授業前通知" disabled />
           </Section>
 
           <Section title="画面表示">
-            <Row label="ダークモード" chevron={false} onClick={() => setDark(toggleDarkMode())} value={<Switch on={dark} />} />
+            <Row label={t('settings.darkMode')} chevron={false} onClick={() => setDark(toggleDarkMode())} value={<Switch on={dark} />} />
             <Divider />
             <div
               style={{
@@ -281,16 +282,16 @@ export default function Settings() {
           </Section>
 
           <Section title="サポート">
-            <Row label="フィードバックを送る" disabled={!FEEDBACK_FORM_URL} onClick={FEEDBACK_FORM_URL ? openFeedback : undefined} />
+            <Row label={t('settings.feedback')} disabled={!FEEDBACK_FORM_URL} onClick={FEEDBACK_FORM_URL ? openFeedback : undefined} />
             <Divider />
-            <Row label="アプリのバージョン" value={`v${pkg.version}`} />
+            <Row label={t('settings.version')} value={`v${pkg.version}`} />
           </Section>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.857em' }}>
             <OutlineButton color="var(--text-strong)" bg="var(--surface)" border="var(--line)" onClick={() => navigate('/link?relink=1')}>
               再連携する
             </OutlineButton>
-            <OutlineButton color="var(--danger-fg)" bg="var(--danger-bg)" border={null} onClick={() => setNote('アカウントの削除は準備中です。')}>
+            <OutlineButton color="var(--danger-fg)" bg="var(--danger-bg)" border={null} onClick={() => setNote(t('settings.deleteSoon'))}>
               アカウントを削除する
             </OutlineButton>
             {note && (

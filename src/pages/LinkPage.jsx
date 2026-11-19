@@ -10,6 +10,7 @@ import Icon from '../components/Icon';
 import BottomNav from '../components/BottomNav';
 import loginIllustration from '../assets/images/other_svgs/login.svg';
 import InstallGuide, { InstallSteps, isIos, isStandalone, needsInstall } from '../components/InstallGuide';
+import { t } from '../lib/ui/text';
 
 const GOOGLE_FONT = "'Google Sans', Roboto, 'Hiragino Sans', 'Noto Sans JP', 'Yu Gothic UI', Arial, sans-serif";
 
@@ -59,7 +60,7 @@ export default function LinkPage() {
 
   function startLink() {
     if (!isGasConfigured()) {
-      setMessage('src/config.js の GAS_URL がまだ設定されていません。');
+      setMessage(t('link.gasUrlMissing'));
       return;
     }
     window.location.href = buildGasLoginUrl();
@@ -67,11 +68,11 @@ export default function LinkPage() {
 
   async function confirmRestartLink() {
     if (!identity) {
-      setMessage('連携情報を確認できません。いったんログインし直してください。');
+      setMessage(t('link.noLinkInfo'));
       return;
     }
     if (!isGasConfigured()) {
-      setMessage('src/config.js の GAS_URL がまだ設定されていません。');
+      setMessage(t('link.gasUrlMissing'));
       return;
     }
     setBusy(true);
@@ -84,7 +85,7 @@ export default function LinkPage() {
       storage.set('relinking', '1');
       window.location.href = buildGasLoginUrl();
     } catch (e) {
-      setMessage('再連携の準備に失敗しました: ' + e.message);
+      setMessage(t('link.relinkFailed') + e.message);
       setBusy(false);
     }
   }
@@ -109,8 +110,8 @@ export default function LinkPage() {
       }
       setMessage(
         result.reason === 'denied'
-          ? '通知が許可されませんでした。ブラウザの設定から許可してください。'
-          : '登録の確認に時間がかかっています。少し待ってから、もう一度お試しください。'
+          ? t('link.permissionDenied')
+          : t('link.timeout')
       );
     } catch (e) {
       setMessage('エラー: ' + e.message);
@@ -173,7 +174,7 @@ export default function LinkPage() {
               <InstallGuide onSkip={() => setGuideOpen(false)} />
             ) : (
               <>
-                {offline && notice('#FEF2F2', '#FECACA', '#DC2626', 'インターネットに接続されていません。接続してからもう一度お試しください。')}
+                {offline && notice('#FEF2F2', '#FECACA', '#DC2626', t('link.offline'))}
                 {needsRelogin && notice('var(--warn-bg)', 'var(--warn-line)', 'var(--warn-fg)', (
                   <>
                     <div style={{ fontWeight: 700, marginBottom: '0.3em' }}>ログイン方法が変わりました</div>
@@ -280,7 +281,7 @@ export default function LinkPage() {
               <div style={dialogActions}>
                 <button type="button" onClick={() => navigate('/class')} disabled={busy} style={textBtn(busy)}>戻る</button>
                 <button type="button" onClick={confirmRestartLink} disabled={busy} style={darkBtn(busy)}>
-                  {busy ? '準備しています...' : '再連携する'}
+                  {busy ? t('link.preparing') : '再連携する'}
                 </button>
               </div>
             </>
@@ -298,7 +299,7 @@ export default function LinkPage() {
             /* 通知未許可 */
             <>
               <div id="link-dialog-title" style={dialogTitle}>
-                {storage.get('relinking') === '1' ? '通知を許可すると再連携が完了します' : '連携が完了しました'}
+                {storage.get('relinking') === '1' ? t('link.relinkWaiting') : t('link.linked')}
               </div>
               <div style={dialogBody}>最後に、通知を許可してください。</div>
               {message && <div style={{ ...dialogBody, color: 'var(--warn-fg)' }}>{message}</div>}
@@ -307,7 +308,7 @@ export default function LinkPage() {
                 <button type="button" onClick={() => navigate('/class')} disabled={busy} style={textBtn(busy)}>あとで設定する</button>
                 <button type="button" onClick={enableNotifications} disabled={busy} aria-busy={busy} style={darkBtn(busy)}>
                   {busy && <Spinner />}
-                  {busy ? '設定中...' : '通知を有効にする'}
+                  {busy ? '設定中...' : t('link.enableNotify')}
                 </button>
               </div>
             </>

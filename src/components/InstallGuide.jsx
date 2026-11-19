@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { t } from '../lib/ui/text';
 
 // ===== 端末の判定(PC には案内を出さない) =====
 const ua = navigator.userAgent.toLowerCase();
@@ -13,19 +14,9 @@ export const isStandalone =
 // ホーム画面に追加していないスマホ・タブレット
 export const needsInstall = isMobile && !isStandalone;
 
-const STEPS_IOS = [
-  'Safari の画面下(iPad は上)にある共有ボタン(□から↑が出ているマーク)を押します。',
-  'メニューを下にスクロールして「ホーム画面に追加」を選びます。',
-  '右上の「追加」を押します。',
-  'ホーム画面にできたアイコンから開き直し、ログインします。',
-];
+const STEPS_IOS = t('install.steps.ios');
 
-const STEPS_ANDROID = [
-  'Chrome の右上にあるメニュー(⋮)を押します。',
-  '「ホーム画面に追加」または「アプリをインストール」を選びます。',
-  '確認の画面で「追加」(または「インストール」)を押します。',
-  'ホーム画面にできたアイコンから開き直し、ログインします。',
-];
+const STEPS_ANDROID = t('install.steps.android');
 
 // Android(Chrome)では、ボタン1つで追加できることがある
 function useInstallPrompt() {
@@ -114,8 +105,8 @@ export default function InstallGuide({ onSkip }) {
         </div>
         <div style={{ color: 'var(--text-muted)', fontSize: '1em', lineHeight: '1.5em' }}>
           {isIos
-            ? 'iPhone では、ホーム画面に追加したアイコンから開かないと、通知を受け取れません。'
-            : 'ホーム画面に追加すると、アプリのように開けて、通知も安定して届きます。'}
+            ? t('install.iosWarning')
+            : t('install.benefit')}
         </div>
       </div>
 
