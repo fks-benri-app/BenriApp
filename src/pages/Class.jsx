@@ -6,15 +6,17 @@ import { goRepairNotifications, isPushRecentlyFixed } from '../lib/push/pushStat
 import TitleRow from './class/TitleRow';
 import TagChips from './class/TagChips';
 import CourseKindFilters from './class/CourseKindFilters';
+import AnnouncementCard from './class/AnnouncementCard';
+import ReadAllDialog from './class/ReadAllDialog';
 import { useDevicePushState } from './class/useDevicePushState';
-import { DetailView, KIND_LABELS, GOOGLE_FONT } from './class/DetailView';
+import { DetailView } from './class/DetailView';
 import { useSchoolEmail, classroomUrl, openExternal, withAuthuser } from './class/schoolEmail';
 import { useIdentity } from '../auth/identity';
 import BottomNav from '../components/BottomNav';
 import { currentFontSize } from '../lib/ui/fontSize';
 import { buildCourseOptions, filterAnnouncements } from '../lib/announce/filters';
 import { peekBootOpen, takeBootOpen } from '../lib/announce/bootOpen';
-import { courseTheme, courseThemeOrNull, shaded } from '../lib/ui/courseTheme';
+import { courseTheme } from '../lib/ui/courseTheme';
 
 // ヘッダー用アイコン
 import { t } from '../lib/ui/text';
@@ -265,70 +267,7 @@ export default function Class() {
         {filteredAnnouncements.length > 0 ? (
           filteredAnnouncements.map((ann) => {
             return (
-              <article
-                key={ann.id}
-                role="link"
-                tabIndex={0}
-                onClick={() => openAnnouncement(ann)}
-                onKeyDown={(e) => { if (e.key === 'Enter') openAnnouncement(ann); }}
-                style={{
-                  position: 'relative',
-                  padding: ann.isUnread ? 'calc(1.143em - 1.5px)' : '1.143em',
-                  border: ann.isUnread ? '1.5px solid transparent' : 'none',
-                  background: ann.isUnread
-                    ? 'linear-gradient(var(--surface-2), var(--surface-2)) padding-box, linear-gradient(135deg, #FF4D4D 0%, #FF8A1B 100%) border-box'
-                    : 'var(--surface-2)', // 背景より一段だけ濃い面(枠線の色よりなじませる)
-                  borderRadius: '1.143em',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '0.857em',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
-                  cursor: 'pointer',
-                  userSelect: 'none',
-                  WebkitUserSelect: 'none',
-                  touchAction: 'manipulation'
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.571em' }}>
-                    <div style={{
-                      padding: '0.286em 0.571em',
-                      background: shaded(courseThemeOrNull(ann.subject)?.gradient || 'var(--line)'),
-                      borderRadius: '0.429em'
-                    }}>
-                      <div style={{
-                        color: courseThemeOrNull(ann.subject)?.textColor || 'var(--text-strong)',
-                        fontSize: '0.786em',
-                        fontWeight: '700'
-                      }}>
-                        {ann.subject}
-                      </div>
-                    </div>
-                    {KIND_LABELS[ann.kind] && (
-                      <div style={{
-                        padding: '0.286em 0.571em',
-                        borderRadius: '0.429em',
-                        background: 'var(--line)', // 種別は無彩色にして、授業の色だけを目立たせる
-                        color: 'var(--text-body)',
-                        fontSize: '0.786em',
-                        fontWeight: '700'
-                      }}>
-                        {KIND_LABELS[ann.kind]}
-                      </div>
-                    )}
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.429em' }}>
-                    <div style={{ color: 'var(--text-muted)', fontSize: '0.786em', fontWeight: '400', position: 'relative', top: '-0.214em', fontVariantNumeric: 'tabular-nums' }}>
-                      {ann.time}
-                    </div>
-                    {/* 既読でも場所は空けておく(未読・既読で、時刻の位置がずれないように) */}
-                    <div style={{ width: '0.571em', height: '0.571em', background: 'linear-gradient(135deg, #FF4D4D 0%, #FF8A1B 100%)', borderRadius: '50%', visibility: ann.isUnread ? 'visible' : 'hidden' }} />
-                  </div>
-                </div>
-                <div style={{ color: 'var(--text-body)', fontSize: '1em', fontWeight: 400, lineHeight: 1.4286, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                  {ann.content}
-                </div>
-              </article>
+        <AnnouncementCard key={ann.id} ann={ann} openAnnouncement={openAnnouncement} />
             );
           })
         ) : (
@@ -344,17 +283,7 @@ export default function Class() {
       />
 
       {readAllAsk && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', fontFamily: GOOGLE_FONT }}>
-          <div onClick={() => setReadAllAsk(false)} style={{ position: 'absolute', inset: 0, background: 'var(--overlay)' }} />
-          <div role="dialog" aria-modal="true" style={{ position: 'relative', width: '100%', maxWidth: '22.857em', background: 'var(--surface)', borderRadius: '1.143em', padding: '1.714em', userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none', boxShadow: '0 8px 24px rgba(0,0,0,0.2)' }}>
-            <div style={{ fontSize: '1.286em', fontWeight: 600, color: 'var(--text-strong)', marginBottom: '0.444em' }}>すべて既読にしますか?</div>
-            <div style={{ fontSize: '1em', lineHeight: '1.43em', color: 'var(--text-muted)', marginBottom: '1.43em' }}>表示中の未読 {unreadShown.length} 件を既読にします。</div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.571em' }}>
-              <button type="button" onClick={() => setReadAllAsk(false)} style={{ padding: '0.714em 1.143em', border: 'none', background: 'transparent', color: 'var(--text-muted)', borderRadius: '999px', fontFamily: 'inherit', fontSize: '1em', fontWeight: 600, cursor: 'pointer' }}>キャンセル</button>
-              <button type="button" onClick={confirmReadAll} style={{ padding: '0.714em 1.143em', border: 'none', background: 'var(--ink)', color: 'var(--on-ink)', borderRadius: '999px', fontFamily: 'inherit', fontSize: '1em', fontWeight: 600, cursor: 'pointer' }}>既読にする</button>
-            </div>
-          </div>
-        </div>
+        <ReadAllDialog unreadCount={unreadShown.length} onCancel={() => setReadAllAsk(false)} onConfirm={confirmReadAll} />
       )}
 
       {detail && (
