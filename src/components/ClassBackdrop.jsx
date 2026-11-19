@@ -15,8 +15,6 @@ import readAllIcon from '../assets/images/icons/read-all.svg';
 
 const FILTERS = tagFilters;
 
-const NO_SCROLLBAR_CSS = '.no-scrollbar{scrollbar-width:none;-ms-overflow-style:none}.no-scrollbar::-webkit-scrollbar{display:none}';
-
 
 
 // ===== プルダウンの見た目(Class.jsx の FilterSelect と同じ。選べない) =====
@@ -117,7 +115,6 @@ export default function ClassBackdrop() {
         WebkitTouchCallout: 'none'
       }}
     >
-      <style>{NO_SCROLLBAR_CSS}</style>
 
       {/* ===== ヘッダー部分 ===== */}
       <header style={{

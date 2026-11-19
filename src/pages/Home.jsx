@@ -11,9 +11,6 @@ import { getDevicePushEnabled } from '../lib/push/notifications';
 import { BASE_COLS, gridFor, loadLayout, rangeFor, resolveLayout, saveLayout } from '../lib/ui/homeLayout';
 import { t } from '../lib/ui/text';
 
-// .hm-press: 押せるものは、押している間 0.95 倍に縮む(静かな動き)
-const NO_SCROLLBAR_CSS = '.no-scrollbar{scrollbar-width:none;-ms-overflow-style:none}.no-scrollbar::-webkit-scrollbar{display:none}'
-  + '.hm-press{transition:transform .18s ease}.hm-press:active{transform:scale(.95)}';
 // デザインの決まり(Apple 風): 色は青ひとつ、角丸は決まった段階、影は使わない、太さは 400 / 600 / 700 だけ
 const ACCENT = '#0066cc';   // Action Blue。押せるもの・今日の印はこの色だけ
 const R_XL = 16;            // 大きな面(カード・ガジェット)
@@ -296,7 +293,6 @@ export default function Home() {
         WebkitTouchCallout: 'none',
       }}
     >
-      <style>{NO_SCROLLBAR_CSS}</style>
 
       {/* ===== ヘッダー(お知らせ画面と同じ形式。タイトルは「ホーム」。編集中は「完了」を出す) ===== */}
       <header style={{

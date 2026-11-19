@@ -14,7 +14,6 @@ import { t } from '../lib/ui/text';
 // フィードバックのフォームのURL。ここに入れると押せるようになる(空の間は灰色で押せない)
 const FEEDBACK_FORM_URL = 'https://forms.gle/pmiB1KdWofSkPgrd8';
 
-const NO_SCROLLBAR_CSS = '.no-scrollbar{scrollbar-width:none;-ms-overflow-style:none}.no-scrollbar::-webkit-scrollbar{display:none}';
 const GREY = 'var(--text-faint)';
 
 // 生徒ID(6桁)から学年・組・番号を読み取る。例: 250710 → 2025年入学の7組10番 → 今年度は2年7組10番
@@ -150,7 +149,6 @@ export default function Settings() {
         WebkitTouchCallout: 'none',
       }}
     >
-      <style>{NO_SCROLLBAR_CSS}</style>
 
       {/* ===== ヘッダー(Class.jsx と同じ形式) ===== */}
       <header
