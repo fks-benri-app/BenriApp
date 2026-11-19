@@ -80,11 +80,9 @@ function toAnnouncement(doc) {
   };
 }
 
-/**
- * 画面が使うのはこのフックだけ。
- * 将来ログインを入れて保存先のパスが変わっても、ここだけ直せば画面は変わらない。
- * @returns {{ status: 'loading'|'ready'|'error', items: Array, markRead: (id: string) => void, markAllRead: (ids: string[]) => void }}
- */
+// 画面が使うのはこのフックだけ。
+// 将来ログインを入れて保存先のパスが変わっても、ここだけ直せば画面は変わらない。
+// @returns {{ status: 'loading'|'ready'|'error', items: Array, markRead: (id: string) => void, markAllRead: (ids: string[]) => void }}
 export function useAnnouncements(studentId, { limitTo } = {}) {
   const [state, setState] = useState(() => {
     const cached = studentId ? peekLive(cacheKey(studentId), reviveItems) : null;
@@ -156,10 +154,8 @@ export function useAnnouncements(studentId, { limitTo } = {}) {
   return { status: state.status, items, markRead, markAllRead, readIds };
 }
 
-/**
- * 一覧にまだ無いお知らせを、1件だけ直接読む(通知を押した直後など、キャッシュに入っていないとき)。
- * 無ければ null。読み込みに失敗したときは例外を投げる。
- */
+// 一覧にまだ無いお知らせを、1件だけ直接読む(通知を押した直後など、キャッシュに入っていないとき)。
+// 無ければ null。読み込みに失敗したときは例外を投げる。
 export async function fetchAnnouncementById(studentId, docId) {
   const { fs, db } = await loadFirestore();
   const snap = await fs.getDoc(fs.doc(db, 'users', studentId, 'announcements', docId));

@@ -17,7 +17,7 @@ const FILTERS = tagFilters;
 
 
 
-// ===== プルダウンの見た目(Class.jsx の FilterSelect と同じ。選べない) =====
+// プルダウンの見た目(Class.jsx の FilterSelect と同じ。選べない)
 const chevron = (color) =>
   `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='${color}' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`;
 
@@ -58,8 +58,8 @@ function FilterSelectView({ allLabel }) {
   );
 }
 
-// ===== ボトムナビゲーション部分(Class.jsx と同じ。ログイン画面でも使う) =====
-// ===== ヘッダー(タイトルの行だけ。Class.jsx と同じ寸法) =====
+// ボトムナビゲーション部分(Class.jsx と同じ。ログイン画面でも使う)
+// ヘッダー(タイトルの行だけ。Class.jsx と同じ寸法)
 export function TitleHeader({ title }) {
   return (
     <header style={{
@@ -95,7 +95,7 @@ export function TitleHeader({ title }) {
   );
 }
 
-// ===== お知らせ画面(Class.jsx)の見た目。ダイアログの背景に使う(カードは出さず「読み込み中…」) =====
+// お知らせ画面(Class.jsx)の見た目。ダイアログの背景に使う(カードは出さず「読み込み中…」)
 export default function ClassBackdrop() {
   const baseFontSize = currentFontSize(); // Class.jsx と同じ基準の文字サイズ(設定画面の値)
   return (
@@ -116,7 +116,7 @@ export default function ClassBackdrop() {
       }}
     >
 
-      {/* ===== ヘッダー部分 ===== */}
+      {/* ヘッダー部分 */}
       <header style={{
         flexShrink: 0,
         display: 'flex',
@@ -209,7 +209,7 @@ export default function ClassBackdrop() {
         </div>
       </header>
 
-      {/* ===== メインコンテンツ部分 ===== */}
+      {/* メインコンテンツ部分 */}
       <main style={{
         flex: 1,
         minHeight: 0,
@@ -227,7 +227,7 @@ export default function ClassBackdrop() {
         </div>
       </main>
 
-      {/* ===== ボトムナビゲーション部分 ===== */}
+      {/* ボトムナビゲーション部分 */}
       <BottomNav active="class" />
     </div>
   );

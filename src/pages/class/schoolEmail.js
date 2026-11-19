@@ -43,7 +43,7 @@ export function classroomUrl(link, email) {
     t.pathname = t.pathname.replace(/\/+$/, '').replace(/^(\/c\/[^/]+\/(?:a\vert{}m\vert{}p)\/[^/]+)$/, '$1/details');
     target = t.toString();
   } catch {
-    /* そのまま */
+    // そのまま
   }
   if (!email) return target; // アドレスが分からないときは、そのまま開く
   // 投稿ページの末尾(/details)はそのままに、?authuser=学校のアドレス を付けて開く

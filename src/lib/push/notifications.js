@@ -64,8 +64,7 @@ export async function saveNotifyPrefs(studentId, prefs) {
   await updateUserDoc(studentId, { notifyPrefs: normalizePrefs(prefs) });
 }
 
-// ---- この端末のオン/オフ ----
-
+// この端末のオン/オフ
 // 今オンかどうか
 export const getDevicePushEnabled = getOneSignalEnabled;
 

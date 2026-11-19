@@ -12,10 +12,8 @@ const MAX_ATTEMPTS = 5;
 const entries = new Map(); // key → { makeRef, opts, hasValue, snap, value, listeners: Set, stop, timer, attempt }
 const memory = new Map(); // key → 画面用に加工した直近の値(購読がまだ値を受け取る前でも、すぐ出せる)
 
-/**
- * 前回の値(画面用に加工したもの)を返す。無ければ null。
- * まず覚えてある値、なければ端末の保存から revive(保存した形 → 画面の形)で戻す。
- */
+// 前回の値(画面用に加工したもの)を返す。無ければ null。
+// まず覚えてある値、なければ端末の保存から revive(保存した形 → 画面の形)で戻す。
 export function peekLive(key, revive) {
   if (memory.has(key)) return memory.get(key);
   try {
@@ -72,13 +70,11 @@ function connect(entry, key) {
   );
 }
 
-/**
- * key の購読に、listener({ onSnap, onValue, onError }) を登録する。戻り値は、この listener だけを外す関数。
- * 直近の値が覚えてあれば、登録した時点で渡す。
- * opts(最初に購読を作る呼び出しの分だけ使われる):
- *   derive(snap)      スナップショット → 画面用の値。購読ごとに1回だけ計算し、onValue に渡す
- *   toStored(value)   端末に保存する形にする(省略すると端末には保存しない)
- */
+// key の購読に、listener({ onSnap, onValue, onError }) を登録する。戻り値は、この listener だけを外す関数。
+// 直近の値が覚えてあれば、登録した時点で渡す。
+// opts(最初に購読を作る呼び出しの分だけ使われる):
+//   derive(snap)      スナップショット → 画面用の値。購読ごとに1回だけ計算し、onValue に渡す
+//   toStored(value)   端末に保存する形にする(省略すると端末には保存しない)
 export function watchLive(key, makeRef, listener, opts = {}) {
   let entry = entries.get(key);
   if (!entry) {
@@ -94,10 +90,8 @@ export function watchLive(key, makeRef, listener, opts = {}) {
   return () => { entry.listeners.delete(listener); };
 }
 
-/**
- * 生徒の users/{id} を監視する(生徒ごとに購読は1つ)。
- * extra.onValue を渡すと、氏名(先頭の学籍番号を外したもの)を受け取る。氏名は端末にも保存して、次回すぐ出す。
- */
+// 生徒の users/{id} を監視する(生徒ごとに購読は1つ)。
+// extra.onValue を渡すと、氏名(先頭の学籍番号を外したもの)を受け取る。氏名は端末にも保存して、次回すぐ出す。
 export function watchUser(studentId, onSnap, onError, extra = {}) {
   const key = 'user:' + studentId;
   const stripId = (v) => (typeof v === 'string' ? v.replace(/^\d{6}\s*/, '') : '');

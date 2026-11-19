@@ -294,7 +294,7 @@ export default function Home() {
       }}
     >
 
-      {/* ===== ヘッダー(お知らせ画面と同じ形式。タイトルは「ホーム」。編集中は「完了」を出す) ===== */}
+      {/* ヘッダー(お知らせ画面と同じ形式。タイトルは「ホーム」。編集中は「完了」を出す) */}
       <header style={{
         flexShrink: 0,
         display: 'flex',
@@ -346,7 +346,7 @@ export default function Home() {
         </div>
       </header>
 
-      {/* ===== 本体: マス目にガジェットを置く。編集中は背景をタップすると完了 ===== */}
+      {/* 本体: マス目にガジェットを置く。編集中は背景をタップすると完了 */}
       <main
         ref={mainRef}
         className="no-scrollbar"
@@ -504,7 +504,7 @@ export default function Home() {
         </div>
       </main>
 
-      {/* ===== 下のバー(他の画面と同じ形式) ===== */}
+      {/* 下のバー(他の画面と同じ形式) */}
       <BottomNav active="home" onSelect={onSelectTab} />
     </div>
   );

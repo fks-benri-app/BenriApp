@@ -1,5 +1,5 @@
 // 開発用のダミーのお知らせ。DEV_MOCK を true にすると、お知らせの先頭に加わる(本番は false)。
-// ===== 開発用モック(コード上のスイッチ。false なら一切表示されず、本番に影響しない) =====
+// 開発用モック(コード上のスイッチ。false なら一切表示されず、本番に影響しない)
 export const DEV_MOCK = false;
 export const MOCK_THUMB = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='88' height='72'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%2377b3ff'/><stop offset='1' stop-color='%23ff9acb'/></linearGradient></defs><rect width='88' height='72' fill='url(%23g)'/></svg>";
 export const MOCK_ITEMS = [

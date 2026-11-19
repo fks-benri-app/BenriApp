@@ -150,7 +150,7 @@ export default function Settings() {
       }}
     >
 
-      {/* ===== ヘッダー(Class.jsx と同じ形式) ===== */}
+      {/* ヘッダー(Class.jsx と同じ形式) */}
       <header
         style={{
           flexShrink: 0,
@@ -170,7 +170,7 @@ export default function Settings() {
         </div>
       </header>
 
-      {/* ===== 本体 ===== */}
+      {/* 本体 */}
       <main
         className="no-scrollbar"
         style={{
@@ -301,7 +301,7 @@ export default function Settings() {
         </div>
       </main>
 
-      {/* ===== 下のバー(Class.jsx と同じ形式) ===== */}
+      {/* 下のバー(Class.jsx と同じ形式) */}
       <BottomNav active="settings" onSelect={onSelectTab} />
     </div>
   );

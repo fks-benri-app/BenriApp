@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { t } from '../lib/ui/text';
 
-// ===== 端末の判定(PC には案内を出さない) =====
+// 端末の判定(PC には案内を出さない)
 const ua = navigator.userAgent.toLowerCase();
 const isIpadOs = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1; // iPadOS は Mac を名乗る
 export const isIos = /iphone|ipad|ipod/.test(ua) || isIpadOs;
@@ -56,7 +56,7 @@ export function InstallSteps() {
     try {
       await promptEvent.userChoice;
     } catch (e) {
-      /* 何もしない */
+      // 何もしない
     }
   }
 

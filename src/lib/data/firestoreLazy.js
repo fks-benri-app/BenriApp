@@ -19,10 +19,8 @@ export function loadFirestore() {
   return loading;
 }
 
-/**
- * Firestore を購読する。makeRef({ fs, db }) で参照(doc や query)を作る。
- * 戻り値の関数を呼ぶと、読み込み前でも購読をやめられる。
- */
+// Firestore を購読する。makeRef({ fs, db }) で参照(doc や query)を作る。
+// 戻り値の関数を呼ぶと、読み込み前でも購読をやめられる。
 export function subscribe(makeRef, onSnap, onErr) {
   let unsub = null;
   let cancelled = false;
@@ -41,17 +39,15 @@ export function subscribe(makeRef, onSnap, onErr) {
 // 生徒の users/{id} の参照
 export const userDoc = (studentId) => ({ fs, db }) => fs.doc(db, 'users', studentId);
 
-/** users/{id} に書き込む(本人だけが書けるルールになっている項目に限る) */
+// users/{id} に書き込む(本人だけが書けるルールになっている項目に限る)
 export async function updateUserDoc(studentId, data) {
   const { fs, db } = await loadFirestore();
   await fs.updateDoc(fs.doc(db, 'users', studentId), data);
 }
 
-/**
- * 通知の登録トークンを、本人の users/{id}/fcmTokens/{ハッシュ} に保存する。
- * ドキュメントIDは GAS 版と同じ(トークンの SHA-256 を URL 安全な Base64 にしたもの)。
- * 書けるのは token と updatedAt だけ(ルールで制限している)。
- */
+// 通知の登録トークンを、本人の users/{id}/fcmTokens/{ハッシュ} に保存する。
+// ドキュメントIDは GAS 版と同じ(トークンの SHA-256 を URL 安全な Base64 にしたもの)。
+// 書けるのは token と updatedAt だけ(ルールで制限している)。
 // 登録トークンの文書ID(トークンの SHA-256 を URL で使える Base64 にしたもの。GAS の計算と同じ)
 async function fcmTokenDocId(token) {
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token));
@@ -71,14 +67,14 @@ export async function saveFcmTokenRemote(studentId, token) {
   );
 }
 
-/** この端末の登録トークンを消す(通知をオフにしたとき)。本人だけが消せる(ルールで制限している) */
+// この端末の登録トークンを消す(通知をオフにしたとき)。本人だけが消せる(ルールで制限している)
 export async function deleteFcmTokenRemote(studentId, token) {
   const { fs, db } = await loadFirestore();
   const docId = await fcmTokenDocId(token);
   await fs.deleteDoc(fs.doc(db, 'users', studentId, 'fcmTokens', docId));
 }
 
-/** お知らせを既読にする(本人が書けるのは、read と readAt の2つだけ。ルールで制限している) */
+// お知らせを既読にする(本人が書けるのは、read と readAt の2つだけ。ルールで制限している)
 export async function markAnnouncementReadRemote(studentId, docId) {
   const { fs, db } = await loadFirestore();
   await fs.updateDoc(fs.doc(db, 'users', studentId, 'announcements', docId), {

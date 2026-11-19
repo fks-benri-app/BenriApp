@@ -175,7 +175,7 @@ export default function Class() {
     }}>
 
 
-      {/* ===== ヘッダー部分（常に表示） ===== */}
+      {/* ヘッダー部分（常に表示） */}
       <header style={{
         flexShrink: 0,
         display: 'flex',
@@ -195,7 +195,7 @@ export default function Class() {
         <CourseKindFilters baseFontSize={baseFontSize} courseValue={courseValue} setCourse={setCourse} courseColor={courseColor} courseOptions={courseOptions} kind={kind} setKind={setKind} kindColor={kindColor} />
       </header>
 
-      {/* ===== メインコンテンツ部分（ここだけスクロールする） ===== */}
+      {/* メインコンテンツ部分（ここだけスクロールする） */}
       <main style={{
         flex: 1,
         minHeight: 0,

@@ -3,12 +3,10 @@ import { ensureSubscription } from '../../lib/push/onesignal';
 import { getDevicePushEnabled } from '../../lib/push/notifications';
 import { usePushBroken, usePushKey, usePushSubs, useDeviceSubscriptionId, judgeDeviceBroken, markPushFixed } from '../../lib/push/pushStatus';
 
-/**
- * お知らせ画面が使う、通知の状態。
- * ・pushBroken: 通知が、この端末に届いていない可能性(GAS が確認した購読の一覧と、この端末の購読で判断する)
- * ・devicePushOn: この端末の通知がオンか(オフなら、ベルに斜線を付ける)
- * 開くたびに、この端末の購読が正しい状態か確認し(ずれていれば付け直す)、FCM の登録トークンの更新時刻も新しくする。
- */
+// お知らせ画面が使う、通知の状態。
+// ・pushBroken: 通知が、この端末に届いていない可能性(GAS が確認した購読の一覧と、この端末の購読で判断する)
+// ・devicePushOn: この端末の通知がオンか(オフなら、ベルに斜線を付ける)
+// 開くたびに、この端末の購読が正しい状態か確認し(ずれていれば付け直す)、FCM の登録トークンの更新時刻も新しくする。
 export function useDevicePushState(studentId) {
   const pushBrokenSend = usePushBroken(studentId);
   const pushSubs = usePushSubs(studentId);

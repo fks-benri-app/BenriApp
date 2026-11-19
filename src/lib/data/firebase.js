@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { initializeAuth, indexedDBLocalPersistence, browserLocalPersistence } from 'firebase/auth';
-// ★ config.js から firebaseConfig をしっかりインポートします
+// config.js から firebaseConfig をしっかりインポートします
 import { firebaseConfig } from '../../config';
 
 // 万が一読み込めていない場合にエラーを分かりやすく表示する保護

@@ -148,7 +148,7 @@ export default function LinkPage() {
     </div>
   );
 
-  // ================= step 1: ログイン画面 =================
+  // step 1: ログイン画面
   if (!identity) {
     return (
       <div onCopy={(e) => e.preventDefault()} style={{ ...rootStyle, display: 'flex', flexDirection: 'column' }}>
@@ -245,7 +245,7 @@ export default function LinkPage() {
     );
   }
 
-  // ================= step 2: お知らせ画面の上にダイアログ =================
+  // step 2: お知らせ画面の上にダイアログ
   const iosNeedsHome = isIos && !isStandalone;
 
   return (
@@ -271,7 +271,7 @@ export default function LinkPage() {
               <div style={dialogBody}>インターネットに接続されていません。接続してからもう一度お試しください。</div>
             </>
           ) : notifyDone ? (
-            /* 連携済み(再連携) */
+            // 連携済み(再連携)
             <>
               <div id="link-dialog-title" style={dialogTitle}>連携済みです</div>
               <div style={dialogBody}>
@@ -286,7 +286,7 @@ export default function LinkPage() {
               </div>
             </>
           ) : iosNeedsHome ? (
-            /* 通知未許可: iPhone でホーム画面に追加していない */
+            // 通知未許可: iPhone でホーム画面に追加していない
             <>
               <div id="link-dialog-title" style={dialogTitle}>ホーム画面に追加してください</div>
               <div style={dialogBody}>iPhoneで通知を受け取るには、ホーム画面に追加したアイコンから開き直す必要があります。</div>
@@ -296,7 +296,7 @@ export default function LinkPage() {
               </div>
             </>
           ) : (
-            /* 通知未許可 */
+            // 通知未許可
             <>
               <div id="link-dialog-title" style={dialogTitle}>
                 {storage.get('relinking') === '1' ? t('link.relinkWaiting') : t('link.linked')}
