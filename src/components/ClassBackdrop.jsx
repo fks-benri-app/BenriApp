@@ -76,7 +76,7 @@ export function TitleHeader({ title }) {
     }}>
       <div style={{
         padding: '0 0.5em 0 1em',
-        height: '2.857em',
+        height: '44px',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -130,7 +130,7 @@ export default function ClassBackdrop() {
       }}>
         <div style={{
           padding: '0 0.5em 0 1em',
-          height: '2.857em',
+          height: '44px',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
@@ -148,27 +148,29 @@ export default function ClassBackdrop() {
 
           {/* 右上アイコン */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 0, flexShrink: 0 }}>
-            <img className="icon-ink" src={readAllIcon} alt="" aria-hidden="true" draggable={false} style={{ width: '1.429em', height: '1.429em', padding: '0.571em', boxSizing: 'content-box', userSelect: 'none', WebkitUserSelect: 'none' }} />
+            <div style={{ width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><img className="icon-ink" src={readAllIcon} alt="" aria-hidden="true" draggable={false} style={{ width: '1.429em', height: '1.429em', userSelect: 'none', WebkitUserSelect: 'none' }} /></div>
             <div
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                width: '2.571em',
-                height: '2.571em',
+                width: '44px',
+                height: '44px',
                 padding: 0,
                 color: 'var(--text-body)'
               }}
             >
               <img className="icon-ink" src={bellIcon} alt="" aria-hidden="true" draggable={false} style={{ width: '1.429em', height: '1.429em', objectFit: 'contain', display: 'block' }} />
             </div>
-            <img
-              draggable={false}
-              style={{ width: '1.429em', height: '1.429em', padding: '0.571em', boxSizing: 'content-box', userSelect: 'none', WebkitUserSelect: 'none' }}
-              className="icon-ink"
-              src={searchIcon}
-              alt=""
-            />
+            <div style={{ width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <img
+                draggable={false}
+                style={{ width: '1.429em', height: '1.429em', userSelect: 'none', WebkitUserSelect: 'none' }}
+                className="icon-ink"
+                src={searchIcon}
+                alt=""
+              />
+            </div>
           </div>
         </div>
 
