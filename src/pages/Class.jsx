@@ -185,7 +185,6 @@ export default function Class() {
         paddingTop: 'calc(0.571em + env(safe-area-inset-top))',
         paddingBottom: '0.5em',
         background: 'var(--surface)',
-        borderBottom: '1px solid var(--line)',
         width: '100%'
       }}>
         <TitleRow searchOpen={searchOpen} searchInputRef={searchInputRef} query={query} setQuery={setQuery} closeSearch={closeSearch} readAllShown={readAllShown} unreadShown={unreadShown} devicePushOn={devicePushOn} openSearch={openSearch} />

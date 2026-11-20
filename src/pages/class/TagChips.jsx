@@ -1,6 +1,7 @@
 // 「すべて・未読・既読…」の絞り込みボタンの行。
 import React from 'react';
 import tagFilters from '../../data/tagFilters.json';
+import { shaded } from '../../lib/ui/courseTheme';
 
 export default function TagChips({ activeFilter, setActiveFilter }) {
   return (
@@ -16,10 +17,13 @@ export default function TagChips({ activeFilter, setActiveFilter }) {
               borderRadius: '0.571em',
               flexShrink: 0,
               cursor: 'pointer',
-              background: isActive ? 'var(--ink)' : 'var(--surface-3)', // 選んでいるものだけ黒(ダークは白)。色は使わない
-              color: isActive ? 'var(--on-ink)' : 'var(--text-body)',
+              backgroundImage: isActive ? shaded('linear-gradient(135deg, #FF4D4D 0%, #FF8A1B 100%)') : 'none',
+              backgroundColor: isActive ? 'transparent' : 'var(--surface)',
+              outline: isActive ? 'none' : '1px var(--line) solid',
+              outlineOffset: '-1px',
+              color: isActive ? 'white' : 'var(--text-muted)',
               fontSize: '0.929em',
-              fontWeight: 600,
+              fontWeight: isActive ? '700' : '400',
               whiteSpace: 'nowrap',
               boxSizing: 'border-box',
               userSelect: 'none',

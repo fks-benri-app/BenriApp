@@ -26,7 +26,6 @@ export default function BottomNav({ active, onSelect }) {
         padding: '0 0 env(safe-area-inset-bottom)',
         height: 'calc(3.857em + env(safe-area-inset-bottom))',
         background: 'var(--surface)',
-        borderTop: '1px solid var(--line)',
         display: 'flex',
         justifyContent: 'stretch',
         alignItems: 'center',
@@ -56,8 +55,8 @@ export default function BottomNav({ active, onSelect }) {
           >
             <img
               draggable={false}
-              style={{ width: '1.714em', height: '1.714em', opacity: isActive ? 1 : 0.55 }}
-              className="icon-nav"
+              style={{ width: '1.714em', height: '1.714em', opacity: isActive ? 1 : 0.45 }}
+              className={isActive ? 'icon-active' : 'icon-ink'}
               src={isActive ? tab.activeIcon : tab.icon}
               alt={tab.id}
             />

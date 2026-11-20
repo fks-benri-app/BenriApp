@@ -24,9 +24,9 @@ export default function FilterSelect({ value, onChange, allLabel, options, label
         maxWidth: '50%',
         height: '30px',
         padding: '0 26px 0 10px',
-        border: '1px solid transparent',
+        border: isActive ? '1px solid transparent' : '1px solid var(--line)',
         borderRadius: '8px',
-        backgroundColor: isActive ? 'transparent' : 'var(--surface-3)',
+        backgroundColor: isActive ? 'transparent' : 'var(--surface)',
         backgroundImage: isActive
           ? `${chevron(onColor)}, ${shaded(theme.gradient)}`
           : chevron('%236B7280'),
@@ -34,9 +34,9 @@ export default function FilterSelect({ value, onChange, allLabel, options, label
         // 選択中の背景は3層(矢印 / 暗くする層 / グラデーション)。位置とサイズも3つ分そろえる
         backgroundPosition: isActive ? 'right 9px center, 0 0, 0 0' : 'right 9px center',
         backgroundSize: isActive ? '13px, 100% 100%, 100% 100%' : '13px',
-        color: isActive ? theme.textColor : 'var(--text-body)',
+        color: isActive ? theme.textColor : 'var(--text-muted)',
         fontSize: `${(fontPx * 0.929).toFixed(1)}px`,
-        fontWeight: 600,
+        fontWeight: isActive ? 700 : 400,
         fontFamily: 'inherit',
         textOverflow: 'ellipsis',
         boxSizing: 'border-box',

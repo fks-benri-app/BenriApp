@@ -16,7 +16,7 @@ export function applyTheme() {
 }
 
 // PWA / ブラウザの一番上(ステータスバー)の色。ヘッダーの背景(styles.css の --surface)と同じ色にそろえる
-const BAR_COLOR = { light: '#FFFFFF', dark: '#121212' };
+const BAR_COLOR = { light: '#FFFFFF', dark: '#1f1f23' };
 function applyBrowserBarColor(dark) {
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.setAttribute('content', dark ? BAR_COLOR.dark : BAR_COLOR.light);
