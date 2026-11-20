@@ -181,9 +181,9 @@ export default function Class() {
         flexShrink: 0,
         display: 'flex',
         flexDirection: 'column',
-        gap: '0.571em',
-        paddingTop: 'calc(0.571em + env(safe-area-inset-top))',
-        paddingBottom: '0.714em',
+        gap: '0.857em',
+        paddingTop: 'calc(2em + env(safe-area-inset-top))',
+        paddingBottom: '1.143em',
         background: 'var(--surface)',
         width: '100%'
       }}>
@@ -203,12 +203,12 @@ export default function Class() {
         overflowY: 'auto',
         overscrollBehavior: 'contain',
         WebkitOverflowScrolling: 'touch',
-        padding: '0.857em 1.143em',
+        padding: '0.857em 1.714em',
         width: '100%',
         boxSizing: 'border-box',
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-        gap: '0.714em',
+        gap: '0.857em',
         alignContent: 'start'
       }}>
         {pushBroken && !isPushRecentlyFixed() && (

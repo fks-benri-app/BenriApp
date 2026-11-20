@@ -33,17 +33,17 @@ function FilterSelectView({ allLabel }) {
         flex: '0 1 auto',
         minWidth: 0,
         maxWidth: '50%',
-        height: '30px',
-        padding: '0 26px 0 10px',
+        height: '32px',
+        padding: '0 28px 0 12px',
         border: '1px solid var(--line)',
-        borderRadius: '8px',
+        borderRadius: '10px',
         backgroundColor: 'var(--surface)',
         backgroundImage: chevron('%236B7280'),
         backgroundRepeat: 'no-repeat',
         backgroundPosition: 'right 9px center',
         backgroundSize: '13px',
         color: 'var(--text-muted)',
-        fontSize: '0.929em',
+        fontSize: 'inherit',
         fontWeight: 400,
         fontFamily: 'inherit',
         textOverflow: 'ellipsis',
@@ -67,9 +67,9 @@ export function TitleHeader({ title }) {
       flexShrink: 0,
       display: 'flex',
       flexDirection: 'column',
-      gap: '0.571em',
-      paddingTop: 'calc(0.571em + env(safe-area-inset-top))',
-      paddingBottom: '0.714em',
+      gap: '0.857em',
+      paddingTop: 'calc(2em + env(safe-area-inset-top))',
+      paddingBottom: '1.143em',
       background: 'var(--surface)',
       borderBottom: '1px var(--line) solid',
       width: '100%'
@@ -122,15 +122,15 @@ export default function ClassBackdrop() {
         flexShrink: 0,
         display: 'flex',
         flexDirection: 'column',
-        gap: '0.357em',
-        paddingTop: 'calc(0.571em + env(safe-area-inset-top))',
-        paddingBottom: '0.5em',
+        gap: '0.857em',
+        paddingTop: 'calc(2em + env(safe-area-inset-top))',
+        paddingBottom: '1.143em',
         background: 'var(--surface)',
         width: '100%'
       }}>
         <div style={{
-          padding: '0 0.5em 0 1em',
-          height: '44px',
+          padding: '0 1.714em',
+          height: '34px',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
@@ -138,59 +138,57 @@ export default function ClassBackdrop() {
         }}>
           <div style={{
             color: 'var(--text-strong)',
-            fontSize: '1.571em',
+            fontSize: '1.871em',
             fontFamily: 'Inter',
-            fontWeight: '700',
+            fontWeight: '800',
             userSelect: 'none'
           }}>
             お知らせ
           </div>
 
           {/* 右上アイコン */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 0, flexShrink: 0 }}>
-            <div style={{ width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><img className="icon-ink" src={readAllIcon} alt="" aria-hidden="true" draggable={false} style={{ width: '1.429em', height: '1.429em', userSelect: 'none', WebkitUserSelect: 'none' }} /></div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.9em', flexShrink: 0 }}>
+            <img className="icon-ink" src={readAllIcon} alt="" aria-hidden="true" draggable={false} style={{ width: '1.571em', height: '1.571em', userSelect: 'none', WebkitUserSelect: 'none' }} />
             <div
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                width: '44px',
-                height: '44px',
+                width: '2.5em',
+                height: '1.571em',
                 padding: 0,
                 color: 'var(--text-body)'
               }}
             >
-              <img className="icon-ink" src={bellIcon} alt="" aria-hidden="true" draggable={false} style={{ width: '1.429em', height: '1.429em', objectFit: 'contain', display: 'block' }} />
+              <img className="icon-ink" src={bellIcon} alt="" aria-hidden="true" draggable={false} style={{ width: '1.571em', height: '1.571em', objectFit: 'contain', display: 'block' }} />
             </div>
-            <div style={{ width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <img
-                draggable={false}
-                style={{ width: '1.429em', height: '1.429em', userSelect: 'none', WebkitUserSelect: 'none' }}
-                className="icon-ink"
-                src={searchIcon}
-                alt=""
-              />
-            </div>
+            <img
+              draggable={false}
+              style={{ width: '1.571em', height: '1.571em', userSelect: 'none', WebkitUserSelect: 'none' }}
+              className="icon-ink"
+              src={searchIcon}
+              alt=""
+            />
           </div>
         </div>
 
         {/* フィルターボタン */}
-        <div className="no-scrollbar" style={{ padding: '0 1.143em', display: 'flex', gap: '0.571em', overflowX: 'auto' }}>
+        <div className="no-scrollbar" style={{ padding: '0.571em 1.714em', display: 'flex', gap: '0.571em', overflowX: 'auto' }}>
           {FILTERS.map((filter) => {
             const isActive = filter.id === 'all';
             return (
               <div
                 key={filter.id}
                 style={{
-                  padding: '0.5em 0.929em',
-                  borderRadius: '0.571em',
+                  padding: '0.571em 1.143em',
+                  borderRadius: '0.857em',
                   flexShrink: 0,
                   backgroundImage: isActive ? 'linear-gradient(var(--tag-shade), var(--tag-shade)), linear-gradient(135deg, #FF4D4D 0%, #FF8A1B 100%)' : 'none',
                   backgroundColor: isActive ? 'transparent' : 'var(--surface)',
                   outline: isActive ? 'none' : '1px var(--line) solid',
                   outlineOffset: '-1px',
                   color: isActive ? 'white' : 'var(--text-muted)',
-                  fontSize: '0.929em',
+                  fontSize: '1em',
                   fontWeight: isActive ? '700' : '400',
                   whiteSpace: 'nowrap',
                   boxSizing: 'border-box',
@@ -206,7 +204,7 @@ export default function ClassBackdrop() {
         </div>
 
         {/* プルダウン: 授業・形式 */}
-        <div style={{ padding: '0 1.143em', display: 'flex', gap: '0.571em' }}>
+        <div style={{ padding: '0 1.714em', display: 'flex', gap: '0.571em', marginTop: '-0.476em' }}>
           <FilterSelectView allLabel="すべての授業" />
           <FilterSelectView allLabel="すべての形式" />
         </div>
@@ -217,12 +215,12 @@ export default function ClassBackdrop() {
         flex: 1,
         minHeight: 0,
         overflow: 'hidden',
-        padding: '0.857em 1.143em',
+        padding: '0.857em 1.714em',
         width: '100%',
         boxSizing: 'border-box',
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-        gap: '0.714em',
+        gap: '0.857em',
         alignContent: 'start'
       }}>
         <div style={{ padding: '3em 0', textAlign: 'center', color: 'var(--text-faint)', gridColumn: '1 / -1', userSelect: 'none' }}>

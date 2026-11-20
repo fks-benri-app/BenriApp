@@ -89,12 +89,12 @@ export default function TitleRow({ searchOpen, searchInputRef, query, setQuery, 
               title={t('class.readAll')}
               style={{
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                width: '44px', height: '44px', padding: 0, border: 'none', background: 'transparent',
+                width: '1.571em', height: '1.571em', padding: 0, border: 'none', background: 'transparent',
                 fontSize: 'inherit', opacity: unreadShown.length === 0 ? 0.35 : 1,
                 cursor: unreadShown.length === 0 ? 'default' : 'pointer', touchAction: 'manipulation'
               }}
             >
-              <img className="icon-ink" src={readAllIcon} alt="" aria-hidden="true" draggable={false} style={{ width: '1.571em', height: '1.571em' }} />
+              <img className="icon-ink" src={readAllIcon} alt="" aria-hidden="true" draggable={false} style={{ width: '100%', height: '100%' }} />
             </button>
             <button
               type="button"
@@ -105,8 +105,8 @@ export default function TitleRow({ searchOpen, searchInputRef, query, setQuery, 
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                width: '44px',
-                height: '44px',
+                width: '2.5em',
+                height: '1.571em',
                 padding: 0,
                 border: 'none',
                 background: 'transparent',
@@ -125,26 +125,24 @@ export default function TitleRow({ searchOpen, searchInputRef, query, setQuery, 
                 style={{ width: '1.571em', height: '1.571em', objectFit: 'contain', display: 'block' }}
               />
             </button>
-            <button
-              type="button"
+            <img
+              draggable={false}
+              role="button"
+              tabIndex={0}
               onClick={openSearch}
-              aria-label="検索"
-              title="検索"
+              onKeyDown={(e) => { if (e.key === 'Enter') openSearch(); }}
               style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '44px',
-                height: '44px',
-                padding: 0,
-                border: 'none',
-                background: 'transparent',
+                width: '1.571em',
+                height: '1.571em',
                 cursor: 'pointer',
+                userSelect: 'none',
+                WebkitUserSelect: 'none',
                 touchAction: 'manipulation'
               }}
-            >
-              <img className="icon-ink" src={searchIcon} alt="" aria-hidden="true" draggable={false} style={{ width: '1.571em', height: '1.571em' }} />
-            </button>
+              className="icon-ink"
+              src={searchIcon}
+              alt="検索"
+            />
           </div>
         </>
       )}
