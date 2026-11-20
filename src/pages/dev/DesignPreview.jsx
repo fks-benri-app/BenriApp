@@ -47,12 +47,12 @@ export default function DesignPreview() {
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'var(--surface)', display: 'flex', flexDirection: 'column', overflow: 'hidden', fontSize: `${base}px` }}>
-      <header style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '0.357em', paddingTop: 'calc(0.571em + env(safe-area-inset-top))', paddingBottom: '0.5em', background: 'var(--surface)', borderBottom: '1px solid var(--line)', width: '100%' }}>
+      <header style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '0.571em', paddingTop: 'calc(0.571em + env(safe-area-inset-top))', paddingBottom: '0.714em', background: 'var(--surface)', borderBottom: '1px solid var(--line)', width: '100%' }}>
         <TitleRow searchOpen={false} searchInputRef={searchRef} query="" setQuery={none} closeSearch={none} readAllShown={none} unreadShown={SAMPLE.filter((s) => s.isUnread)} devicePushOn openSearch={none} />
         <TagChips activeFilter={filter} setActiveFilter={setFilter} />
         <CourseKindFilters baseFontSize={base} courseValue="" setCourse={none} courseColor={courseTheme('化学')} courseOptions={[{ id: '化学', label: '化学' }]} kind="" setKind={none} kindColor={courseTheme('化学')} />
       </header>
-      <main style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '0.571em 1em', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '0.5em', alignContent: 'start' }}>
+      <main style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '0.857em 1.143em', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '0.714em', alignContent: 'start' }}>
         {SAMPLE.map((ann) => <AnnouncementCard key={ann.id} ann={ann} openAnnouncement={none} />)}
       </main>
       <BottomNav active="class" onSelect={none} />

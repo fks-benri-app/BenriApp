@@ -5,7 +5,7 @@ import { shaded } from '../../lib/ui/courseTheme';
 
 export default function TagChips({ activeFilter, setActiveFilter }) {
   return (
-    <div className="no-scrollbar" style={{ padding: '0 1em', display: 'flex', gap: '0.429em', overflowX: 'auto' }}>
+    <div className="no-scrollbar" style={{ padding: '0 1.143em', display: 'flex', gap: '0.571em', overflowX: 'auto' }}>
       {tagFilters.map((filter) => {
         const isActive = activeFilter === filter.id;
         return (
