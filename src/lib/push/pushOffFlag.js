@@ -2,7 +2,7 @@
 import { storage } from '../data/storage';
 
 // この端末の通知を、利用者が自分でオフにしたかどうか(オフの間は、自動でオンに戻さない)。
-// OneSignal・FCM のどちらからも読むので、ここに独立させている。画面からは lib/notifications.js 経由で使う。
+// FCM と通知の設定の両方から読むので、ここに独立させている。画面からは lib/notifications.js 経由で使う。
 const PUSH_OFF_KEY = 'pushOffByUser';
 export function isPushOffByUser() {
   return storage.get(PUSH_OFF_KEY) === '1';

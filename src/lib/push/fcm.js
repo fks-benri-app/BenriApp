@@ -5,7 +5,7 @@ import { getMessaging, getToken, isSupported, onMessage } from 'firebase/messagi
 import { app } from '../data/firebase';
 import { CONFIG } from '../../config';
 import { saveFcmTokenRemote, deleteFcmTokenRemote } from '../data/firestoreLazy';
-import { isPushOffByUser } from './pushOffFlag';
+import { isPushOffByUser, setPushOffByUser } from './pushOffFlag';
 
 const BASE = import.meta.env.BASE_URL; // 例: /BenriApp/
 
@@ -19,14 +19,16 @@ export async function fcmSupported() {
 }
 
 // 通知を許可してもらい、登録トークンを返す。ボタンのクリックの中から呼ぶこと
-export async function requestFcmToken() {
+// onPermissionDone は、許可が終わったあとに一度だけ呼ばれる(待ち時間の表示に使う)
+export async function requestFcmToken(onPermissionDone) {
   if (!('Notification' in window)) throw new Error('この端末では通知を使えません');
   if (!(await fcmSupported())) throw new Error('この端末・ブラウザは FCM に対応していません(iPhone はホーム画面から開いてください)');
 
   const permission = await Notification.requestPermission();
+  if (onPermissionDone) onPermissionDone();
   if (permission !== 'granted') throw new Error('通知が許可されませんでした');
 
-  // FCM 専用の Service Worker を、/BenriApp/fcm/ のスコープで登録する(OneSignal の SW とは分ける)
+  // FCM 専用の Service Worker を、/BenriApp/fcm/ のスコープで登録する(アプリのオフライン用 SW とは分ける)
   const registration = await navigator.serviceWorker.register(`${BASE}fcm/firebase-messaging-sw.js`, {
     scope: `${BASE}fcm/`,
   });
@@ -37,6 +39,21 @@ export async function requestFcmToken() {
   });
   if (!token) throw new Error('登録トークンを取れませんでした');
   return token;
+}
+
+// 通知を許可してもらい、この端末の登録トークンを本人の端末として保存する。ボタンのクリックの中から呼ぶこと。
+// 戻り値: { ok: true } か、{ ok: false, reason: 'denied' | 'failed' }
+export async function enableFcmForStudent(studentId, onPermissionDone) {
+  setPushOffByUser(false);
+  try {
+    const token = await requestFcmToken(onPermissionDone);
+    await registerFcmToken(studentId, token);
+    return { ok: true };
+  } catch (e) {
+    console.warn('[enableFcmForStudent] 失敗', e);
+    const denied = typeof Notification !== 'undefined' && Notification.permission === 'denied';
+    return { ok: false, reason: denied ? 'denied' : 'failed' };
+  }
 }
 
 // 登録トークンを、本人の users/{生徒ID}/fcmTokens に保存する(GAS が読んで、授業のトピックへ購読させる)。

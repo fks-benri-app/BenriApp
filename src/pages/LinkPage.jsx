@@ -1,10 +1,10 @@
 // ログインと、通知の連携(再連携)の画面。
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useIdentity } from '../auth/identity';
 import { buildGasLoginUrl, isGasConfigured } from '../config';
-import { initOneSignal, subscribeAs } from '../lib/push/onesignal';
-import { usePushKey, markPushFixed } from '../lib/push/pushStatus';
+import { enableFcmForStudent } from '../lib/push/fcm';
+import { markPushFixed } from '../lib/push/pushStatus';
 import { isNotifyDone, markNotifyDone, KEYS, storage } from '../lib/data/storage';
 import ClassBackdrop, { TitleHeader } from '../components/ClassBackdrop';
 import Icon from '../components/Icon';
@@ -46,13 +46,6 @@ export default function LinkPage() {
 
   const [baseFontSize] = useState(14);
 
-  useEffect(() => {
-    initOneSignal();
-  }, []);
-
-  // OneSignal の External ID に使う値(生徒IDではなく、推測できない値)
-  const pushKey = usePushKey(identity?.id);
-
   const notifyDone = !!(identity && isNotifyDone(identity.id));
 
   if (notifyDone && !relinkMode) {
@@ -80,7 +73,7 @@ export default function LinkPage() {
     setMessage('');
 
     try {
-      // OneSignal の紐づけは、ここでは解除しない(通知を許可する段階で付け替える)。
+      // 通知の登録は、ここでは解除しない(通知を許可する段階で付け替える)。
       // 途中で戻っても、通知が届かなくなるのを防ぐため。
       storage.remove(KEYS.notifyDoneFor);
       storage.set('relinking', '1');
@@ -98,13 +91,12 @@ export default function LinkPage() {
 
     try {
       // ブラウザの許可画面を押すまでの時間は数えない(許可が終わってから10秒たったら補足を出す)
-      // キーがまだ届いていなくても許可は進める。ひもづけは、キーが届いたあとにお知らせ画面が自動で行う
-      const result = await subscribeAs(pushKey, () => {
+      const result = await enableFcmForStudent(identity.id, () => {
         slowTimer.current = setTimeout(() => setSlow(true), 10000);
       });
       if (result.ok) {
         markNotifyDone(identity.id);
-        if (result.synced) markPushFixed();
+        markPushFixed();
         storage.remove('relinking');
         navigate('/class', { replace: true });
         return;
