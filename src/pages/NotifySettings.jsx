@@ -86,7 +86,7 @@ export default function NotifySettings() {
 
   const rowStyle = { padding: '0.857em 1.143em', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.857em' };
   const sectionTitle = { color: 'var(--text-muted)', fontSize: '0.929em', fontWeight: 600, padding: '0 0.286em', marginBottom: '0.571em' };
-  const card = { background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: '1.143em' };
+  const card = { background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: '0.857em' };
   const divider = { height: '1px', background: 'var(--line)' };
   const selectStyle = { padding: '0.4em 0.6em', borderRadius: '0.6em', border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--text-strong)', fontSize: '0.929em' };
 
@@ -99,8 +99,8 @@ export default function NotifySettings() {
         fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Noto Sans JP', sans-serif",
       }}
     >
-      <header style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '0.857em', paddingTop: 'calc(2em + env(safe-area-inset-top))', paddingBottom: '1.143em', background: 'var(--surface)' }}>
-        <div style={{ padding: '0 1.714em', height: '34px', display: 'flex', alignItems: 'center', gap: '0.857em' }}>
+      <header style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '0.857em', paddingTop: 'calc(0.571em + env(safe-area-inset-top))', paddingBottom: '0.5em', background: 'var(--surface)' }}>
+        <div style={{ padding: '0 1em', height: '2.857em', display: 'flex', alignItems: 'center', gap: '0.857em' }}>
           <button
             type="button"
             onClick={() => navigate(backTo)}
@@ -114,7 +114,7 @@ export default function NotifySettings() {
         </div>
       </header>
 
-      <main className="no-scrollbar" style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '0 1.714em 1.714em', boxSizing: 'border-box' }}>
+      <main className="no-scrollbar" style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '0 1em 1.5em', boxSizing: 'border-box' }}>
         <div style={sectionTitle}>この端末</div>
         <div style={card}>
           <div style={rowStyle}>
@@ -134,7 +134,7 @@ export default function NotifySettings() {
           </div>
         </div>
 
-        <div style={{ ...sectionTitle, marginTop: '1.714em' }}>授業ごと</div>
+        <div style={{ ...sectionTitle, marginTop: '1.286em' }}>授業ごと</div>
         <div style={card}>
           {courses.length === 0 ? (
             <div style={{ ...rowStyle, color: 'var(--text-muted)', fontSize: '0.929em', lineHeight: '1.6em' }}>
@@ -165,7 +165,7 @@ export default function NotifySettings() {
           )}
         </div>
 
-        <div style={{ ...sectionTitle, marginTop: '1.714em' }}>リマインド</div>
+        <div style={{ ...sectionTitle, marginTop: '1.286em' }}>リマインド</div>
         <div style={card}>
           <div style={rowStyle}>
             <div style={{ color: 'var(--text-strong)', fontWeight: 600, minWidth: 0 }}>
