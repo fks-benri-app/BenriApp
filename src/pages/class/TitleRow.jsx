@@ -11,8 +11,8 @@ export default function TitleRow({ searchOpen, searchInputRef, query, setQuery, 
   const navigate = useNavigate();
   return (
     <div style={{
-      padding: '0 1.714em',
-      height: '34px', // 検索を開いても高さが変わらないよう固定
+      padding: '0 0.5em 0 1em',
+      height: '2.857em', // 検索を開いても高さが変わらないよう固定
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
@@ -70,16 +70,16 @@ export default function TitleRow({ searchOpen, searchInputRef, query, setQuery, 
         <>
           <div style={{
             color: 'var(--text-strong)',
-            fontSize: '1.871em',
+            fontSize: '1.571em',
             fontFamily: 'Inter',
-            fontWeight: '800',
+            fontWeight: '700',
             userSelect: 'none'
           }}>
             お知らせ
           </div>
 
           {/* 右上アイコン */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.9em', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 0, flexShrink: 0 }}>
             {/* 一斉既読(ベル・検索と同じ並び。未読がないときは薄くして押せなくする) */}
             <button
               type="button"
@@ -89,12 +89,12 @@ export default function TitleRow({ searchOpen, searchInputRef, query, setQuery, 
               title={t('class.readAll')}
               style={{
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                width: '1.571em', height: '1.571em', padding: 0, border: 'none', background: 'transparent',
+                width: '2.571em', height: '2.571em', padding: 0, border: 'none', background: 'transparent',
                 fontSize: 'inherit', opacity: unreadShown.length === 0 ? 0.35 : 1,
                 cursor: unreadShown.length === 0 ? 'default' : 'pointer', touchAction: 'manipulation'
               }}
             >
-              <img className="icon-ink" src={readAllIcon} alt="" aria-hidden="true" draggable={false} style={{ width: '100%', height: '100%' }} />
+              <img className="icon-ink" src={readAllIcon} alt="" aria-hidden="true" draggable={false} style={{ width: '1.429em', height: '1.429em' }} />
             </button>
             <button
               type="button"
@@ -105,8 +105,8 @@ export default function TitleRow({ searchOpen, searchInputRef, query, setQuery, 
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                width: '2.5em',
-                height: '1.571em',
+                width: '2.571em',
+                height: '2.571em',
                 padding: 0,
                 border: 'none',
                 background: 'transparent',
@@ -122,7 +122,7 @@ export default function TitleRow({ searchOpen, searchInputRef, query, setQuery, 
                 alt=""
                 aria-hidden="true"
                 draggable={false}
-                style={{ width: '1.571em', height: '1.571em', objectFit: 'contain', display: 'block' }}
+                style={{ width: '1.429em', height: '1.429em', objectFit: 'contain', display: 'block' }}
               />
             </button>
             <img
@@ -132,8 +132,10 @@ export default function TitleRow({ searchOpen, searchInputRef, query, setQuery, 
               onClick={openSearch}
               onKeyDown={(e) => { if (e.key === 'Enter') openSearch(); }}
               style={{
-                width: '1.571em',
-                height: '1.571em',
+                width: '1.429em',
+                height: '1.429em',
+                padding: '0.571em', // 見た目は小さく、押せる範囲は広く
+                boxSizing: 'content-box',
                 cursor: 'pointer',
                 userSelect: 'none',
                 WebkitUserSelect: 'none',

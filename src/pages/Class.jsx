@@ -181,10 +181,11 @@ export default function Class() {
         flexShrink: 0,
         display: 'flex',
         flexDirection: 'column',
-        gap: '0.857em',
-        paddingTop: 'calc(2em + env(safe-area-inset-top))',
-        paddingBottom: '1.143em',
+        gap: '0.357em',
+        paddingTop: 'calc(0.571em + env(safe-area-inset-top))',
+        paddingBottom: '0.5em',
         background: 'var(--surface)',
+        borderBottom: '1px solid var(--line)',
         width: '100%'
       }}>
         <TitleRow searchOpen={searchOpen} searchInputRef={searchInputRef} query={query} setQuery={setQuery} closeSearch={closeSearch} readAllShown={readAllShown} unreadShown={unreadShown} devicePushOn={devicePushOn} openSearch={openSearch} />
@@ -203,12 +204,12 @@ export default function Class() {
         overflowY: 'auto',
         overscrollBehavior: 'contain',
         WebkitOverflowScrolling: 'touch',
-        padding: '0.857em 1.714em',
+        padding: '0.571em 1em',
         width: '100%',
         boxSizing: 'border-box',
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-        gap: '0.857em',
+        gap: '0.5em',
         alignContent: 'start'
       }}>
         {pushBroken && !isPushRecentlyFixed() && (

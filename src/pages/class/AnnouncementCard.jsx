@@ -12,16 +12,13 @@ export default function AnnouncementCard({ ann, openAnnouncement }) {
       onKeyDown={(e) => { if (e.key === 'Enter') openAnnouncement(ann); }}
       style={{
         position: 'relative',
-        padding: ann.isUnread ? 'calc(1.143em - 1.5px)' : '1.143em',
-        border: ann.isUnread ? '1.5px solid transparent' : 'none',
-        background: ann.isUnread
-          ? 'linear-gradient(var(--surface-2), var(--surface-2)) padding-box, linear-gradient(135deg, #FF4D4D 0%, #FF8A1B 100%) border-box'
-          : 'var(--surface-2)', // 背景より一段だけ濃い面(枠線の色よりなじませる)
-        borderRadius: '1.143em',
+        padding: '0.786em 0.929em',
+        border: '1px solid var(--line)',
+        background: 'var(--surface)',
+        borderRadius: '0.857em',
         display: 'flex',
         flexDirection: 'column',
-        gap: '0.857em',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
+        gap: '0.5em',
         cursor: 'pointer',
         userSelect: 'none',
         WebkitUserSelect: 'none',
@@ -31,9 +28,9 @@ export default function AnnouncementCard({ ann, openAnnouncement }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.571em' }}>
           <div style={{
-            padding: '0.286em 0.571em',
+            padding: '0.214em 0.5em',
             background: shaded(courseThemeOrNull(ann.subject)?.gradient || 'var(--line)'),
-            borderRadius: '0.429em'
+            borderRadius: '0.357em'
           }}>
             <div style={{
               color: courseThemeOrNull(ann.subject)?.textColor || 'var(--text-strong)',
@@ -45,9 +42,9 @@ export default function AnnouncementCard({ ann, openAnnouncement }) {
           </div>
           {KIND_LABELS[ann.kind] && (
             <div style={{
-              padding: '0.286em 0.571em',
-              borderRadius: '0.429em',
-              background: 'var(--line)', // 種別は無彩色にして、授業の色だけを目立たせる
+              padding: '0.214em 0.5em',
+              borderRadius: '0.357em',
+              background: 'var(--surface-3)', // 種別は無彩色にして、授業の色だけを目立たせる
               color: 'var(--text-body)',
               fontSize: '0.786em',
               fontWeight: '700'
@@ -61,10 +58,10 @@ export default function AnnouncementCard({ ann, openAnnouncement }) {
             {ann.time}
           </div>
           {/* 既読でも場所は空けておく(未読・既読で、時刻の位置がずれないように) */}
-          <div style={{ width: '0.571em', height: '0.571em', background: 'linear-gradient(135deg, #FF4D4D 0%, #FF8A1B 100%)', borderRadius: '50%', visibility: ann.isUnread ? 'visible' : 'hidden' }} />
+          <div style={{ width: '0.643em', height: '0.643em', background: 'var(--accent)', borderRadius: '50%', visibility: ann.isUnread ? 'visible' : 'hidden' }} />
         </div>
       </div>
-      <div style={{ color: 'var(--text-body)', fontSize: '1em', fontWeight: 400, lineHeight: 1.4286, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+      <div style={{ color: ann.isUnread ? 'var(--text-strong)' : 'var(--text-body)', fontSize: '1em', fontWeight: ann.isUnread ? 600 : 400, lineHeight: 1.4, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
         {ann.content}
       </div>
     </article>
