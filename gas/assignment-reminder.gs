@@ -10,6 +10,11 @@
 //
 // 注意: この機能を入れる前に保存されたお知らせには、dueAt や read が無いため、対象にならない
 // 注意: 検索には Firestore の複合インデックスが要る(初回の実行時にエラーのリンクから作成する)
+//   ・sendDueReminders:    reminded(==), dueAt(範囲)            → (reminded, dueAt)
+//   ・sendUnreadReminders: read(==), unreadNotified(==), receivedAt(範囲) → (read, unreadNotified, receivedAt)
+// 読み取りを減らすための決まり:
+//   ・送った・対象外と決まったお知らせには、必ず印(reminded / unreadNotified)を付ける。印の付いたものは検索に出ない
+//   ・トリガーは 課題の期限=毎日18時、未読=3時間ごと(setupDueReminderTrigger を参照)
 // ==================================================
 const REMIND_HOUR_JST = 18;
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -120,8 +125,9 @@ function sendDueReminders() {
   if (jstHourOf_(now) < REMIND_HOUR_JST) return;
 
   const todayStart = jstMidnight_(jstDateOf_(now));
-  // 明日から3日後の0時まで(設定できる最大は3日前)
+  // 明日から3日後の0時まで(設定できる最大は3日前)。送り済み(reminded)は検索に出さない
   const rows = queryAnnouncements_([
+    ff_('reminded', 'EQUAL', { booleanValue: false }),
     ff_('dueAt', 'GREATER_THAN_OR_EQUAL', tsv_(todayStart + DAY_MS)),
     ff_('dueAt', 'LESS_THAN', tsv_(todayStart + 4 * DAY_MS)),
   ]);
@@ -129,7 +135,10 @@ function sendDueReminders() {
   rows.forEach(function (r) {
     if (r.reminded || r.deleted || isNaN(r.dueAtMs)) return;
     const prefs = prefsCacheFor_(cache, r.studentId);
-    if (!prefs.remindAssignment.on) return;
+    if (!prefs.remindAssignment.on) {
+      markFlag_(r, 'reminded'); // 設定がオフの生徒には、もう読まない(オンに戻しても、この課題は対象外)
+      return;
+    }
     // 期限の日の0時と、今日の0時の差(日数)が、設定の「何日前」と同じなら送る
     const daysUntil = Math.round((jstMidnight_(jstDateOf_(r.dueAtMs)) - todayStart) / DAY_MS);
     if (daysUntil !== prefs.remindAssignment.daysBefore) return;
@@ -155,8 +164,10 @@ function sendDueReminders() {
 function sendUnreadReminders() {
   const now = Date.now();
   // 最短の12時間前から、14日前までの未読を見る(それより新しいもの・古いものは対象外)
+  // 通知済み(unreadNotified)は検索に出さない。これで、同じ未読を毎時読み直すことがなくなる
   const rows = queryAnnouncements_([
     ff_('read', 'EQUAL', { booleanValue: false }),
+    ff_('unreadNotified', 'EQUAL', { booleanValue: false }),
     ff_('receivedAt', 'LESS_THAN_OR_EQUAL', tsv_(now - 12 * HOUR_MS)),
     ff_('receivedAt', 'GREATER_THAN', tsv_(now - 14 * DAY_MS)),
   ]);
@@ -164,7 +175,10 @@ function sendUnreadReminders() {
   rows.forEach(function (r) {
     if (r.read || r.unreadNotified || r.deleted || isNaN(r.receivedAtMs)) return;
     const prefs = prefsCacheFor_(cache, r.studentId);
-    if (!prefs.remindUnread.on) return;
+    if (!prefs.remindUnread.on) {
+      markFlag_(r, 'unreadNotified'); // 設定がオフの生徒には、もう読まない
+      return;
+    }
     if (now - r.receivedAtMs < prefs.remindUnread.afterHours * HOUR_MS) return; // まだ時間がたっていない
     if (!notifyAllowed_(prefs, courseIdFromLink_(r.link))) {
       markFlag_(r, 'unreadNotified');
@@ -184,13 +198,15 @@ function sendUnreadReminders() {
   });
 }
 
-// 1回だけ実行する: 2つの処理の毎時 trigger を設定する(既存の trigger は作り直す)
+// 1回だけ実行する: 2つの処理の trigger を設定する(既存の trigger は作り直す)
+//   ・課題の期限: 毎日 18 時(18時台の1回だけ。1日に何度も検索しない)
+//   ・未読のお知らせ: 3時間ごと(12時間以上たった未読を送る。送る時刻は最大3時間ずれる)
+// 注意: atHour は GAS プロジェクトのタイムゾーンで解釈される。プロジェクトが Asia/Tokyo になっているか確認する
 function setupDueReminderTrigger() {
   const names = ['sendDueReminders', 'sendUnreadReminders'];
   ScriptApp.getProjectTriggers().forEach(function (t) {
     if (names.indexOf(t.getHandlerFunction()) >= 0) ScriptApp.deleteTrigger(t);
   });
-  names.forEach(function (name) {
-    ScriptApp.newTrigger(name).timeBased().everyHours(1).create();
-  });
+  ScriptApp.newTrigger('sendDueReminders').timeBased().everyDays(1).atHour(REMIND_HOUR_JST).create();
+  ScriptApp.newTrigger('sendUnreadReminders').timeBased().everyHours(3).create();
 }

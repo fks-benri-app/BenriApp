@@ -338,11 +338,21 @@ function notifyPrefsFrom_(fields) {
 }
 
 // 生徒1人の設定を読む(新しい投稿が見つかったときの、本人の分)
+// 設定は滅多に変わらないので、CacheService に10分覚える(1分ごとの確認で、毎回 Firestore を読まないため)。
+// 変更の反映は最大10分おくれる。読めなかったときは覚えない(既定値を10分続けない)。
+const NOTIFY_PREFS_CACHE_SEC = 600;
 function getNotifyPrefs_(studentId) {
+  const cacheKey = 'prefs:' + studentId;
+  try {
+    const hit = CacheService.getScriptCache().get(cacheKey);
+    if (hit) return JSON.parse(hit);
+  } catch (e) { /* 覚えが壊れていれば、読み直す */ }
   try {
     const res = fsRequest_(fsDocUrl_('/users/' + encodeURIComponent(studentId)) + '?mask.fieldPaths=notifyPrefs', 'get');
     if (res.getResponseCode() !== 200) return NOTIFY_PREFS_DEFAULT;
-    return notifyPrefsFrom_(JSON.parse(res.getContentText()).fields);
+    const prefs = notifyPrefsFrom_(JSON.parse(res.getContentText()).fields);
+    try { CacheService.getScriptCache().put(cacheKey, JSON.stringify(prefs), NOTIFY_PREFS_CACHE_SEC); } catch (e) { /* 覚えられなくても続ける */ }
+    return prefs;
   } catch (e) {
     console.error('通知設定の読み取りに失敗: ' + e);
     return NOTIFY_PREFS_DEFAULT;

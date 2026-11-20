@@ -29,7 +29,7 @@ export default function Class() {
   const navigate = useNavigate();
   const { identity } = useIdentity();
   const real = useAnnouncements(identity?.id);
-  const { markRead, markAllRead } = real;
+  const { markRead, markAllRead, hasMore, loadingMore, loadMore } = real;
   // 開発用: DEV_MOCK を true にすると、先頭にモックが加わる(本番は false のまま)
   const status = DEV_MOCK ? 'ready' : real.status;
   const items = useMemo(
@@ -239,6 +239,18 @@ export default function Class() {
         ) : (
           <div style={{ padding: '3em 0', textAlign: 'center', color: 'var(--text-faint)', gridColumn: '1 / -1', userSelect: 'none' }}>
             {emptyMessage}
+          </div>
+        )}
+        {!DEV_MOCK && hasMore && (
+          <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'center', padding: '1em 0' }}>
+            <button
+              type="button"
+              onClick={loadMore}
+              disabled={loadingMore}
+              style={{ padding: '0.6em 1.4em', borderRadius: 999, border: '1px solid var(--line)', background: 'transparent', color: 'var(--text-strong)', cursor: loadingMore ? 'default' : 'pointer', opacity: loadingMore ? 0.6 : 1 }}
+            >
+              {loadingMore ? t('class.loadingMore') : t('class.loadMore')}
+            </button>
           </div>
         )}
       </main>

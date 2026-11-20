@@ -20,6 +20,8 @@
   },
   "class": {
     "loadFailed": "読み込みに失敗しました",
+    "loadMore": "もっと見る",
+    "loadingMore": "読み込み中…",
     "none": "該当するお知らせはありません",
     "searchPlaceholder": "教科・先生・本文で検索",
     "searchLabel": "お知らせを検索",
