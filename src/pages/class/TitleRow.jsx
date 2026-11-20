@@ -12,7 +12,7 @@ export default function TitleRow({ searchOpen, searchInputRef, query, setQuery, 
   return (
     <div style={{
       padding: '0 0.5em 0 1em',
-      height: '2.857em', // 検索を開いても高さが変わらないよう固定
+      height: '44px', // 検索を開いても高さが変わらないよう固定(押すところは 44px 以上)
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
@@ -89,7 +89,7 @@ export default function TitleRow({ searchOpen, searchInputRef, query, setQuery, 
               title={t('class.readAll')}
               style={{
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                width: '2.571em', height: '2.571em', padding: 0, border: 'none', background: 'transparent',
+                width: '44px', height: '44px', padding: 0, border: 'none', background: 'transparent',
                 fontSize: 'inherit', opacity: unreadShown.length === 0 ? 0.35 : 1,
                 cursor: unreadShown.length === 0 ? 'default' : 'pointer', touchAction: 'manipulation'
               }}
@@ -105,8 +105,8 @@ export default function TitleRow({ searchOpen, searchInputRef, query, setQuery, 
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                width: '2.571em',
-                height: '2.571em',
+                width: '44px',
+                height: '44px',
                 padding: 0,
                 border: 'none',
                 background: 'transparent',
@@ -125,26 +125,26 @@ export default function TitleRow({ searchOpen, searchInputRef, query, setQuery, 
                 style={{ width: '1.429em', height: '1.429em', objectFit: 'contain', display: 'block' }}
               />
             </button>
-            <img
-              draggable={false}
-              role="button"
-              tabIndex={0}
+            <button
+              type="button"
               onClick={openSearch}
-              onKeyDown={(e) => { if (e.key === 'Enter') openSearch(); }}
+              aria-label="検索"
+              title="検索"
               style={{
-                width: '1.429em',
-                height: '1.429em',
-                padding: '0.571em', // 見た目は小さく、押せる範囲は広く
-                boxSizing: 'content-box',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '44px',
+                height: '44px',
+                padding: 0,
+                border: 'none',
+                background: 'transparent',
                 cursor: 'pointer',
-                userSelect: 'none',
-                WebkitUserSelect: 'none',
                 touchAction: 'manipulation'
               }}
-              className="icon-ink"
-              src={searchIcon}
-              alt="検索"
-            />
+            >
+              <img className="icon-ink" src={searchIcon} alt="" aria-hidden="true" draggable={false} style={{ width: '1.429em', height: '1.429em' }} />
+            </button>
           </div>
         </>
       )}
