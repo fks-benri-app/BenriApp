@@ -52,6 +52,19 @@ export default function App() {
     }
     return () => off();
   }, []);
+  // 起動の少しあとに、ほかの画面の JS と Firestore を先に読んでおく(画面の切り替えで白い画面を出さないため)。
+  // 読んだものは Service Worker のキャッシュにも入り、次に起動したときは端末から瞬時に読める
+  useEffect(() => {
+    const warm = () => {
+      import('./pages/Class').catch(() => {});
+      import('./pages/Settings').catch(() => {});
+      import('./pages/LinkPage').catch(() => {});
+      import('./pages/NotifySettings').catch(() => {});
+      loadFirestore().catch(() => {});
+    };
+    const id = setTimeout(warm, 1500);
+    return () => clearTimeout(id);
+  }, []);
   // ログイン状態の確認が終わるまでは何も出さない(連携画面が一瞬ちらつくのを防ぐ)
   if (!ready) return null;
   return (
