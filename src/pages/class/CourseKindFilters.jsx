@@ -6,7 +6,7 @@ import { t } from '../../lib/ui/text';
 
 export default function CourseKindFilters({ baseFontSize, courseValue, setCourse, courseColor, courseOptions, kind, setKind, kindColor }) {
   return (
-    <div style={{ padding: '0 1em', display: 'flex', gap: '0.429em' }}>
+    <div style={{ padding: '0 1.143em', display: 'flex', gap: '0.571em' }}>
       <FilterSelect fontPx={baseFontSize}
         label={t('class.courseFilter')}
         value={courseValue}

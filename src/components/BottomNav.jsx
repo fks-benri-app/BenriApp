@@ -23,11 +23,11 @@ export default function BottomNav({ active, onSelect }) {
     <nav
       style={{
         flexShrink: 0,
-        padding: '0 0 env(safe-area-inset-bottom)',
-        height: 'calc(3.857em + env(safe-area-inset-bottom))',
+        padding: '0 1.143em env(safe-area-inset-bottom)',
+        height: 'calc(4.571em + env(safe-area-inset-bottom))',
         background: 'var(--surface)',
         display: 'flex',
-        justifyContent: 'stretch',
+        justifyContent: 'space-between',
         alignItems: 'center',
         width: '100%',
         boxSizing: 'border-box',
@@ -44,10 +44,10 @@ export default function BottomNav({ active, onSelect }) {
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '0.143em',
-              flex: 1, // 4等分。親指で押す場所なので、画面の幅いっぱいを押せるようにする
-              height: '100%',
+              gap: '0.214em',
+              width: '5.714em',
               cursor: 'pointer',
+              padding: '0.4em 0',
               userSelect: 'none',
               WebkitUserSelect: 'none',
               touchAction: 'manipulation',
@@ -55,12 +55,12 @@ export default function BottomNav({ active, onSelect }) {
           >
             <img
               draggable={false}
-              style={{ width: '1.714em', height: '1.714em', opacity: isActive ? 1 : 0.45 }}
+              style={{ width: '1.5em', height: '1.5em', opacity: isActive ? 1 : 0.45 }}
               className={isActive ? 'icon-active' : 'icon-ink'}
               src={isActive ? tab.activeIcon : tab.icon}
               alt={tab.id}
             />
-            <div style={{ color: isActive ? 'var(--text-strong)' : 'var(--text-muted)', fontSize: '0.714em', fontWeight: isActive ? '700' : '500' }}>
+            <div style={{ color: isActive ? 'var(--text-strong)' : 'var(--text-muted)', fontSize: '0.786em', fontWeight: '600' }}>
               {tab.label}
             </div>
           </div>

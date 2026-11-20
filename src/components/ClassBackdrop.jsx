@@ -67,9 +67,9 @@ export function TitleHeader({ title }) {
       flexShrink: 0,
       display: 'flex',
       flexDirection: 'column',
-      gap: '0.357em',
+      gap: '0.571em',
       paddingTop: 'calc(0.571em + env(safe-area-inset-top))',
-      paddingBottom: '0.5em',
+      paddingBottom: '0.714em',
       background: 'var(--surface)',
       borderBottom: '1px var(--line) solid',
       width: '100%'
@@ -173,7 +173,7 @@ export default function ClassBackdrop() {
         </div>
 
         {/* フィルターボタン */}
-        <div className="no-scrollbar" style={{ padding: '0 1em', display: 'flex', gap: '0.429em', overflowX: 'auto' }}>
+        <div className="no-scrollbar" style={{ padding: '0 1.143em', display: 'flex', gap: '0.571em', overflowX: 'auto' }}>
           {FILTERS.map((filter) => {
             const isActive = filter.id === 'all';
             return (
@@ -204,7 +204,7 @@ export default function ClassBackdrop() {
         </div>
 
         {/* プルダウン: 授業・形式 */}
-        <div style={{ padding: '0 1em', display: 'flex', gap: '0.429em' }}>
+        <div style={{ padding: '0 1.143em', display: 'flex', gap: '0.571em' }}>
           <FilterSelectView allLabel="すべての授業" />
           <FilterSelectView allLabel="すべての形式" />
         </div>
@@ -215,12 +215,12 @@ export default function ClassBackdrop() {
         flex: 1,
         minHeight: 0,
         overflow: 'hidden',
-        padding: '0.571em 1em',
+        padding: '0.857em 1.143em',
         width: '100%',
         boxSizing: 'border-box',
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-        gap: '0.5em',
+        gap: '0.714em',
         alignContent: 'start'
       }}>
         <div style={{ padding: '3em 0', textAlign: 'center', color: 'var(--text-faint)', gridColumn: '1 / -1', userSelect: 'none' }}>
