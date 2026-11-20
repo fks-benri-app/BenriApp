@@ -13,8 +13,8 @@ export default function TagChips({ activeFilter, setActiveFilter }) {
             key={filter.id}
             onClick={() => setActiveFilter(filter.id)}
             style={{
-              padding: '0.571em 1.143em',
-              borderRadius: '0.857em',
+              padding: '0.5em 0.929em',
+              borderRadius: '0.571em',
               flexShrink: 0,
               cursor: 'pointer',
               backgroundImage: isActive ? shaded('linear-gradient(135deg, #FF4D4D 0%, #FF8A1B 100%)') : 'none',
@@ -22,7 +22,7 @@ export default function TagChips({ activeFilter, setActiveFilter }) {
               outline: isActive ? 'none' : '1px var(--line) solid',
               outlineOffset: '-1px',
               color: isActive ? 'white' : 'var(--text-muted)',
-              fontSize: '1em',
+              fontSize: '0.929em',
               fontWeight: isActive ? '700' : '400',
               whiteSpace: 'nowrap',
               boxSizing: 'border-box',
