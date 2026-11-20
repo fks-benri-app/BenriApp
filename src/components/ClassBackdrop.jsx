@@ -75,8 +75,8 @@ export function TitleHeader({ title }) {
       width: '100%'
     }}>
       <div style={{
-        padding: '0 0.5em 0 1em',
-        height: '44px',
+        padding: '0 1.714em',
+        height: '34px',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -84,9 +84,9 @@ export function TitleHeader({ title }) {
       }}>
         <div style={{
           color: 'var(--text-strong)',
-          fontSize: '1.571em',
+          fontSize: '1.871em',
           fontFamily: 'Inter',
-          fontWeight: '700',
+          fontWeight: '800',
           userSelect: 'none'
         }}>
           {title}

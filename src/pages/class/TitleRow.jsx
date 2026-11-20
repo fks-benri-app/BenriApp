@@ -11,8 +11,8 @@ export default function TitleRow({ searchOpen, searchInputRef, query, setQuery, 
   const navigate = useNavigate();
   return (
     <div style={{
-      padding: '0 0.5em 0 1em',
-      height: '44px', // 検索を開いても高さが変わらないよう固定(押すところは 44px 以上)
+      padding: '0 1.714em',
+      height: '34px', // 検索を開いても高さが変わらないよう固定
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
@@ -70,16 +70,16 @@ export default function TitleRow({ searchOpen, searchInputRef, query, setQuery, 
         <>
           <div style={{
             color: 'var(--text-strong)',
-            fontSize: '1.571em',
+            fontSize: '1.871em',
             fontFamily: 'Inter',
-            fontWeight: '700',
+            fontWeight: '800',
             userSelect: 'none'
           }}>
             お知らせ
           </div>
 
           {/* 右上アイコン */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 0, flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.9em', flexShrink: 0 }}>
             {/* 一斉既読(ベル・検索と同じ並び。未読がないときは薄くして押せなくする) */}
             <button
               type="button"
@@ -94,7 +94,7 @@ export default function TitleRow({ searchOpen, searchInputRef, query, setQuery, 
                 cursor: unreadShown.length === 0 ? 'default' : 'pointer', touchAction: 'manipulation'
               }}
             >
-              <img className="icon-ink" src={readAllIcon} alt="" aria-hidden="true" draggable={false} style={{ width: '1.429em', height: '1.429em' }} />
+              <img className="icon-ink" src={readAllIcon} alt="" aria-hidden="true" draggable={false} style={{ width: '1.571em', height: '1.571em' }} />
             </button>
             <button
               type="button"
@@ -122,7 +122,7 @@ export default function TitleRow({ searchOpen, searchInputRef, query, setQuery, 
                 alt=""
                 aria-hidden="true"
                 draggable={false}
-                style={{ width: '1.429em', height: '1.429em', objectFit: 'contain', display: 'block' }}
+                style={{ width: '1.571em', height: '1.571em', objectFit: 'contain', display: 'block' }}
               />
             </button>
             <button
@@ -143,7 +143,7 @@ export default function TitleRow({ searchOpen, searchInputRef, query, setQuery, 
                 touchAction: 'manipulation'
               }}
             >
-              <img className="icon-ink" src={searchIcon} alt="" aria-hidden="true" draggable={false} style={{ width: '1.429em', height: '1.429em' }} />
+              <img className="icon-ink" src={searchIcon} alt="" aria-hidden="true" draggable={false} style={{ width: '1.571em', height: '1.571em' }} />
             </button>
           </div>
         </>
