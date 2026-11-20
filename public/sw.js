@@ -1,5 +1,4 @@
-importScripts("https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js");
-
+// オフライン対応の Service Worker(アプリ本体のキャッシュ)。main.jsx から登録する
 // ===== オフライン対応(アプリ本体のキャッシュ) =====
 const APP_CACHE = 'benri-app-v1'; // 更新するときは v2, v3… と上げる
 const APP_SCOPE = self.registration.scope; // 例: https://…/BenriApp/
@@ -21,9 +20,8 @@ self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
-  // このアプリの中身だけ対象(Firebase・GAS・OneSignal などの通信は触らない)
+  // このアプリの中身だけ対象(Firebase・GAS などの通信は触らない)
   if (url.origin !== self.location.origin || !url.href.startsWith(APP_SCOPE)) return;
-  if (url.pathname.includes('OneSignal')) return;
   // repair.html など別のページは触らない(アプリ本体の画面として、キャッシュに入れないため)
   if (url.pathname.endsWith('.html')) return;
 

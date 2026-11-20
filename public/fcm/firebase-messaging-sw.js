@@ -1,5 +1,5 @@
 // FCM のバックグラウンド通知(段階2の試験用)
-// 配置: /BenriApp/fcm/ のスコープ。OneSignal の SW(ルート)とは別のスコープで動く。
+// 配置: /BenriApp/fcm/ のスコープ。アプリのオフライン用 SW(ルート)とは別のスコープで動く。
 // 設定値は src/config.js の firebaseConfig と同じ(公開してよい値)。変えたら両方を直す。
 importScripts('./firebase-app-compat.js');
 importScripts('./firebase-messaging-compat.js');

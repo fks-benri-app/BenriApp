@@ -8,12 +8,12 @@
 //  ・認証は、既存の FIREBASE_SERVICE_ACCOUNT で OAuth2 のアクセストークンを作る(スコープは firebase.messaging)。
 //
 // 注意
-//  ・USE_FCM が false の間は、どこからも呼ばれない。既存の OneSignal の送信はそのまま動く。
+//  ・USE_FCM が false の間は、送信しない。
 //  ・テストは、GAS エディタから testFcmSubscribe / testFcmSend を実行して行う。
 //    そのためにスクリプトプロパティ TEST_FCM_TOKEN に、テスト端末の登録トークンを入れておく。
 //  ・登録トークンは、ログや画面に全文を出さない(末尾だけ出す)。
 // ==================================================
-const USE_FCM = true; // 送信: 登録トークンがある生徒は FCM、ない生徒は OneSignal(shared-notify.gs / コード.gs)
+const USE_FCM = true; // 送信(push.gs から呼ばれる)
 const FCM_SCOPE = 'https://www.googleapis.com/auth/firebase.messaging';
 
 // 授業のトピック名(例: course_123456)。授業IDは数字なので、そのまま使える
@@ -195,7 +195,7 @@ function fcmSyncStudent_(studentId) {
     ' 解除' + stats.off + ' 削除' + stats.removed + ' 失敗' + stats.ng);
 }
 
-// ----- 送信(OneSignal と並行する移行期間の用)。USE_FCM が false の間は何もしない -----
+// ----- 送信。USE_FCM が false の間は何もしない -----
 
 // 授業のトピックへ1件送る(授業の購読している全端末へ届く)。共有通知の送る役が、1回だけ呼ぶ
 // 授業のトピックへ送る。いまは使っていない(目標の授業ごとの保存に移ったときに使う)
@@ -205,7 +205,7 @@ function fcmSendToCourse_(courseId, title, body, url, data) {
   if (!r.ok) console.error('FCMトピック送信失敗(' + r.code + '): ' + r.detail);
 }
 
-// 生徒の登録トークンすべてに、1件ずつ送る(個人宛て・まとめ通知)。送れた数を返す。0 なら呼び出し側が OneSignal で送る
+// 生徒の登録トークンすべてに、1件ずつ送る(個人宛て・まとめ通知)。送れた数を返す。
 function fcmSendToStudent_(studentId, title, body, url, data) {
   if (!USE_FCM) return 0;
   let docs = [];

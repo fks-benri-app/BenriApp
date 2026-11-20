@@ -7,12 +7,10 @@ import { watchUser } from '../data/liveStore';
 //
 // 通知の設定は、このファイルが唯一の入口。
 //   1. 授業ごとの設定(Firestore の notifyPrefs)  … useNotifyPrefs / saveNotifyPrefs
-//   2. この端末のオン/オフ(OneSignal の購読 + FCM の登録トークン)  … getDevicePushEnabled / setDevicePushEnabled
-// OneSignal は移行が終わったら消す。そのときは、2. の中の OneSignal の呼び出しを外すだけで済む。
+//   2. この端末のオン/オフ(FCM の登録トークン + 利用者のオフの印)  … getDevicePushEnabled / setDevicePushEnabled
 import { useEffect, useState } from 'react';
 import { updateUserDoc } from '../data/firestoreLazy';
-import { getDevicePushEnabled as getOneSignalEnabled, setDevicePushEnabled as setOneSignalEnabled } from './onesignal';
-import { isPushOffByUser } from './pushOffFlag';
+import { isPushOffByUser, setPushOffByUser } from './pushOffFlag';
 
 export { isPushOffByUser };
 
@@ -65,17 +63,23 @@ export async function saveNotifyPrefs(studentId, prefs) {
   await updateUserDoc(studentId, { notifyPrefs: normalizePrefs(prefs) });
 }
 
-// この端末のオン/オフ
-// 今オンかどうか
-export const getDevicePushEnabled = getOneSignalEnabled;
+// この端末の通知が今オンか(許可済みで、利用者がオフにしていないか)
+export async function getDevicePushEnabled() {
+  if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return false;
+  return !isPushOffByUser();
+}
 
-// オン/オフを切り替える。OneSignal と FCM を同じ状態にそろえる。戻り値は、切り替えたあとの状態(オンなら true)。
-// オフ: FCM の登録トークンを消す(消すと FCM はこの端末に送らない)。
-// オン: FCM の登録トークンを取り直して保存する。
+// オン/オフを切り替える。戻り値は、切り替えたあとの状態(オンなら true)。
+// オフ: 利用者のオフの印を立て、FCM の登録トークンを消す(消すと FCM はこの端末に送らない)。
+// オン: オフの印を外し、FCM の登録トークンを取り直して保存する。
 export async function setDevicePushEnabled(studentId, on) {
-  const result = await setOneSignalEnabled(on);
+  setPushOffByUser(!on);
   const fcm = await import('./fcm');
-  if (result) fcm.refreshFcmTokenIfGranted(studentId).catch(() => {});
-  else fcm.removeFcmTokenForThisDevice(studentId).catch(() => {});
-  return result;
+  try {
+    if (on) await fcm.refreshFcmTokenIfGranted(studentId);
+    else await fcm.removeFcmTokenForThisDevice(studentId);
+  } catch (e) {
+    console.warn('[setDevicePushEnabled]', e);
+  }
+  return getDevicePushEnabled();
 }

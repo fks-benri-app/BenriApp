@@ -1,13 +1,13 @@
 // ==================================================
 // 授業の中での通知の共有  ※ Code.gs の末尾に貼り付ける(組み込む場所は別紙の「組み込み手順」)
 //
-// これまで: 全員の GAS が、同じ投稿を別々に見つけて、別々に OneSignal へ送っていた。
+// これまで: 全員の GAS が、同じ投稿を別々に見つけて、別々に送っていた。
 // これから: 最初に見つけた1人が、その授業の全員分をまとめて送る。ほかの人は、送られたことを確認して、送らない。
 //
 // 流れ
 //  1. 投稿のリンク(.../c/授業ID/p/投稿ID)から、全員で同じになる鍵 postKey を作る。
 //  2. Firestore に posts/{postKey} を「新規作成」する。すでにあれば 409 になる → 1人だけが先に取れる。
-//  3. 先に取った人: 授業のメンバー全員の users/{ID}/announcements/{postKey} を書き、全員の pushKey 宛てに1回だけ送る。
+//  3. 先に取った人: 授業のメンバー全員の users/{ID}/announcements/{postKey} を書き、登録トークンのある全員に1回だけ送る。
 //  4. 取れなかった人: 送信が終わっていて、自分が送り先に入っていれば、何もしない。
 //     ・自分が入っていない / 2分たっても終わらない / 失敗した → 自分で送る(通知を取りこぼさない)
 //  メンバーは、その授業の投稿を自分のメールで見つけた人(courses/{授業ID}/members/{ID})。
@@ -239,8 +239,8 @@ function sendToCourse_(studentId, item, ref) {
   }));
 
   const msg = buildMessage_(item);
-  // 送り方は push.gs に任せる(FCM へ。送れなかった生徒だけ OneSignal へ)
-  const sent = sendPushToStudents_(recipients, msg.heading, msg.body, msg.url, msg.data, studentId);
+  // 送り方は push.gs に任せる(FCM へ送る)
+  const sent = sendPushToStudents_(recipients, msg.heading, msg.body, msg.url, msg.data);
   if (!sent.ok) return false; // 送れなかった。自分には、これまでどおり送る(記録は未送信のまま → ほかの人は2分後に自分で送る)
 
   try {

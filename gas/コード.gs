@@ -1,7 +1,6 @@
 // ==================================================
 // 1. グローバル変数・設定
 // ==================================================
-const ONESIGNAL_APP_ID = "726063a2-acd8-4d5d-9ff0-98902924cfe1";
 const LABEL_NAME = 'ClassroomNotified';
 const APP_URL = 'https://fks-benri-app.github.io/BenriApp/';
 // 通知のアイコン(Chrome・Android で表示される。iPhone の Safari は、ホーム画面アプリのアイコンになる)
@@ -13,7 +12,6 @@ const QUIET_END_HOUR = 6;          // 通知開始時間
 const OVERLAP_MS = 5 * 60 * 1000;  // 取りこぼし防止に前回より5分前から探す
 const MAX_THREADS = 20;
 const BATCH_THRESHOLD = 5;         // 新着がこの件数以上なら1通にまとめる
-const INCLUDE_LEGACY_ID = false;   // 古い方式(生徒ID)の端末には送らない。反映の前に、OneSignal で生徒IDの購読が残っていないか確認する(仕様書 13-2)
 
 
 // ==================================================
@@ -157,7 +155,6 @@ function checkNewAssignments() {
       console.error('氏名の保存に失敗: ' + e);
     }
   }
-  try { checkSubscriptionHealth_(studentId); } catch (e) { console.error(e); }
   const startedAt = Date.now();
   const label = GmailApp.getUserLabelByName(LABEL_NAME) || GmailApp.createLabel(LABEL_NAME);
 
@@ -366,7 +363,7 @@ function decodeClassroomId_(s) {
 
 
 // ==================================================
-// 4. OneSignal プッシュ通知機能
+// 4. プッシュ通知機能
 // ==================================================
 
 // 新着通知の送信制御
@@ -432,50 +429,6 @@ function notifyFresh_(studentId, fresh) {
   const more = fallback.length > 3 ? ' ほか' + (fallback.length - 3) + '件' : '';
   const body = fallback.length + '件の新着: ' + titles + more;
   sendPushToStudent_(studentId, heading, body, APP_URL); // 送り方は push.gs に任せる
-}
-
-// OneSignalAPIへリクエスト送信
-function sendDirectNotification_(externalUserId, title, body, url, data) {
-  const payload = {
-    "app_id": ONESIGNAL_APP_ID,
-    "include_aliases": { "external_id": [].concat(externalUserId) },
-    "target_channel": "push",
-    "headings": { "en": title, "ja": title },
-    "contents": { "en": body, "ja": body },
-    "chrome_web_icon": NOTIFY_ICON_URL
-  };
-  if (url) payload.url = url;
-  if (data) payload.data = data;
-  return executeOneSignalApi_(payload);
-}
-
-// OneSignalの通知APIへUrlFetchAppを送信
-function executeOneSignalApi_(payload) {
-  console.log("送信ペイロード: " + JSON.stringify(payload));
-  const url = "https://onesignal.com/api/v1/notifications";
-  const options = {
-    "method": "post",
-    "contentType": "application/json; charset=utf-8",
-    "headers": { "Authorization": "Key " + getRestApiKey_() },
-    "payload": JSON.stringify(payload),
-    "muteHttpExceptions": true
-  };
-  const response = UrlFetchApp.fetch(url, options);
-  Logger.log("HTTP Response Code: " + response.getResponseCode());
-  Logger.log("Response Body: " + response.getContentText());
-  return JSON.parse(response.getContentText());
-}
-
-// スクリプトプロパティからOneSignalのREST APIキーを取得します。
-function getRestApiKey_() {
-  return PropertiesService.getScriptProperties().getProperty('ONESIGNAL_REST_API_KEY');
-}
-
-// 生徒IDからプッシュ通知の送信先を生成
-function pushTargets_(studentId) {
-  const t = [derivePushKey_(studentId)];
-  if (INCLUDE_LEGACY_ID) t.push(studentId);
-  return t;
 }
 
 
@@ -585,8 +538,8 @@ function markPushStatus_(studentId, broken) {
 }
 
 // プッシュ通知の送信結果を判定し、状態に変化があった場合のみFirestoreの状態を更新
-function recordPushResult_(studentId, res) {
-  const broken = !res || !res.id;
+function recordPushResult_(studentId, ok) {
+  const broken = !ok;
   const props = PropertiesService.getUserProperties();
   if (broken === (props.getProperty('pushBroken') === '1')) return;
   try {
@@ -609,88 +562,6 @@ function signJwt_(payload, privateKey) {
 
 
 // ==================================================
-// 購読の状態の確認(端末ごと)
-// OneSignal の REST API で、pushKey に紐づく購読の一覧(id と enabled)を取り、
-// Firestore の users/{生徒ID}.pushSubs に保存する。各端末が、自分の購読IDを見て、
-// 自分が無効のときだけ「通知を直す」を出す(古い購読が無効のまま残っていても、警告は出ない)。
-// ==================================================
-const SUBS_CHECK_INTERVAL_MS = 30 * 60 * 1000; // 確認できたら、30分あける
-const SUBS_RETRY_MS = 5 * 60 * 1000;           // 失敗したら、5分あける
-
-function checkSubscriptionHealth_(studentId) {
-  const props = PropertiesService.getUserProperties();
-  const now = Date.now();
-  if (now < Number(props.getProperty('subsNextCheckMs') || 0)) return;
-  // 先に次回の時刻を決めておく(途中で失敗しても、毎分APIを叩き続けないため)
-  props.setProperty('subsNextCheckMs', String(now + SUBS_RETRY_MS));
-
-  const res = UrlFetchApp.fetch(
-    'https://api.onesignal.com/apps/' + ONESIGNAL_APP_ID +
-      '/users/by/external_id/' + encodeURIComponent(derivePushKey_(studentId)),
-    { method: 'get', headers: { Authorization: 'Key ' + getRestApiKey_() }, muteHttpExceptions: true }
-  );
-  const code = res.getResponseCode();
-
-  if (code === 429) {
-    // 上限超過: Retry-After の秒数(無ければ60秒)だけ待つ
-    const headers = res.getHeaders();
-    const key = Object.keys(headers).filter(function (k) { return k.toLowerCase() === 'retry-after'; })[0];
-    const wait = Math.max(Number(key ? headers[key] : 60) || 60, 60);
-    props.setProperty('subsNextCheckMs', String(now + wait * 1000));
-    console.warn('購読の確認: 429 ' + wait + '秒待つ');
-    return;
-  }
-  if (code !== 200) {
-    // 404(見つからない)・503・その他: 「購読が無い」とは判断せず、状態は変えない。次の回にまた確認する
-    console.warn('購読の確認: ' + code + ' 状態は変えません');
-    return;
-  }
-
-  const json = JSON.parse(res.getContentText());
-  const subs = (json.subscriptions || [])
-    .filter(function (s) { return /Push$/.test(s.type); }) // メール・SMS は除く
-    .map(function (s) { return { id: s.id, enabled: s.enabled === true }; });
-  saveSubscriptions_(studentId, subs);
-  props.setProperty('subsNextCheckMs', String(now + SUBS_CHECK_INTERVAL_MS));
-  console.log('購読の確認: ' + subs.map(function (s) { return s.id.slice(0, 8) + ':' + (s.enabled ? 'on' : 'off'); }).join(', '));
-}
-
-// Firestore の users/{生徒ID} に、購読の一覧と確認した時刻を保存(他の項目は消さない)
-function saveSubscriptions_(studentId, subs) {
-  const url =
-    'https://firestore.googleapis.com/v1/projects/' + FIRESTORE_PROJECT_ID +
-    '/databases/(default)/documents/users/' + encodeURIComponent(studentId) +
-    '?updateMask.fieldPaths=pushSubs&updateMask.fieldPaths=pushSubsCheckedAt';
-  const body = {
-    fields: {
-      pushSubs: {
-        arrayValue: {
-          values: subs.map(function (s) {
-            return { mapValue: { fields: { id: { stringValue: s.id }, enabled: { booleanValue: s.enabled } } } };
-          }),
-        },
-      },
-      pushSubsCheckedAt: { timestampValue: new Date().toISOString() },
-    },
-  };
-  const res = UrlFetchApp.fetch(url, {
-    method: 'patch',
-    contentType: 'application/json',
-    headers: { Authorization: 'Bearer ' + getFirestoreToken_() },
-    payload: JSON.stringify(body),
-    muteHttpExceptions: true,
-  });
-  if (res.getResponseCode() >= 300) throw new Error('pushSubs保存失敗: ' + res.getContentText());
-}
-
-// GASエディタから手動実行して、確認の経路だけを試す用(30分の間隔は無視する)
-function testSubscriptionHealth() {
-  const studentId = PropertiesService.getUserProperties().getProperty('studentId');
-  PropertiesService.getUserProperties().deleteProperty('subsNextCheckMs');
-  checkSubscriptionHealth_(studentId);
-}
-
-// ==================================================
 // 6. 開発・テスト用関数
 // ==================================================
 
@@ -708,14 +579,14 @@ function devImportPast() {
 
 function testPush() {
   const studentId = PropertiesService.getUserProperties().getProperty('studentId');
-  const res = sendDirectNotification_(pushTargets_(studentId), 'テスト通知', 'これが届けば通知は正常です', null);
-  Logger.log('studentId=' + studentId + ' / ' + JSON.stringify(res));
+  const sent = fcmSendToStudent_(studentId, 'テスト通知', 'これが届けば通知は正常です', null, null);
+  Logger.log('studentId=' + studentId + ' / 送れた端末数=' + sent);
 }
 
 function testPushWithData() {
   const studentId = PropertiesService.getUserProperties().getProperty('studentId');
-  sendDirectNotification_(
-    pushTargets_(studentId),
+  fcmSendToStudent_(
+    studentId,
     'テスト通知(data付き)',
     'data付きのテストです',
     APP_URL + '?open=test123',
@@ -732,18 +603,8 @@ function testPushWithData() {
 
 function testSend() {
   const info = parseStudentId_(Session.getEffectiveUser().getEmail());
-  const res = sendDirectNotification_(pushTargets_(info.studentId), "テスト通知", "GASからのテスト送信です");
-  console.log(JSON.stringify(res));
-}
-
-function debugOneSignalUser() {
-  const url = 'https://api.onesignal.com/apps/' + ONESIGNAL_APP_ID + '/users/by/external_id/250710';
-  const res = UrlFetchApp.fetch(url, {
-    method: 'get',
-    headers: { 'Authorization': 'Key ' + getRestApiKey_() },
-    muteHttpExceptions: true
-  });
-  Logger.log(res.getResponseCode() + ' ' + res.getContentText());
+  const sent = fcmSendToStudent_(info.studentId, "テスト通知", "GASからのテスト送信です", null, null);
+  console.log("送れた端末数=" + sent);
 }
 
 function makePushKeySecret() {
@@ -754,23 +615,7 @@ function makePushKeySecret() {
 
 function testPushNew() {
   const studentId = PropertiesService.getUserProperties().getProperty('studentId');
-  const res = sendDirectNotification_(pushTargets_(studentId), 'テスト通知(新方式)', 'PCとスマホに届くか確認', null);
-  Logger.log('targets=' + JSON.stringify(pushTargets_(studentId)) + ' / ' + JSON.stringify(res));
+  const sent = fcmSendToStudent_(studentId, 'テスト通知(新方式)', 'PCとスマホに届くか確認', null, null);
+  Logger.log('送れた端末数=' + sent);
 }
 
-function debugPushKeyUser() {
-  const studentId = PropertiesService.getUserProperties().getProperty('studentId');
-  [derivePushKey_(studentId), studentId].forEach(function (id) {
-    const res = UrlFetchApp.fetch(
-      'https://api.onesignal.com/apps/' + ONESIGNAL_APP_ID + '/users/by/external_id/' + id,
-      { method: 'get', headers: { Authorization: 'Key ' + getRestApiKey_() }, muteHttpExceptions: true });
-    let out = res.getResponseCode() + ' ';
-    try {
-      const j = JSON.parse(res.getContentText());
-      out += JSON.stringify((j.subscriptions || []).map(function (s) {
-        return { id: String(s.id).slice(0, 8), type: s.type, enabled: s.enabled, nt: s.notification_types };
-      }));
-    } catch (e) { out += res.getContentText().slice(0, 200); }
-    Logger.log((id === studentId ? '旧ID ' : 'pushKey ') + out);
-  });
-}
