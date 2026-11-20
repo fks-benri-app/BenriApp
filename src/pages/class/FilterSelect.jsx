@@ -22,10 +22,10 @@ export default function FilterSelect({ value, onChange, allLabel, options, label
         flex: '0 1 auto',
         minWidth: 0,
         maxWidth: '50%',
-        height: '30px',
-        padding: '0 26px 0 10px',
+        height: '32px',
+        padding: '0 28px 0 12px',
         border: isActive ? '1px solid transparent' : '1px solid var(--line)',
-        borderRadius: '8px',
+        borderRadius: '10px',
         backgroundColor: isActive ? 'transparent' : 'var(--surface)',
         backgroundImage: isActive
           ? `${chevron(onColor)}, ${shaded(theme.gradient)}`
@@ -35,7 +35,7 @@ export default function FilterSelect({ value, onChange, allLabel, options, label
         backgroundPosition: isActive ? 'right 9px center, 0 0, 0 0' : 'right 9px center',
         backgroundSize: isActive ? '13px, 100% 100%, 100% 100%' : '13px',
         color: isActive ? theme.textColor : 'var(--text-muted)',
-        fontSize: `${(fontPx * 0.929).toFixed(1)}px`,
+        fontSize: `${fontPx}px`,
         fontWeight: isActive ? 700 : 400,
         fontFamily: 'inherit',
         textOverflow: 'ellipsis',

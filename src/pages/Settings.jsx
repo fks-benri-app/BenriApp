@@ -41,7 +41,7 @@ function Section({ title, children }) {
         style={{
           padding: '0.286em 0',
           background: 'var(--surface)',
-          borderRadius: '0.857em',
+          borderRadius: '1.143em',
           outline: '1px var(--line) solid',
           outlineOffset: '-1px',
           display: 'flex',
@@ -158,14 +158,14 @@ export default function Settings() {
           display: 'flex',
           flexDirection: 'column',
           gap: '0.857em',
-          paddingTop: 'calc(0.571em + env(safe-area-inset-top))',
-          paddingBottom: '0.5em',
+          paddingTop: 'calc(2em + env(safe-area-inset-top))',
+          paddingBottom: '1.143em',
           background: 'var(--surface)',
           width: '100%',
         }}
       >
-        <div style={{ padding: '0 1em', height: '2.857em', display: 'flex', alignItems: 'center' }}>
-          <div style={{ color: 'var(--text-strong)', fontSize: '1.571em', fontFamily: 'Inter', fontWeight: '700', userSelect: 'none' }}>
+        <div style={{ padding: '0 1.714em', height: '34px', display: 'flex', alignItems: 'center' }}>
+          <div style={{ color: 'var(--text-strong)', fontSize: '1.871em', fontFamily: 'Inter', fontWeight: '800', userSelect: 'none' }}>
             設定
           </div>
         </div>
@@ -180,7 +180,7 @@ export default function Settings() {
           overflowY: 'auto',
           overscrollBehavior: 'contain',
           WebkitOverflowScrolling: 'touch',
-          padding: '0 1em 1em',
+          padding: '0 1.714em 1.143em',
           boxSizing: 'border-box',
         }}
       >
@@ -190,7 +190,7 @@ export default function Settings() {
             style={{
               padding: '0.857em 1.429em',
               background: 'var(--surface)',
-              borderRadius: '0.857em',
+              borderRadius: '1.143em',
               outline: '1px var(--line) solid',
               outlineOffset: '-1px',
               display: 'flex',

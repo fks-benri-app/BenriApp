@@ -86,7 +86,7 @@ export default function ClassNoticesGadget({ identity }) {
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5em', minWidth: 0 }}>
-              <div style={{ padding: '0.2em 0.5em', background: shaded(theme?.gradient || 'var(--line)'), borderRadius: '0.357em', flexShrink: 0 }}>
+              <div style={{ padding: '0.2em 0.5em', background: shaded(theme?.gradient || 'var(--line)'), borderRadius: '0.4em', flexShrink: 0 }}>
                 <div style={{ color: theme?.textColor || 'var(--text-strong)', fontSize: '0.786em', fontWeight: 700 }}>{a.subject}</div>
               </div>
               {KIND_LABELS[a.kind] && (

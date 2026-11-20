@@ -283,13 +283,13 @@ export default function Home() {
         display: 'flex',
         flexDirection: 'column',
         gap: '0.857em',
-        paddingTop: 'calc(0.571em + env(safe-area-inset-top))',
-        paddingBottom: '0.5em',
+        paddingTop: 'calc(2em + env(safe-area-inset-top))',
+        paddingBottom: '1.143em',
         background: 'var(--surface)',
         width: '100%',
       }}>
-        <div style={{ padding: '0 1em', height: '2.857em', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.857em' }}>
-          <div style={{ color: 'var(--text-strong)', fontSize: '1.571em', fontFamily: 'Inter', fontWeight: 700, userSelect: 'none', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <div style={{ padding: '0 1.714em', height: '34px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.857em' }}>
+          <div style={{ color: 'var(--text-strong)', fontSize: '1.871em', fontFamily: 'Inter', fontWeight: 800, userSelect: 'none', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {editing ? t('home.edit') : 'ホーム'}
           </div>
           {editing ? (
