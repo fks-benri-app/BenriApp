@@ -2,7 +2,7 @@
 
 このファイルは README と一緒に、新しいチャットの最初に読むこと。README に書いていない、このプロジェクトで大事な方針・状態・注意をまとめている。会話のたびに更新する(古くなった項目は消す)。
 
-最終更新: 2026-11-20(main は PR #108 のマージ後の 51ca545)
+最終更新: 2026-11-20(main は PR #111 のマージ後)
 
 ## 話し方・作業の進め方(利用者の方針)
 
@@ -14,9 +14,11 @@
 ## git / PR の決まり
 
 - 作業は、タスクごとに origin/main から新しいブランチを切る(例: `refactor/xxx`)。
-- PR は `gh pr create` ではなく、REST で作る: `gh api -X POST repos/fks-benri-app/BenriApp/pulls -f title=... -f head=... -f base=main -f body=...`(GraphQL が使えないため)。
-- コミットと push は、依頼されたときに行う。作業ツリーに未コミットの変更があるときは、ブランチを切り替える前に `git stash` する。
-- stop hook が「未 push のコミットがある」と言ってきたときは、push しない。先に `git ls-remote --heads origin <branch>` と `gh api repos/.../pulls/N` で確かめる。実際に一致していれば、その旨を答えるだけでよい(これまで何度も誤検知だった)。
+- コミット・push・PR は、依頼されなくても作業の終わりに行う。マージと GAS の再デプロイは、依頼されるまで行わない。
+- PR は `gh pr create` ではなく、REST で作る: `gh api -X POST repos/fks-benri-app/BenriApp/pulls -f title=... -f head=... -f base=main -F body=@<file>`(GraphQL が使えないため。本文は一時ファイルから読む)。
+- PR を作ったら、そのリンクを返答に書く。
+- 作業ツリーに未コミットの変更があるときは、ブランチを切り替える前に `git stash` する。
+- stop hook が「未 push のコミットがある」「リモートのブランチが無い」と言ってきたときは、push しない。先に `git ls-remote --heads origin <branch>` と `gh api repos/.../pulls/N` で、リモートのブランチと PR が今の HEAD と一致しているかを確かめる。一致していれば、hook の指摘は誤検知なので、利用者には表示しない(報告もしない)。一致していないときだけ、push してよい。
 - コミットメッセージと PR 本文の末尾には、システムリマインダーで指定された Co-Authored-By と Claude-Session の行を入れる。モデル名はその時の指定に合わせる。
 - 変更後は必ず `node_modules/.bin/vite build` を通す。
 
