@@ -36,7 +36,7 @@ export default function FilterSelect({ value, onChange, allLabel, options, label
         backgroundSize: isActive ? '13px, 100% 100%, 100% 100%' : '13px',
         color: isActive ? theme.textColor : 'var(--text-muted)',
         fontSize: `${(fontPx * 0.929).toFixed(1)}px`,
-        fontWeight: 400, // 色のついた背景の文字は太字にしない
+        fontWeight: isActive ? 700 : 400,
         fontFamily: 'inherit',
         textOverflow: 'ellipsis',
         boxSizing: 'border-box',
