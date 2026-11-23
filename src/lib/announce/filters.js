@@ -1,5 +1,7 @@
 // 絞り込みに使う関数だけを集めたファイル(Firebase に依存しないので、単体でテストできる)
 
+import { CONFIG } from '../../config';
+
 // 全角/半角・大文字/小文字の違いを無視して検索できるようにそろえる
 export const normalize = (s) => String(s || '').normalize('NFKC').toLowerCase();
 
@@ -79,7 +81,7 @@ export function cleanText(text) {
     String(text || '')
       .split('\n')
       .map((line) => line.replace(/https?:\/\/\S+/g, '').trim())
-      .filter((line) => line && !/AccountChooser|accounts\.google\.com|@g\.nagano-c\.ed\.jp/.test(line))
+      .filter((line) => line && !/AccountChooser|accounts\.google\.com/.test(line) && !line.includes('@' + CONFIG.SCHOOL_EMAIL_DOMAIN))
       .join('\n')
   );
 }

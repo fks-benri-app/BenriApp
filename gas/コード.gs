@@ -5,7 +5,9 @@ const LABEL_NAME = 'ClassroomNotified';
 const APP_URL = 'https://fks-benri-app.github.io/BenriApp/';
 // 通知のアイコン(Chrome・Android で表示される。iPhone の Safari は、ホーム画面アプリのアイコンになる)
 const NOTIFY_ICON_URL = 'https://fks-benri-app.github.io/BenriApp/icon-192.png';
-const EMAIL_PATTERN = /^fks(\d{3})(\d)(\d{2})@g\.nagano-c\.ed\.jp$/;
+// 学校のメールのドメイン(生徒の Google アカウント)。ここだけ直せば、GAS 内の判定がそろう
+const SCHOOL_EMAIL_DOMAIN = 'g.nagano-c.ed.jp';
+const EMAIL_PATTERN = new RegExp('^fks(\\d{3})(\\d)(\\d{2})@' + SCHOOL_EMAIL_DOMAIN.replace(/\./g, '\\.') + '$');
 
 const QUIET_START_HOUR = 23;       // 通知停止時間
 const QUIET_END_HOUR = 6;          // 通知開始時間
@@ -20,8 +22,6 @@ const BATCH_THRESHOLD = 5;         // 新着がこの件数以上なら1通に�
 
 // Webアプリ表示
 function doGet(e) {
-  // アプリからの通知の登録(JSON で返す。画面は出さない)
-  if (e && e.parameter && e.parameter.action === 'registerFcm') return fcmRegisterHandler_(e.parameter);
   const props = PropertiesService.getUserProperties();
   const isAlreadySet = props.getProperty('isSetup') === 'true';
   const studentId = props.getProperty('studentId') || '';
