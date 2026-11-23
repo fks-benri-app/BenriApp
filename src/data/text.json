@@ -28,7 +28,27 @@
     "allCourses": "すべての授業",
     "kindFilter": "形式で絞り込み",
     "allKinds": "すべての形式",
-    "noMatch": "「{query}」に一致するお知らせはありません"
+    "noMatch": "「{query}」に一致するお知らせはありません",
+    "pinnedLabel": "ピン留め",
+    "reminderBadge": "リマインド",
+    "menu": {
+      "pin": "ピン留めする",
+      "unpin": "ピン留めを外す",
+      "remind": "リマインドを設定",
+      "close": "閉じる"
+    },
+    "reminder": {
+      "title": "リマインドを設定",
+      "hour": "1時間後",
+      "tomorrowMorning": "明日の朝 8:00",
+      "tomorrowEvening": "明日の夕方 18:00",
+      "custom": "日時を指定",
+      "save": "設定する",
+      "clear": "リマインドを外す",
+      "cancel": "キャンセル",
+      "dueTitle": "リマインドのお知らせ",
+      "dueClose": "閉じる"
+    }
   },
   "common": {
     "bellOff": "通知設定(この端末はオフ)"
