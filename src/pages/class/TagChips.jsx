@@ -17,13 +17,13 @@ export default function TagChips({ activeFilter, setActiveFilter }) {
               borderRadius: '0.571em',
               flexShrink: 0,
               cursor: 'pointer',
-              backgroundImage: isActive ? shaded('linear-gradient(135deg, #FF4D4D 0%, #FF8A1B 100%)') : 'none',
-              backgroundColor: isActive ? 'transparent' : 'var(--surface)',
+              backgroundImage: 'none',
+              backgroundColor: isActive ? '#0066cc' : 'var(--surface)', // 選択中はアクセント色(Apple の Action Blue)の単色
               outline: isActive ? 'none' : '1px var(--line) solid',
               outlineOffset: '-1px',
               color: isActive ? 'white' : 'var(--text-muted)',
               fontSize: '0.929em',
-              fontWeight: isActive ? '700' : '400',
+              fontWeight: '400', // 色のついた背景の文字は太字にしない
               whiteSpace: 'nowrap',
               boxSizing: 'border-box',
               userSelect: 'none',
