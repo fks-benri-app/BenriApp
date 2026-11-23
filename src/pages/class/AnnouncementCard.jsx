@@ -38,7 +38,7 @@ export default function AnnouncementCard({ ann, openAnnouncement }) {
             <div style={{
               color: courseThemeOrNull(ann.subject)?.textColor || 'var(--text-strong)',
               fontSize: '0.786em',
-              fontWeight: '400'
+              fontWeight: '700'
             }}>
               {ann.subject}
             </div>
