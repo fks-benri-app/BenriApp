@@ -23,7 +23,7 @@ export default function TagChips({ activeFilter, setActiveFilter }) {
               outlineOffset: '-1px',
               color: isActive ? 'white' : 'var(--text-muted)',
               fontSize: '0.929em',
-              fontWeight: '400', // 色のついた背景の文字は太字にしない
+              fontWeight: isActive ? '700' : '400',
               whiteSpace: 'nowrap',
               boxSizing: 'border-box',
               userSelect: 'none',

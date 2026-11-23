@@ -189,7 +189,7 @@ export default function ClassBackdrop() {
                   outlineOffset: '-1px',
                   color: isActive ? 'white' : 'var(--text-muted)',
                   fontSize: '1em',
-                  fontWeight: '400',
+                  fontWeight: isActive ? '700' : '400',
                   whiteSpace: 'nowrap',
                   boxSizing: 'border-box',
                   userSelect: 'none',
