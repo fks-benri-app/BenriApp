@@ -187,7 +187,7 @@ export default function ClassBackdrop() {
                   backgroundColor: isActive ? '#0066cc' : 'var(--surface)',
                   outline: isActive ? 'none' : '1px var(--line) solid',
                   outlineOffset: '-1px',
-                  color: isActive ? 'white' : 'var(--text-muted)',
+                  color: isActive ? 'var(--on-accent)' : 'var(--text-muted)',
                   fontSize: '1em',
                   fontWeight: isActive ? '700' : '400',
                   whiteSpace: 'nowrap',

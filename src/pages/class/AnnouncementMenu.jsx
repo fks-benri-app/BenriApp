@@ -1,32 +1,69 @@
-// 長押しで出る、お知らせのメニュー(下から出る画面)。ピン留め・リマインドを選ぶ。
-import React from 'react';
+// 長押しで出る、お知らせのメニュー。押したお知らせを浮かせ、そのそばに選択肢を出す(iPhone のアプリの長押しのように)。
+import React, { useLayoutEffect, useRef, useState } from 'react';
+import { BellOff, BellRing, Pin, PinOff } from 'lucide-react';
 import { t } from '../../lib/ui/text';
 
-export default function AnnouncementMenu({ ann, pinned, hasReminder, onTogglePin, onRemind, onClose }) {
-  const rowStyle = {
-    display: 'block', width: '100%', padding: '1em', border: 'none', background: 'var(--surface-2)',
-    color: 'var(--text-strong)', borderRadius: '0.9em', fontFamily: 'inherit', fontSize: '1em', fontWeight: 600,
-    textAlign: 'left', cursor: 'pointer', touchAction: 'manipulation'
-  };
+const GAP = 10;
+const MENU_WIDTH = 248;
+const EDGE = 12;
+
+export default function AnnouncementMenu({ ann, anchor, pinned, hasReminder, onTogglePin, onRemind, onClose }) {
+  const menuRef = useRef(null);
+  const [top, setTop] = useState(null);
+  const left = anchor
+    ? Math.min(Math.max(anchor.left, EDGE), window.innerWidth - MENU_WIDTH - EDGE)
+    : (window.innerWidth - MENU_WIDTH) / 2;
+
+  // 押したお知らせの下に出す。下に空きがなければ上に出す
+  useLayoutEffect(() => {
+    if (!menuRef.current) return;
+    const h = menuRef.current.offsetHeight;
+    if (!anchor) { setTop((window.innerHeight - h) / 2); return; }
+    const below = anchor.top + anchor.height + GAP;
+    setTop(below + h <= window.innerHeight - EDGE ? below : Math.max(EDGE, anchor.top - GAP - h));
+  }, [anchor]);
+
+  const row = (index) => ({
+    display: 'flex', alignItems: 'center', gap: '0.75em', width: '100%', padding: '0.95em 1em', boxSizing: 'border-box',
+    border: 'none', borderTop: index ? '1px solid var(--line)' : 'none', background: 'transparent',
+    color: 'var(--text-strong)', fontFamily: 'inherit', fontSize: '1em', fontWeight: 600, textAlign: 'left',
+    cursor: 'pointer', touchAction: 'manipulation',
+  });
+
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 60, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-      <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'var(--overlay)' }} />
-      <div role="dialog" aria-modal="true" style={{
-        position: 'relative', width: '100%', maxWidth: '28em', background: 'var(--surface)',
-        borderRadius: '1.429em 1.429em 0 0', padding: '1.143em 1.143em calc(1.143em + env(safe-area-inset-bottom))',
-        boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: '0.571em', userSelect: 'none', WebkitUserSelect: 'none'
-      }}>
-        <div style={{ fontSize: '0.857em', color: 'var(--text-muted)', padding: '0 0.571em 0.429em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {ann.subject}
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 60, background: 'var(--overlay)', backdropFilter: 'blur(3px)', WebkitBackdropFilter: 'blur(3px)' }}>
+      {anchor && (
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'fixed', top: anchor.top, left: anchor.left, width: anchor.width, height: anchor.height, boxSizing: 'border-box',
+            padding: '0.9em 1em', overflow: 'hidden', borderRadius: '14px', background: 'var(--surface)',
+            boxShadow: '0 12px 32px rgba(0,0,0,0.28)', pointerEvents: 'none', userSelect: 'none',
+          }}
+        >
+          <div style={{ fontSize: '0.8em', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ann.subject}</div>
+          <div style={{ fontSize: '0.95em', fontWeight: 600, color: 'var(--text-strong)', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+            {ann.title || ann.content}
+          </div>
         </div>
-        <button type="button" onClick={onTogglePin} style={rowStyle}>
+      )}
+      <div
+        ref={menuRef}
+        role="menu"
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          position: 'fixed', left, top: top ?? 0, width: MENU_WIDTH, boxSizing: 'border-box', overflow: 'hidden',
+          background: 'var(--surface)', borderRadius: '14px', boxShadow: '0 12px 32px rgba(0,0,0,0.28)',
+          visibility: top === null ? 'hidden' : 'visible', userSelect: 'none', WebkitUserSelect: 'none',
+        }}
+      >
+        <button type="button" role="menuitem" onClick={onTogglePin} style={row(0)}>
+          {pinned ? <PinOff size={20} strokeWidth={2} aria-hidden="true" /> : <Pin size={20} strokeWidth={2} aria-hidden="true" />}
           {pinned ? t('class.menu.unpin') : t('class.menu.pin')}
         </button>
-        <button type="button" onClick={onRemind} style={rowStyle}>
+        <button type="button" role="menuitem" onClick={onRemind} style={row(1)}>
+          {hasReminder ? <BellOff size={20} strokeWidth={2} aria-hidden="true" /> : <BellRing size={20} strokeWidth={2} aria-hidden="true" />}
           {hasReminder ? t('class.reminder.clear') : t('class.menu.remind')}
-        </button>
-        <button type="button" onClick={onClose} style={{ ...rowStyle, background: 'transparent', color: 'var(--text-muted)', textAlign: 'center', marginTop: '0.286em' }}>
-          {t('class.menu.close')}
         </button>
       </div>
     </div>

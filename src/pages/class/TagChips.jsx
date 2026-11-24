@@ -21,7 +21,7 @@ export default function TagChips({ activeFilter, setActiveFilter }) {
               backgroundColor: isActive ? '#0066cc' : 'var(--surface)', // 選択中はアクセント色(Apple の Action Blue)の単色
               outline: isActive ? 'none' : '1px var(--line) solid',
               outlineOffset: '-1px',
-              color: isActive ? 'white' : 'var(--text-muted)',
+              color: isActive ? 'var(--on-accent)' : 'var(--text-muted)',
               fontSize: '0.929em',
               fontWeight: isActive ? '700' : '400',
               whiteSpace: 'nowrap',

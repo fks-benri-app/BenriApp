@@ -27,11 +27,13 @@ export default function AnnouncementCard({ ann, openAnnouncement, onLongPress, p
         if (e.pointerType === 'mouse' && e.button !== 0) return;
         fired.current = false;
         cancel();
+        // 押した場所の大きさ(メニューを、このお知らせのそばに出すため)
+        const rect = e.currentTarget.getBoundingClientRect();
         timer.current = setTimeout(() => {
           timer.current = null;
           fired.current = true;
           if (navigator.vibrate) navigator.vibrate(10);
-          onLongPress?.(ann);
+          onLongPress?.(ann, { top: rect.top, left: rect.left, width: rect.width, height: rect.height, bottom: rect.bottom });
         }, LONG_PRESS_MS);
       }}
       onPointerUp={cancel}

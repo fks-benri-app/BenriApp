@@ -114,7 +114,7 @@ export default function ProfileDialog({ studentId, profile, avatar, onAvatarChan
   return (
     <ModalDialog
       onClose={busy ? () => {} : onClose}
-      title="設定"
+      title="プロフィール設定"
       actions={(
         <>
           <DialogButton onClick={onClose} disabled={busy}>キャンセル</DialogButton>
@@ -144,8 +144,9 @@ export default function ProfileDialog({ studentId, profile, avatar, onAvatarChan
                 value={draftCourse}
                 onChange={setDraftCourse}
                 allLabel="講座を選ぶ"
+                plain
                 theme={courseTheme(undefined)}
-                options={OPTIONS.courseLetters.map((l) => ({ id: l, label: `講座 ${l}` }))}
+                options={OPTIONS.courseLetters.map((l) => ({ id: l, label: `${l}講座` }))}
               />
             </div>
           </section>

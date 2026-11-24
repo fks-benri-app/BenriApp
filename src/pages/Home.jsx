@@ -301,7 +301,7 @@ export default function Home() {
               className="hm-press"
               style={{
                 flexShrink: 0, border: 'none', borderRadius: 999, padding: '0.6em 1.4em',
-                background: ACCENT, color: '#ffffff', fontWeight: 600, fontSize: '0.929em', cursor: 'pointer',
+                background: ACCENT, color: 'var(--on-accent)', fontWeight: 600, fontSize: '0.929em', cursor: 'pointer',
               }}
             >
               完了

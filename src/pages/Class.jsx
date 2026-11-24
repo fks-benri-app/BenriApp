@@ -49,6 +49,7 @@ export default function Class() {
   const pinSet = useMemo(() => new Set(pinnedIds), [pinnedIds]);
   const { reminders, setReminder } = useReminders(identity?.id);
   const [menuId, setMenuId] = useState(null);
+  const [menuAnchor, setMenuAnchor] = useState(null);
   const [remindId, setRemindId] = useState(null);
   const [dueIds, setDueIds] = useState([]);
 
@@ -193,7 +194,7 @@ export default function Class() {
       key={ann.id}
       ann={ann}
       openAnnouncement={openAnnouncement}
-      onLongPress={(a) => setMenuId(a.id)}
+      onLongPress={(a, rect) => { setMenuAnchor(rect); setMenuId(a.id); }}
       pinned={pinSet.has(ann.id)}
       reminderAt={reminders[ann.id]}
     />
@@ -321,6 +322,7 @@ export default function Class() {
       {menuAnn && (
         <AnnouncementMenu
           ann={menuAnn}
+          anchor={menuAnchor}
           pinned={pinSet.has(menuAnn.id)}
           hasReminder={!!reminders[menuAnn.id]}
           onTogglePin={() => { togglePin(menuAnn.id); setMenuId(null); }}
