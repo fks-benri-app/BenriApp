@@ -19,6 +19,7 @@ import { currentFontSize } from '../lib/ui/fontSize';
 import { buildCourseOptions, filterAnnouncements } from '../lib/announce/filters';
 import { peekBootOpen, takeBootOpen } from '../lib/announce/bootOpen';
 import { courseTheme } from '../lib/ui/courseTheme';
+import { usePageMemory, useScrollMemory } from '../lib/ui/pageMemory';
 import { usePins } from '../lib/announce/pins';
 import { useReminders } from '../lib/announce/reminders';
 import AnnouncementMenu from './class/AnnouncementMenu';
@@ -75,14 +76,16 @@ export default function Class() {
     markRead(id);
   }, [markRead]);
 
-  const [activeTab, setActiveTab] = useState('class');
-  const [activeFilter, setActiveFilter] = useState('all');
-  const [course, setCourse] = useState('');
-  const [kind, setKind] = useState('');
+  const [activeTab, setActiveTab] = usePageMemory('class.tab', 'class');
+  const [activeFilter, setActiveFilter] = usePageMemory('class.filter', 'all');
+  const [course, setCourse] = usePageMemory('class.course', '');
+  const [kind, setKind] = usePageMemory('class.kind', '');
+  const mainRef = useRef(null);
+  useScrollMemory('class', mainRef);
 
   // 検索
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [query, setQuery] = useState('');
+  const [searchOpen, setSearchOpen] = usePageMemory('class.searchOpen', false);
+  const [query, setQuery] = usePageMemory('class.query', '');
   const searchInputRef = useRef(null);
 
   // フォントサイズ基準値（プログラム制御対応）
@@ -244,7 +247,7 @@ export default function Class() {
       </header>
 
       {/* メインコンテンツ部分（ここだけスクロールする） */}
-      <main style={{
+      <main ref={mainRef} style={{
         flex: 1,
         minHeight: 0,
         overflowY: 'auto',

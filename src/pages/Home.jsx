@@ -5,6 +5,7 @@ import { useIdentity } from '../auth/identity';
 import BottomNav from '../components/BottomNav';
 import { GADGETS, gadgetById } from '../gadgets';
 import { currentFontSize } from '../lib/ui/fontSize';
+import { useScrollMemory } from '../lib/ui/pageMemory';
 import bellIcon from '../assets/images/icons/bell.svg';
 import bellOffIcon from '../assets/images/icons/bell-off.svg';
 import { getDevicePushEnabled } from '../lib/push/notifications';
@@ -64,6 +65,7 @@ export default function Home() {
   }, [measured]);
 
   const mainRef = useRef(null);
+  useScrollMemory('home', mainRef);
   const gridRef = useRef(null);
   const layoutRef = useRef(layout);
   layoutRef.current = layout;
