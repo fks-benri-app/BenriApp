@@ -10,8 +10,9 @@ const chevron = (color) =>
   `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='${color}' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`;
 
 // theme: 選んでいるときの色 { gradient, textColor }
-export default function FilterSelect({ value, onChange, allLabel, options, label, theme, fontPx }) {
-  const isActive = value !== '';
+// plain: 選んでも色をつけない(設定の画面など)
+export default function FilterSelect({ value, onChange, allLabel, options, label, theme, fontPx, plain = false }) {
+  const isActive = !plain && value !== '';
   const onColor = theme.chevron || (theme.textColor === 'white' ? '%23FFFFFF' : '%23111827');
   return (
     <select
@@ -34,9 +35,9 @@ export default function FilterSelect({ value, onChange, allLabel, options, label
         // 選択中の背景は3層(矢印 / 暗くする層 / グラデーション)。位置とサイズも3つ分そろえる
         backgroundPosition: isActive ? 'right 9px center, 0 0, 0 0' : 'right 9px center',
         backgroundSize: isActive ? '13px, 100% 100%, 100% 100%' : '13px',
-        color: isActive ? theme.textColor : 'var(--text-muted)',
+        color: isActive ? theme.textColor : (plain && value ? 'var(--text-strong)' : 'var(--text-muted)'),
         fontSize: `${(fontPx * 0.929).toFixed(1)}px`,
-        fontWeight: isActive ? 700 : 400,
+        fontWeight: isActive || (plain && value) ? 600 : 400,
         fontFamily: 'inherit',
         textOverflow: 'ellipsis',
         boxSizing: 'border-box',

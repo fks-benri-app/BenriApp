@@ -15,6 +15,7 @@
   --text-faint: #9ca3af;     /* 無効・ほとんど目立たない文字 */
   --ink: #111827;            /* 黒いボタンの背景 */
   --on-ink: #ffffff;         /* 黒いボタンの文字 */
+  --on-accent: #ffffff;      /* 色のついた面(青のボタン・選択中のタグ)の文字 */
   --link: #0b57d0;
   --warn-bg: #fffbeb;
   --warn-fg: #b45309;
@@ -74,7 +75,7 @@ p { margin: 0; font-size: 13px; line-height: 1.7; color: var(--muted); }
   border: none;
   border-radius: 12px;
   background: var(--blue);
-  color: #fff;
+  color: var(--on-accent);
   font-size: 16px;
   font-weight: bold;
   cursor: pointer;
@@ -115,7 +116,7 @@ img {
 }
 
 .steps li::before { content: counter(step) '. '; }
-.steps li.on { color: #fff; background: var(--blue); border-color: var(--blue); }
+.steps li.on { color: var(--on-accent); background: var(--blue); border-color: var(--blue); }
 .steps li.done { color: var(--green); border-color: var(--green); }
 
 
@@ -140,6 +141,7 @@ html[data-theme="dark"] {
   --text-faint: #8a8a93;
   --ink: #e5e7eb;
   --on-ink: #111827;
+  --on-accent: #f2f2f4;
   --link: #8ab4ff;
   --warn-bg: #3a2d10;
   --warn-fg: #fcd34d;
