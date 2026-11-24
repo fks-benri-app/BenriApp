@@ -15,9 +15,9 @@ service cloud.firestore {
     // schoolEmail と pushBroken を含む生徒の情報。こちらも本人だけが読める。
     match /users/{studentId} {
       allow read: if request.auth != null && request.auth.uid == studentId;
-      // 通知の設定(notifyPrefs)だけ、本人が書き換えられる。ほかの項目は GAS だけが書く
+      // 通知の設定(notifyPrefs)と、本人の設定(講座 courseLetter・選択教科 electiveSubjects)だけ、本人が書き換えられる。ほかの項目は GAS だけが書く
       allow update: if request.auth != null && request.auth.uid == studentId
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['notifyPrefs']);
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['notifyPrefs', 'courseLetter', 'electiveSubjects']);
       allow create, delete: if false;
     }
 

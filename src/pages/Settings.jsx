@@ -10,6 +10,8 @@ import { useAccountName } from '../lib/data/account';
 import pkg from '../../package.json';
 import Switch from '../components/Switch';
 import { useNotifyPrefs, isPushOffByUser } from '../lib/push/notifications';
+import { useProfile, loadAvatar } from '../lib/profile/profile';
+import ProfileDialog from './settings/ProfileDialog';
 import { t } from '../lib/ui/text';
 
 // フィードバックのフォームのURL。ここに入れると押せるようになる(空の間は灰色で押せない)
@@ -117,6 +119,9 @@ export default function Settings() {
   const [fontPx, setFontPx] = useState(currentFontSize);
   const fontOptions = Array.from({ length: FONT_SIZE_MAX - FONT_SIZE_MIN + 1 }, (_, i) => FONT_SIZE_MIN + i);
   const studentClass = identity ? classOf(identity.id) : null;
+  const profile = useProfile(identity ? identity.id : null);
+  const [avatar, setAvatar] = useState(() => (identity ? loadAvatar(identity.id) : ''));
+  const [profileOpen, setProfileOpen] = useState(false);
   const accountName = useAccountName(identity ? identity.id : null);
   const [dark, setDark] = useState(isDarkMode);
   const notifyPrefs = useNotifyPrefs(identity ? identity.id : null).prefs;
@@ -187,7 +192,9 @@ export default function Settings() {
         <div style={{ width: '100%', maxWidth: '500px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.143em' }}>
           {/* アカウント */}
           <div
+            onClick={() => setProfileOpen(true)}
             style={{
+              cursor: 'pointer',
               padding: '0.857em 1.429em',
               background: 'var(--surface)',
               borderRadius: '1.143em',
@@ -210,7 +217,7 @@ export default function Settings() {
                 flexShrink: 0,
               }}
             >
-              <Icon name="account" size="1.8em" color={GREY} />
+              {avatar ? <img src={avatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Icon name="account" size="1.8em" color={GREY} />}
             </div>
             <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '0.286em' }}>
               <div style={{ color: 'var(--text-strong)', fontSize: '1.286em', fontFamily: 'Inter', fontWeight: 700 }}>
@@ -218,6 +225,7 @@ export default function Settings() {
               </div>
               <div style={{ color: 'var(--text-muted)', fontSize: '0.929em' }}>
                 {studentClass ? studentClass : `生徒ID ${identity ? identity.id : '-'}`}
+                {profile.courseLetter ? `・講座 ${profile.courseLetter}` : ''}
               </div>
             </div>
             <Chevron />
@@ -303,6 +311,15 @@ export default function Settings() {
       </main>
 
       {/* 下のバー(Class.jsx と同じ形式) */}
+      {profileOpen && identity && (
+        <ProfileDialog
+          studentId={identity.id}
+          profile={profile}
+          avatar={avatar}
+          onAvatarChange={setAvatar}
+          onClose={() => setProfileOpen(false)}
+        />
+      )}
       <BottomNav active="settings" onSelect={onSelectTab} />
     </div>
   );
