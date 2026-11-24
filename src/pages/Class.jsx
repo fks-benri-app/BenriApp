@@ -324,7 +324,7 @@ export default function Class() {
           ann={menuAnn}
           anchor={menuAnchor}
           pinned={pinSet.has(menuAnn.id)}
-          hasReminder={!!reminders[menuAnn.id]}
+          reminderAt={reminders[menuAnn.id]}
           onTogglePin={() => { togglePin(menuAnn.id); setMenuId(null); }}
           onRemind={() => {
             if (reminders[menuAnn.id]) setReminder(menuAnn.id, null);

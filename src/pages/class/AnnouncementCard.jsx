@@ -40,7 +40,16 @@ export default function AnnouncementCard({ ann, openAnnouncement, onLongPress, p
       onPointerLeave={cancel}
       onPointerCancel={cancel}
       onContextMenu={(e) => e.preventDefault()}
-      style={{
+      style={cardStyle(ann)}
+    >
+      <AnnouncementCardFace ann={ann} pinned={pinned} reminderAt={reminderAt} />
+    </article>
+  );
+}
+
+// 見た目(一覧のカードと、長押しで浮かせたカードで同じものを使う)
+export function cardStyle(ann) {
+  return {
         position: 'relative',
         padding: ann.isUnread ? 'calc(1.143em - 1.5px)' : '1.143em',
         border: ann.isUnread ? '1.5px solid transparent' : 'none',
@@ -56,8 +65,12 @@ export default function AnnouncementCard({ ann, openAnnouncement, onLongPress, p
         userSelect: 'none',
         WebkitUserSelect: 'none',
         touchAction: 'manipulation'
-      }}
-    >
+  };
+}
+
+export function AnnouncementCardFace({ ann, pinned, reminderAt }) {
+  return (
+    <>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.571em' }}>
           <div style={{
@@ -99,6 +112,6 @@ export default function AnnouncementCard({ ann, openAnnouncement, onLongPress, p
       <div style={{ color: 'var(--text-body)', fontSize: '1em', fontWeight: 400, lineHeight: 1.4286, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
         {ann.content}
       </div>
-    </article>
+    </>
   );
 }
