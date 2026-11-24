@@ -1,7 +1,6 @@
 // 開発用のダミーのお知らせ。DEV_MOCK を true にすると、お知らせの先頭に加わる(本番は false)。
 // 開発用モック(コード上のスイッチ。false なら一切表示されず、本番に影響しない)
 export const DEV_MOCK = false;
-export const MOCK_THUMB = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='88' height='72'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%2377b3ff'/><stop offset='1' stop-color='%23ff9acb'/></linearGradient></defs><rect width='88' height='72' fill='url(%23g)'/></svg>";
 export const MOCK_ITEMS = [
   {
     id: '__mock_list', subject: '倫理', teacher: '秋本裕子', courseKey: '倫理', courseLabel: '倫理',
@@ -16,7 +15,7 @@ export const MOCK_ITEMS = [
     rawBody: 'https://forms.gle/xZbA5yp8aYTGonGG8\n来年度科目選択のフォーム入力が未入力の人に送信しています。\n\nこちらへ入力をお願いします。\n    (空白と改行はそのまま表示されます)\n\n【持ち物】\n1. 筆記用具\n2. 問題集(p.40-45を解いておく。長い説明が折り返されても番号の下にそろいます)\n3. 体育館シューズ\n\n①集合は8時30分 ②解散は15時',
     attachments: [
       { type: 'drive', title: '2026w_poster.pdf', url: 'https://drive.google.com/file/d/xxx/view' },
-      { type: 'drive', title: '2026年7月9日（8:39）.jpg', url: 'https://drive.google.com/file/d/yyy/view', thumb: MOCK_THUMB },
+      { type: 'drive', title: '2026年7月9日（8:39）.jpg', url: 'https://drive.google.com/file/d/yyy/view' },
       { type: 'drive', title: '読み込めない画像.png', url: 'https://drive.google.com/file/d/zzz/view', thumb: 'https://invalid.example/none.png' },
       { type: 'link', title: 'https://example.com/info', url: 'https://example.com/info' },
       { type: 'youtube', title: '解説動画', url: 'https://www.youtube.com/watch?v=xxx' },

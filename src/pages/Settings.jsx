@@ -251,41 +251,40 @@ export default function Settings() {
               }}
             >
               <div style={{ color: 'var(--text-strong)', fontSize: '1.071em', fontWeight: 600 }}>文字サイズ</div>
-              <select
-                aria-label="文字サイズ"
-                value={fontPx}
-                onChange={(e) => {
-                  const px = Number(e.target.value);
-                  setFontSize(px);
-                  setFontPx(px);
-                }}
-                style={{
-                  height: '2.286em',
-                  padding: '0 1.714em 0 0.857em',
-                  border: '1px solid var(--line)',
-                  borderRadius: '0.714em',
-                  backgroundColor: 'var(--surface)',
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 20 20'%3E%3Cpath d='M5 7.5l5 5 5-5' stroke='%236B7280' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right 0.6em center',
-                  backgroundSize: '0.9em',
-                  color: 'var(--text-strong)',
-                  fontSize: '1em',
-                  fontFamily: 'inherit',
-                  fontWeight: 600,
-                  WebkitAppearance: 'none',
-                  appearance: 'none',
-                  outline: 'none',
-                  cursor: 'pointer',
-                  touchAction: 'manipulation',
-                }}
-              >
-                {fontOptions.map((px) => (
-                  <option key={px} value={px} style={{ color: 'var(--text-strong)', background: 'var(--surface)' }}>
-                    {px === FONT_SIZE_DEFAULT ? `${px}px（デフォルト）` : `${px}px`}
-                  </option>
-                ))}
-              </select>
+              <div style={{ position: 'relative', display: 'inline-flex' }}>
+                <select
+                  aria-label="文字サイズ"
+                  value={fontPx}
+                  onChange={(e) => {
+                    const px = Number(e.target.value);
+                    setFontSize(px);
+                    setFontPx(px);
+                  }}
+                  style={{
+                    height: '2.286em',
+                    padding: '0 1.714em 0 0.857em',
+                    border: '1px solid var(--line)',
+                    borderRadius: '0.714em',
+                    backgroundColor: 'var(--surface)',
+                    color: 'var(--text-strong)',
+                    fontSize: '1em',
+                    fontFamily: 'inherit',
+                    fontWeight: 600,
+                    WebkitAppearance: 'none',
+                    appearance: 'none',
+                    outline: 'none',
+                    cursor: 'pointer',
+                    touchAction: 'manipulation',
+                  }}
+                >
+                  {fontOptions.map((px) => (
+                    <option key={px} value={px} style={{ color: 'var(--text-strong)', background: 'var(--surface)' }}>
+                      {px === FONT_SIZE_DEFAULT ? `${px}px（デフォルト）` : `${px}px`}
+                    </option>
+                  ))}
+                </select>
+                <Icon name="chevronDown" size="0.9em" color="#6B7280" style={{ position: 'absolute', right: '0.6em', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+              </div>
             </div>
           </Section>
 

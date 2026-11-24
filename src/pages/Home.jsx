@@ -6,8 +6,7 @@ import BottomNav from '../components/BottomNav';
 import { GADGETS, gadgetById } from '../gadgets';
 import { currentFontSize } from '../lib/ui/fontSize';
 import { useScrollMemory } from '../lib/ui/pageMemory';
-import bellIcon from '../assets/images/icons/bell.svg';
-import bellOffIcon from '../assets/images/icons/bell-off.svg';
+import Icon from '../components/Icon';
 import { getDevicePushEnabled } from '../lib/push/notifications';
 import { BASE_COLS, gridFor, loadLayout, rangeFor, resolveLayout, saveLayout } from '../lib/ui/homeLayout';
 import { t } from '../lib/ui/text';
@@ -318,14 +317,7 @@ export default function Home() {
                 fontSize: 'inherit', color: 'var(--text-body)', cursor: 'pointer', touchAction: 'manipulation', flexShrink: 0,
               }}
             >
-              <img
-                className="icon-ink"
-                src={devicePushOn ? bellIcon : bellOffIcon}
-                alt=""
-                aria-hidden="true"
-                draggable={false}
-                style={{ width: '1.571em', height: '1.571em', objectFit: 'contain', display: 'block' }}
-              />
+              <Icon name={devicePushOn ? 'bell' : 'bellOff'} size="1.571em" />
             </button>
           )}
         </div>

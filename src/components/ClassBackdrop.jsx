@@ -5,10 +5,7 @@ import { currentFontSize } from '../lib/ui/fontSize';
 import BottomNav from './BottomNav';
 import tagFilters from '../data/tagFilters.json';
 
-// ヘッダー用アイコン
-import searchIcon from '../assets/images/icons/search.svg';
-import bellIcon from '../assets/images/icons/bell.svg';
-import readAllIcon from '../assets/images/icons/read-all.svg';
+import Icon from './Icon';
 
 // このファイルは、Class.jsx の見た目の部分(ヘッダー・フィルター・カード・ボトムナビ)を、
 // スタイルそのままで写したもの。通知や検索・既読などの「機能」は付けていない(表示だけ)。
@@ -18,30 +15,21 @@ const FILTERS = tagFilters;
 
 
 
-// プルダウンの見た目(Class.jsx の FilterSelect と同じ。選べない)
-const chevron = (color) =>
-  `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='${color}' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`;
-
 function FilterSelectView({ allLabel }) {
   return (
+    <div style={{ position: 'relative', flex: '0 1 auto', minWidth: 0, maxWidth: '50%' }}>
     <select
       aria-hidden="true"
       tabIndex={-1}
       value=""
       onChange={() => {}}
       style={{
-        flex: '0 1 auto',
-        minWidth: 0,
-        maxWidth: '50%',
+        width: '100%',
         height: '32px',
         padding: '0 28px 0 12px',
         border: '1px solid var(--line)',
         borderRadius: '10px',
         backgroundColor: 'var(--surface)',
-        backgroundImage: chevron('%236B7280'),
-        backgroundRepeat: 'no-repeat',
-        backgroundPosition: 'right 9px center',
-        backgroundSize: '13px',
         color: 'var(--text-muted)',
         fontSize: 'inherit',
         fontWeight: 400,
@@ -56,6 +44,8 @@ function FilterSelectView({ allLabel }) {
     >
       <option value="">{allLabel}</option>
     </select>
+    <Icon name="chevronDown" size={13} color="#6B7280" style={{ position: 'absolute', right: 9, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+    </div>
   );
 }
 
@@ -148,7 +138,7 @@ export default function ClassBackdrop() {
 
           {/* 右上アイコン */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.9em', flexShrink: 0 }}>
-            <img className="icon-ink" src={readAllIcon} alt="" aria-hidden="true" draggable={false} style={{ width: '1.571em', height: '1.571em', userSelect: 'none', WebkitUserSelect: 'none' }} />
+            <Icon name="readAll" size="1.571em" />
             <div
               style={{
                 display: 'inline-flex',
@@ -160,15 +150,9 @@ export default function ClassBackdrop() {
                 color: 'var(--text-body)'
               }}
             >
-              <img className="icon-ink" src={bellIcon} alt="" aria-hidden="true" draggable={false} style={{ width: '1.571em', height: '1.571em', objectFit: 'contain', display: 'block' }} />
+              <Icon name="bell" size="1.571em" />
             </div>
-            <img
-              draggable={false}
-              style={{ width: '1.571em', height: '1.571em', userSelect: 'none', WebkitUserSelect: 'none' }}
-              className="icon-ink"
-              src={searchIcon}
-              alt=""
-            />
+            <Icon name="search" size="1.571em" />
           </div>
         </div>
 

@@ -23,14 +23,7 @@ const textBtn = (busy) => ({ padding: '0.714em 1.143em', border: 'none', backgro
 const darkBtn = (busy) => ({ padding: '0.714em 1.143em', border: 'none', background: 'var(--ink)', color: 'var(--on-ink)', borderRadius: '999px', fontFamily: 'inherit', fontSize: '1em', fontWeight: 600, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.85 : 1, display: 'inline-flex', alignItems: 'center', gap: '8px' });
 
 function Spinner() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="12" cy="12" r="9" stroke="rgba(255,255,255,0.35)" strokeWidth="3" />
-      <path d="M12 3a9 9 0 0 1 9 9" stroke="#fff" strokeWidth="3" strokeLinecap="round">
-        <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="0.9s" repeatCount="indefinite" />
-      </path>
-    </svg>
-  );
+  return <Icon name="spinner" size={16} color="#fff" style={{ animation: 'spin 0.9s linear infinite' }} />;
 }
 
 export default function LinkPage() {
