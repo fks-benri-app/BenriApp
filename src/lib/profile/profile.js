@@ -66,21 +66,18 @@ export const clearAvatar = (id) => {
   try { storage.remove(avatarKey(id)); } catch { /* 無視 */ }
 };
 
-// 選んだ画像を、正方形の小さな JPEG にする(端末の保存を小さく保つため)
-export function imageToAvatar(file, size = 160) {
+// 切り抜き(react-easy-crop の croppedAreaPixels)の範囲を、正方形の小さな JPEG にする(端末の保存を小さく保つため)
+export function cropToAvatar(src, area, size = 160) {
   return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(file);
     const img = new Image();
     img.onload = () => {
-      const side = Math.min(img.width, img.height);
       const canvas = document.createElement('canvas');
       canvas.width = size;
       canvas.height = size;
-      canvas.getContext('2d').drawImage(img, (img.width - side) / 2, (img.height - side) / 2, side, side, 0, 0, size, size);
-      URL.revokeObjectURL(url);
+      canvas.getContext('2d').drawImage(img, area.x, area.y, area.width, area.height, 0, 0, size, size);
       resolve(canvas.toDataURL('image/jpeg', 0.85));
     };
-    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('画像を読み込めませんでした')); };
-    img.src = url;
+    img.onerror = () => reject(new Error('画像を読み込めませんでした'));
+    img.src = src;
   });
 }
