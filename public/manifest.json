@@ -1,6 +1,6 @@
 {
-  "name": "Classroom通知",
-  "short_name": "Classroom通知",
+  "name": "BenriApp",
+  "short_name": "BenriApp",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
