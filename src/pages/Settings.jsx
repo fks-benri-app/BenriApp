@@ -239,7 +239,7 @@ export default function Settings() {
           </Section>
 
           <Section title="画面表示">
-            <Row label={t('settings.darkMode')} chevron={false} onClick={() => setDark(toggleDarkMode())} value={<Switch on={dark} />} />
+            <Row label={t('settings.darkMode')} chevron={false} onClick={() => setDark(toggleDarkMode())} value={<Switch checked={dark} onCheckedChange={() => setDark(toggleDarkMode())} aria-label={t('settings.darkMode')} />} />
             <Divider />
             <div
               style={{

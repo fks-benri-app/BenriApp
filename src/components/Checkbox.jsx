@@ -1,0 +1,34 @@
+// チェックボックス(Radix の Checkbox と、Lucide のチェックの印)
+import React from 'react';
+import * as RadixCheckbox from '@radix-ui/react-checkbox';
+import { Check } from 'lucide-react';
+
+export default function Checkbox({ checked, onCheckedChange, disabled = false, 'aria-label': ariaLabel }) {
+  return (
+    <RadixCheckbox.Root
+      checked={checked}
+      onCheckedChange={onCheckedChange}
+      disabled={disabled}
+      aria-label={ariaLabel}
+      style={{
+        width: '1.5em',
+        height: '1.5em',
+        flexShrink: 0,
+        padding: 0,
+        display: 'grid',
+        placeItems: 'center',
+        borderRadius: '0.4em',
+        border: checked ? 'none' : '1.5px solid var(--line)',
+        background: checked ? 'var(--ink)' : 'var(--surface)',
+        color: 'var(--on-ink)',
+        opacity: disabled ? 0.45 : 1,
+        cursor: disabled ? 'default' : 'pointer',
+        transition: 'background 0.15s, border-color 0.15s',
+      }}
+    >
+      <RadixCheckbox.Indicator>
+        <Check size={16} strokeWidth={3} aria-hidden="true" />
+      </RadixCheckbox.Indicator>
+    </RadixCheckbox.Root>
+  );
+}
