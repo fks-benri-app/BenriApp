@@ -13,7 +13,7 @@ function precacheManifest() {
       const files = Object.keys(bundle).filter((f) => !f.endsWith('.map')).sort();
       const hash = createHash('sha256');
       files.forEach((f) => hash.update(f + (bundle[f].code ?? bundle[f].source ?? '')));
-      const extra = ['icon-192.png', 'icon-512.png', 'manifest.json'];
+      const extra = ['icon-v2-192.png', 'icon-v2-512.png', 'manifest.json'];
       const list = ['', ...files, ...extra];
       this.emitFile({
         type: 'asset',
