@@ -1,7 +1,7 @@
-// チェックボックス(Radix の Checkbox と、Lucide のチェックの印)
+// チェックボックス(Radix の Checkbox と、Tabler のチェックの印)
 import React from 'react';
 import * as RadixCheckbox from '@radix-ui/react-checkbox';
-import { Check } from 'lucide-react';
+import { TbCheck as Check } from 'react-icons/tb';
 
 export default function Checkbox({ checked, onCheckedChange, disabled = false, 'aria-label': ariaLabel }) {
   return (

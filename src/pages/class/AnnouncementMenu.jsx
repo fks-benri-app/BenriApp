@@ -1,7 +1,7 @@
 // 長押しで出るお知らせのメニュー。押したカードをそのまま浮かせ、そのそばに選択肢を出す(Radix の DropdownMenu)。
 import React from 'react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { BellOff, BellRing, Pin, PinOff } from 'lucide-react';
+import { TbBellOff, TbBellRinging, TbPin, TbPinnedOff } from 'react-icons/tb';
 import { t } from '../../lib/ui/text';
 import { AnnouncementCardFace, cardStyle } from './AnnouncementCard';
 
@@ -32,12 +32,12 @@ export default function AnnouncementMenu({ ann, anchor, pinned, reminderAt, onTo
             style={{ zIndex: 62, width: 248, boxSizing: 'border-box', overflow: 'hidden', background: 'var(--surface)', borderRadius: '14px', boxShadow: '0 12px 32px rgba(0,0,0,0.28)', userSelect: 'none', WebkitUserSelect: 'none' }}
           >
             <DropdownMenu.Item onSelect={onTogglePin} style={ITEM}>
-              {pinned ? <PinOff size={20} strokeWidth={2} aria-hidden="true" /> : <Pin size={20} strokeWidth={2} aria-hidden="true" />}
+              {pinned ? <TbPinnedOff size={20} aria-hidden="true" /> : <TbPin size={20} aria-hidden="true" />}
               {pinned ? t('class.menu.unpin') : t('class.menu.pin')}
             </DropdownMenu.Item>
             <DropdownMenu.Separator style={{ height: 1, background: 'var(--line)' }} />
             <DropdownMenu.Item onSelect={onRemind} style={ITEM}>
-              {reminderAt ? <BellOff size={20} strokeWidth={2} aria-hidden="true" /> : <BellRing size={20} strokeWidth={2} aria-hidden="true" />}
+              {reminderAt ? <TbBellOff size={20} aria-hidden="true" /> : <TbBellRinging size={20} aria-hidden="true" />}
               {reminderAt ? t('class.reminder.clear') : t('class.menu.remind')}
             </DropdownMenu.Item>
           </DropdownMenu.Content>
