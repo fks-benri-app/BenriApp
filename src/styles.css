@@ -156,6 +156,8 @@ html[data-theme="dark"] {
   --blue: #3f6fd0;
 }
 
+@keyframes spin { to { transform: rotate(360deg); } }
+
 /* 画像として読むアイコン(ベルなど)は、CSS の色を変えられない。ダークでは反転して明るくする */
 html[data-theme="dark"] img.icon-ink { filter: invert(1) hue-rotate(180deg) brightness(0.8); }
 /* 選択中の色付きアイコンは、タグと同じ程度に少し暗くする */

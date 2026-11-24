@@ -1,29 +1,30 @@
-// アイコンの表示部品。形は src/data/icons.json にある。
+// アイコンの表示部品。線の形は Lucide、Google・YouTube のロゴは react-icons から取る。
 import React from 'react';
-import icons from '../data/icons.json';
+import {
+  Bell, BellOff, Check, CheckCheck, ChevronDown, ChevronRight, ClipboardList, Copy,
+  ExternalLink, File, FileText, Link as LinkIcon, Loader2, Megaphone, Paperclip, UserRound, X,
+} from 'lucide-react';
+import { FaYoutube } from 'react-icons/fa6';
+import { FcGoogle } from 'react-icons/fc';
 
-// アイコンの表示。形は src/data/icons.json にまとめてある(名前で呼ぶ)。
+// 名前 → アイコン。呼び出し側は名前で指定する(例: <Icon name="bell" />)
+const LINE = {
+  close: X, closeSmall: X, open: ExternalLink, announcement: Megaphone, assignment: ClipboardList,
+  material: Paperclip, file: File, link: LinkIcon, form: FileText, doneAll: CheckCheck, readAll: CheckCheck,
+  check: Check, chevronRight: ChevronRight, chevronRightSmall: ChevronRight, chevronDown: ChevronDown,
+  account: UserRound, bell: Bell, bellOff: BellOff, copy: Copy, spinner: Loader2,
+};
+// ブランドのロゴ(色つき。color は使わない)
+const BRAND = { youtube: FaYoutube, google: FcGoogle };
+
 // ・size: 数字なら px、文字なら CSS の長さ(例 "1.2em")。width / height で別々にも指定できる
-// ・color: 塗り(fill 型)または線(stroke 型)の色。色つきのアイコン(google)では使わない
+// ・color: 線の色(Lucide は線で描く)。ブランドのロゴでは使わない
 export default function Icon({ name, size = 24, width, height, color = 'currentColor', style }) {
-  const def = icons[name] || icons.file;
-  const stroked = typeof def.stroke === 'number';
-  const common = stroked
-    ? { fill: 'none', style: { stroke: color }, strokeWidth: def.stroke, strokeLinecap: 'round', strokeLinejoin: 'round' }
-    : { fill: undefined };
-  return (
-    <svg
-      width={width ?? size}
-      height={height ?? size}
-      viewBox={def.viewBox}
-      fill={stroked ? 'none' : color}
-      aria-hidden="true"
-      focusable="false"
-      style={{ display: 'block', flexShrink: 0, ...style }}
-    >
-      {def.shapes.map((sh, i) => (sh.circle
-        ? <circle key={i} cx={sh.circle[0]} cy={sh.circle[1]} r={sh.circle[2]} {...common} />
-        : <path key={i} d={sh.path} {...common} fill={sh.fill || common.fill} />))}
-    </svg>
-  );
+  const w = width ?? size;
+  const h = height ?? size;
+  const css = { display: 'block', flexShrink: 0, ...style };
+  const Brand = BRAND[name];
+  if (Brand) return <Brand width={w} height={h} style={css} aria-hidden="true" focusable="false" />;
+  const Line = LINE[name] || File;
+  return <Line width={w} height={h} color={color} style={css} />;
 }

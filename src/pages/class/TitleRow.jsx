@@ -1,10 +1,8 @@
 // お知らせ画面の上の行(タイトル・検索・一斉既読・通知設定)。
 import React from 'react';
 import { t } from '../../lib/ui/text';
+import Icon from '../../components/Icon';
 import searchIcon from '../../assets/images/icons/search.svg';
-import bellIcon from '../../assets/images/icons/bell.svg';
-import bellOffIcon from '../../assets/images/icons/bell-off.svg';
-import readAllIcon from '../../assets/images/icons/read-all.svg';
 import { useNavigate } from 'react-router-dom';
 
 export default function TitleRow({ searchOpen, searchInputRef, query, setQuery, closeSearch, readAllShown, unreadShown, devicePushOn, openSearch }) {
@@ -94,7 +92,7 @@ export default function TitleRow({ searchOpen, searchInputRef, query, setQuery, 
                 cursor: unreadShown.length === 0 ? 'default' : 'pointer', touchAction: 'manipulation'
               }}
             >
-              <img className="icon-ink" src={readAllIcon} alt="" aria-hidden="true" draggable={false} style={{ width: '100%', height: '100%' }} />
+              <Icon name="readAll" size="100%" />
             </button>
             <button
               type="button"
@@ -116,33 +114,9 @@ export default function TitleRow({ searchOpen, searchInputRef, query, setQuery, 
                 touchAction: 'manipulation'
               }}
             >
-              <img
-                className="icon-ink"
-                src={devicePushOn ? bellIcon : bellOffIcon}
-                alt=""
-                aria-hidden="true"
-                draggable={false}
-                style={{ width: '1.571em', height: '1.571em', objectFit: 'contain', display: 'block' }}
-              />
+              <Icon name={devicePushOn ? 'bell' : 'bellOff'} size="1.571em" />
             </button>
-            <img
-              draggable={false}
-              role="button"
-              tabIndex={0}
-              onClick={openSearch}
-              onKeyDown={(e) => { if (e.key === 'Enter') openSearch(); }}
-              style={{
-                width: '1.571em',
-                height: '1.571em',
-                cursor: 'pointer',
-                userSelect: 'none',
-                WebkitUserSelect: 'none',
-                touchAction: 'manipulation'
-              }}
-              className="icon-ink"
-              src={searchIcon}
-              alt="検索"
-            />
+            <img className="icon-ink" src={searchIcon} alt="検索" />
           </div>
         </>
       )}

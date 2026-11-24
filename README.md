@@ -103,7 +103,7 @@ src/pages/Home.jsx            ホーム画面(ガジェットを並べる・編�
 src/pages/Class.jsx           お知らせ画面(部品は src/pages/class/)
 src/pages/Home.jsx            ホーム画面(ガジェット1枚の描画は src/pages/home/)
 src/data/                     画面に出す値のまとめ(JSON)。変えたいときはここを直す
-                                text.json(文章)/ icons.json(アイコンの形)/ themes.json・courseThemes.json(色)
+                                text.json(文章)/ themes.json・courseThemes.json(色)
                                 tagFilters.json(絞り込み)/ homeConfig.json(ホームの動きの数値)
 src/components/               複数の画面で使う部品(タブバー・Icon など)
 src/pages/dev/                開発用のテスト画面(OCR・FCM)

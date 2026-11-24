@@ -1,6 +1,6 @@
 // 文字をクリップボードにコピーするボタン。
 import React from 'react';
-import copyIcon from '../assets/images/icons/copy.svg';
+import Icon from './Icon';
 
 export default function CopyButton({ textToCopy }) {
   const handleCopy = async (e) => {
@@ -37,7 +37,7 @@ export default function CopyButton({ textToCopy }) {
         WebkitUserSelect: 'none'
       }}
     >
-      <img src={copyIcon} alt="copy" style={{ width: '1.3em', height: '1.3em' }} />
+      <Icon name="copy" size="1.3em" />
     </button>
   );
 }
