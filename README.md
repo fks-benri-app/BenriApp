@@ -4,7 +4,7 @@ Google Classroom のお知らせ・課題を、スマホのプッシュ通知で
 画面は GitHub Pages で配信する React アプリです。新着の検知と通知の送信は、Google Apps Script(GAS)が行います。
 
 > **現在の状態**
-> 通知は FCM だけで送ります(OneSignal は撤去済み)。お知らせの授業単位での保存は、次の作業です。
+> 通知は FCM だけで送ります(OneSignal は撤去済み)。お知らせは授業ごとに保存し、授業に入っている生徒に表示します(移行済み)。既読は生徒ごとに持ちます。
 > 計画の詳細は [通知の仕様(改訂版)](docs/notification-spec.md) を見てください。
 
 ## 目次
@@ -163,10 +163,10 @@ GAS のコードは `gas/` にあります。ただし、GAS のプロジェク�
 - リマインド: `gas/assignment-reminder.gs` にあります。`setupDueReminderTrigger` を 1 回実行して、毎時の trigger を設定してください。
   - 課題の期限: 生徒が設定した「何日前」(1〜3 日)に、JST の 18 時以降に知らせます。
   - 未読のお知らせ: 受け取ってから、設定した時間(12 時間・1 日・3 日)がたった未読を、1 回だけ知らせます。
-- 既読は、アプリで読むと、Firestore の `read` / `readAt` にも書きます。サーバーが未読を判断するためです。
+- 既読は、アプリで読むと `users/{ID}/readState/main` に書きます。あわせて、生徒ごとの `announcements` の `read` / `readAt` も付けます。サーバーが未読を判断するためです。
 - 次の 2 つは、Firebase の設定が必要です。
-  - `firestore.rules` を公開し直してください。本人が書けるのは、お知らせの `read` / `readAt` だけです。
-  - 検索用の複合インデックス(`announcements` の `read` と `receivedAt`)が要ります。初回の実行でエラーが出たら、ログのリンクから作成してください。
+  - `firestore.rules` を公開し直してください。本人が書けるのは、既読(`readState`・`announcements` の `read` / `readAt`)などに限ります。
+  - 検索用の複合インデックスが要ります。`announcements` の `read` と `receivedAt`、授業の投稿(コレクション グループ `posts`)の `courseId` と `receivedAt`、期限切れ掃除用の `expireAt`。初回の実行でエラーが出たら、ログのリンクから作成してください。
 - この機能を入れる前に保存されたお知らせには、`dueAt` や `read` がありません。そのため、リマインドの対象になりません。
 
 ## 時間割読み取り(テスト機能)
@@ -236,7 +236,7 @@ iPhone で、再連携の画面から戻れないときは、左下の「←」�
 
 ### 通知の仕組みの改善
 
-通知は FCM に移行済みです。授業単位の保存は次の作業で、[通知の仕様(改訂版)](docs/notification-spec.md)にまとめています。
+通知は FCM に移行済みです。授業単位の保存も移行済みです。設計は [通知の仕様(改訂版)](docs/notification-spec.md) にまとめています。
 
 将来は、通知までの遅れ(ラグ)を減らすことも考えています。
 
