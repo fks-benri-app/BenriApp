@@ -2,6 +2,7 @@
 import React from 'react';
 import { t } from '../../lib/ui/text';
 import Icon from '../../components/Icon';
+import searchIcon from '../../assets/images/icons/search.svg';
 import { useNavigate } from 'react-router-dom';
 
 export default function TitleRow({ searchOpen, searchInputRef, query, setQuery, closeSearch, readAllShown, unreadShown, devicePushOn, openSearch }) {
@@ -115,7 +116,7 @@ export default function TitleRow({ searchOpen, searchInputRef, query, setQuery, 
             >
               <Icon name={devicePushOn ? 'bell' : 'bellOff'} size="1.571em" />
             </button>
-            <Icon name="search" size="1.571em" />
+            <img className="icon-ink" src={searchIcon} alt="検索" />
           </div>
         </>
       )}

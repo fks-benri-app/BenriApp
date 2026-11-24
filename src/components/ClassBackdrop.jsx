@@ -6,6 +6,7 @@ import BottomNav from './BottomNav';
 import tagFilters from '../data/tagFilters.json';
 
 import Icon from './Icon';
+import searchIcon from '../assets/images/icons/search.svg';
 
 // このファイルは、Class.jsx の見た目の部分(ヘッダー・フィルター・カード・ボトムナビ)を、
 // スタイルそのままで写したもの。通知や検索・既読などの「機能」は付けていない(表示だけ)。
@@ -152,7 +153,7 @@ export default function ClassBackdrop() {
             >
               <Icon name="bell" size="1.571em" />
             </div>
-            <Icon name="search" size="1.571em" />
+            <img draggable={false} style={{ width: '1.571em', height: '1.571em', userSelect: 'none', WebkitUserSelect: 'none' }} className="icon-ink" src={searchIcon} alt="" />
           </div>
         </div>
 
