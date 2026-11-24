@@ -15,7 +15,7 @@ import { DetailView } from './class/DetailView';
 import { useSchoolEmail, classroomUrl, openExternal, withAuthuser } from './class/schoolEmail';
 import { useIdentity } from '../auth/identity';
 import BottomNav from '../components/BottomNav';
-import { currentFontSize } from '../lib/ui/fontSize';
+import { useFontSize } from '../lib/ui/fontSize';
 import { buildCourseOptions, filterAnnouncements } from '../lib/announce/filters';
 import { peekBootOpen, takeBootOpen } from '../lib/announce/bootOpen';
 import { courseTheme } from '../lib/ui/courseTheme';
@@ -89,7 +89,7 @@ export default function Class() {
   const searchInputRef = useRef(null);
 
   // フォントサイズ基準値（プログラム制御対応）
-  const [baseFontSize] = useState(currentFontSize);
+  const baseFontSize = useFontSize();
 
   // 授業の選択肢は、手元のお知らせから作る
   const courseOptions = useMemo(() => buildCourseOptions(items), [items]);
