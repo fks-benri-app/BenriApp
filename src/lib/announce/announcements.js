@@ -1,7 +1,7 @@
 // お知らせの取得(liveStore 経由)と、既読の管理。
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { loadFirestore, markAnnouncementReadRemote, saveReadStateRemote } from '../data/firestoreLazy';
-import { watchLive, peekLive } from '../data/liveStore';
+import { watchLive, peekLive, rememberValue } from '../data/liveStore';
 import { storage } from '../data/storage';
 import { cleanTeacher, cleanText, courseKey, courseLabel, joinTitleAndBody, kindOf, shortCourse } from './filters';
 
@@ -59,13 +59,29 @@ function personalDocIdOf(link) {
 // 古いページ(「もっと見る」で読んだもの)を、生徒ごとに、この画面のセッションの間だけ覚えておく。
 // 購読の先頭(head)は、購読が届くたびに更新する。cursor は次のページの開始位置(読んだ最後の文書)。
 const olderStore = new Map(); // 読む元の key → { head, cursor, items, hasMore, loading }
+// 「もっと見る」で読んだ古いページは端末にも残す(リロードしても読み直さないため。新しい順に OLDER_SAVE_MAX 件まで)
+const OLDER_SAVE_MAX = 90;
+const olderKey = (key) => 'older:' + key;
 function olderFor(key) {
   let o = olderStore.get(key);
   if (!o) {
-    o = { head: null, cursor: null, items: [], hasMore: true, loading: false };
+    const saved = peekLive(olderKey(key));
+    o = saved
+      ? { head: null, cursor: null, cursorMs: saved.cursorMs, items: reviveItems(saved.items), hasMore: saved.hasMore, loading: false }
+      : { head: null, cursor: null, cursorMs: null, items: [], hasMore: true, loading: false };
     olderStore.set(key, o);
   }
   return o;
+}
+// 古いページを端末に保存する。先頭(新しい方)から残すので、残した最後の時刻から続けて読める
+function saveOlder(key, o) {
+  const kept = o.items.slice(0, OLDER_SAVE_MAX);
+  const last = kept[kept.length - 1];
+  rememberValue(olderKey(key), {
+    items: itemsToStored(kept),
+    hasMore: o.hasMore || kept.length < o.items.length,
+    cursorMs: last ? last.receivedAtMs : null,
+  });
 }
 
 // 保存した形 → 画面の形。「今日・昨日」の表示は、読んだ時点の日付で作り直す
@@ -262,17 +278,22 @@ export function useAnnouncements(studentId, { limitTo } = {}) {
     if (!studentId || !source || source.empty) return;
     const o = olderFor(source.key);
     if (o.loading || !o.hasMore) return;
-    const after = o.cursor || o.head;
-    if (!after) return; // 購読がまだ届いていない
+    if (!o.cursor && !o.cursorMs && !o.head) return; // 購読がまだ届いていない
     o.loading = true;
     setOlder((prev) => ({ ...prev, loading: true }));
     try {
       const { fs, db } = await loadFirestore();
+      // 続きの位置: この画面で読んだ最後の文書 → 端末に残した最後の時刻 → 先頭ページの最後
+      const after = o.cursor || (o.cursorMs ? fs.Timestamp.fromMillis(o.cursorMs) : o.head);
       const snap = await fs.getDocs(source.query(fs, db, after));
-      const page = snap.docs.map(toAnnouncement).filter((a) => !a.deleted);
-      o.items = [...o.items, ...page];
-      if (snap.docs.length) o.cursor = snap.docs[snap.docs.length - 1];
+      const all = snap.docs.map(toAnnouncement);
+      o.items = [...o.items, ...all.filter((a) => !a.deleted)];
+      if (snap.docs.length) {
+        o.cursor = snap.docs[snap.docs.length - 1];
+        o.cursorMs = all[all.length - 1].receivedAtMs;
+      }
       o.hasMore = snap.size >= ANNOUNCEMENT_LIMIT;
+      saveOlder(source.key, o);
     } catch (e) {
       console.error(e);
     } finally {
