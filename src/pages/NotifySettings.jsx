@@ -6,7 +6,7 @@ import Icon from '../components/Icon';
 import Switch from '../components/Switch';
 import { currentFontSize } from '../lib/ui/fontSize';
 import { useAnnouncements } from '../lib/announce/announcements';
-import { DAY_OPTIONS, HOUR_OPTIONS, courseIdOf, saveNotifyPrefs, useNotifyPrefs, getDevicePushEnabled, setDevicePushEnabled } from '../lib/push/notifications';
+import { DAY_OPTIONS, HOUR_OPTIONS, courseIdOf, saveNotifyPrefs, useNotifyPrefs, getDevicePushEnabled, setDevicePushEnabled, isPushDenied } from '../lib/push/notifications';
 import { t } from '../lib/ui/text';
 
 // 通知の詳細設定。ベル・設定の「クラスルーム通知」から開く
@@ -52,7 +52,9 @@ export default function NotifySettings() {
     if (deviceOn === null) return;
     setNote('');
     try {
-      setDeviceOn(await setDevicePushEnabled(studentId, !deviceOn));
+      const on = await setDevicePushEnabled(studentId, !deviceOn);
+      setDeviceOn(on);
+      if (!on && !deviceOn && isPushDenied()) setNote(t('notifySettings.denied'));
     } catch {
       setNote(t('notifySettings.toggleFailed'));
     }
