@@ -52,6 +52,7 @@ GAS(サービスアカウント)とアプリが、同じ Firestore を読み書�
 
 - 書くのは GAS だけ。読めるのは、その授業に所属する本人(`users/{生徒ID}/courses/{授業ID}` があるとき)。
 - 中身は `users/.../announcements` と同じ項目(表示用・本文・期限・添付など)。既読は含めない。
+- `courseId`(文字列): 授業のID。授業の一覧(collection group)で読むときの条件に使う。GAS が書く。
 - `USE_COURSE_STORE` が false の間は、GAS がまだ書かない。ルールだけ先に入れている。
 
 ### `users/{生徒ID}/readState/main`(授業単位に移ったあとの既読)
@@ -67,7 +68,7 @@ GAS(サービスアカウント)とアプリが、同じ Firestore を読み書�
 
 ### `users/{生徒ID}/courses/{授業ID}`
 
-- `joinedAt`(時刻)。所属授業。GAS が書く(メンバー登録と同時)。アプリは読めない。
+- `joinedAt`(時刻)。所属授業。GAS が書く(メンバー登録と同時)。本人は読める(授業の一覧に使う)。書けない。
 - GAS の購読の同期(`fcmSyncStudent_`)が、授業のトピック購読に使う。
 
 ### `courses/{授業ID}/members/{生徒ID}` / `courses/{授業ID}/posts/{投稿ID}`
