@@ -1,0 +1,6 @@
+{
+  "_comment": "運営が編集する設定の選択肢。変えたらビルドし直す。courseGrades: 講座を選べる学年。courseLetters: 講座の記号。electiveSubjects: 選択教科の名前(一覧にチェックする)",
+  "courseGrades": [2, 3],
+  "courseLetters": ["A", "B", "C", "D", "E", "F"],
+  "electiveSubjects": []
+}
