@@ -155,16 +155,14 @@ export default function NotifySettings() {
                   {i > 0 && <div style={divider} />}
                   <div style={{ ...rowStyle, opacity: deviceOn ? 1 : 0.45 }}>
                     <div style={{ color: 'var(--text-strong)', fontWeight: 600, minWidth: 0, overflowWrap: 'anywhere' }}>{c.label}</div>
-                    <button
-                      type="button"
-                      onClick={() => toggleCourse(c.id)}
+                    <input
+                      type="checkbox"
+                      checked={on}
+                      onChange={() => toggleCourse(c.id)}
                       disabled={!loaded || !deviceOn}
-                      aria-pressed={on}
                       aria-label={`${c.label}の通知`}
-                      style={{ border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', flexShrink: 0 }}
-                    >
-                      <Switch on={on} disabled={!loaded || !deviceOn} />
-                    </button>
+                      style={{ width: '1.357em', height: '1.357em', margin: 0, flexShrink: 0, accentColor: 'var(--ink)', cursor: 'pointer' }}
+                    />
                   </div>
                 </React.Fragment>
               );
