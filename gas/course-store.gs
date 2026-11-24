@@ -46,7 +46,7 @@ function saveCoursePost_(courseId, postId, rec, updatedAtMs, deleted) {
   const res = fsRequest_(
     fsDocUrl_('/courses/' + encodeURIComponent(courseId) + '/posts/' + encodeURIComponent(postId)),
     'patch',
-    { fields: courseFieldsFor_(rec, updatedAtMs, deleted) }
+    { fields: Object.assign(courseFieldsFor_(rec, updatedAtMs, deleted), { courseId: { stringValue: courseId } }) }
   );
   if (res.getResponseCode() >= 300) {
     throw new Error('授業の投稿の保存に失敗(' + res.getResponseCode() + '): ' + res.getContentText());
