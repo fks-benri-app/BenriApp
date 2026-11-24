@@ -1,7 +1,8 @@
 // 名前のカードを押したときの設定(アイコン画像・講座・選択教科)。ダイアログは共通の見た目。
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import ModalDialog, { DialogButton } from '../../components/ModalDialog';
-import { OPTIONS, canChooseCourse, clearAvatar, imageToAvatar, saveAvatar, saveProfile } from '../../lib/profile/profile';
+import { OPTIONS, canChooseCourse, clearAvatar, cropToAvatar, saveAvatar, saveProfile } from '../../lib/profile/profile';
+import AvatarCropper from './AvatarCropper';
 
 const chip = (on) => ({
   padding: '0.5em 0.9em', borderRadius: '999px', border: on ? 'none' : '1px solid var(--line)', fontFamily: 'inherit',
@@ -13,18 +14,41 @@ export default function ProfileDialog({ studentId, profile, avatar, onAvatarChan
   const [draftSubjects, setDraftSubjects] = useState(profile.electiveSubjects || []);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState('');
+  // 切り抜き中の写真(選んだ直後から、決定か戻るまで)
+  const [crop, setCrop] = useState(null); // { src, zoom, area }
   const fileRef = useRef(null);
   const showCourse = canChooseCourse(studentId);
 
-  async function pickImage(e) {
+  // 写真の一時のURL。使い終わったら(次に選んだとき・閉じたとき)解放する
+  const srcRef = useRef(null);
+  const releaseSrc = () => {
+    if (srcRef.current) URL.revokeObjectURL(srcRef.current);
+    srcRef.current = null;
+  };
+  useEffect(() => releaseSrc, []);
+
+  function pickImage(e) {
     const file = e.target.files && e.target.files[0];
     e.target.value = '';
     if (!file) return;
+    setNote('');
+    releaseSrc();
+    srcRef.current = URL.createObjectURL(file);
+    setCrop({ src: srcRef.current, zoom: 1, area: null });
+  }
+
+  function cancelCrop() {
+    releaseSrc();
+    setCrop(null);
+  }
+
+  async function applyCrop() {
+    if (!crop || !crop.area) return;
     try {
-      const dataUrl = await imageToAvatar(file);
+      const dataUrl = await cropToAvatar(crop.src, crop.area);
       saveAvatar(studentId, dataUrl);
       onAvatarChange(dataUrl);
-      setNote('');
+      cancelCrop();
     } catch {
       setNote('画像を使えませんでした。別の画像を選んでください。');
     }
@@ -57,6 +81,31 @@ export default function ProfileDialog({ studentId, profile, avatar, onAvatarChan
         : '保存できませんでした。通信を確かめてもう一度お試しください。');
       setBusy(false);
     }
+  }
+
+  // 切り抜き中は、切り抜きの画面だけを出す
+  if (crop) {
+    return (
+      <ModalDialog
+        onClose={cancelCrop}
+        title="写真の位置"
+        description="円の中に入る部分が、アイコンになります。"
+        actions={(
+          <>
+            <DialogButton onClick={cancelCrop}>戻る</DialogButton>
+            <DialogButton primary onClick={applyCrop} disabled={!crop.area}>決定</DialogButton>
+          </>
+        )}
+      >
+        <AvatarCropper
+          src={crop.src}
+          zoom={crop.zoom}
+          setZoom={(zoom) => setCrop((c) => ({ ...c, zoom }))}
+          onAreaChange={(area) => setCrop((c) => ({ ...c, area }))}
+        />
+        {note && <div style={{ fontSize: '0.857em', color: 'var(--warn-fg)', marginTop: '0.6em' }}>{note}</div>}
+      </ModalDialog>
+    );
   }
 
   return (
