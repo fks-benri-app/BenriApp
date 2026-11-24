@@ -515,8 +515,8 @@
         // 取っておいたトークンがあれば、押した操作のうちに、その場で移動する(iPhone でも止められない)
         if (tokenIsFresh()) {
           try {
-            // 移行期間: 古いアプリ向けに studentId も付ける(新しいアプリは #token だけを使う)
-            window.top.location.href = APP_URL + '?studentId=' + window.__studentId + '#token=' + loginToken;
+            // トークンは URL のハッシュ(#)だけで渡す。生徒 ID は URL に載せない
+            window.top.location.href = APP_URL + '#token=' + loginToken;
           } catch (e) {
             showReturnStatus('アプリに戻れませんでした。右上の「×」で閉じて、ホーム画面のアプリを開き直してください。');
           }

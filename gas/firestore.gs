@@ -116,7 +116,7 @@ function stripUrls_(text) {
       .replace(/<?https?:\/\/[^\s<>【】]+>?/g, '')  // URL(<...> で囲まれた形も含む)
       .replace(/[【】<>]/g, '')                     // 囲みの記号の残り
       .trim())
-    .filter(l => l && !/AccountChooser|accounts\.google\.com|@g\.nagano-c\.ed\.jp|さん（Classroom）|^日時:/.test(l))
+    .filter(l => l && !/AccountChooser|accounts\.google\.com|さん（Classroom）|^日時:/.test(l) && !l.includes('@' + SCHOOL_EMAIL_DOMAIN))
     .join('\n');
 }
 // 学校のアドレスを users/{studentId} の schoolEmail に保存(他の項目は消さない)

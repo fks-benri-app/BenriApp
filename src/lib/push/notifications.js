@@ -72,14 +72,25 @@ export async function getDevicePushEnabled() {
 // オン/オフを切り替える。戻り値は、切り替えたあとの状態(オンなら true)。
 // オフ: 利用者のオフの印を立て、FCM の登録トークンを消す(消すと FCM はこの端末に送らない)。
 // オン: オフの印を外し、FCM の登録トークンを取り直して保存する。
+// オンにするときは、許可がまだなら許可を求める(再連携のあとなど、許可が未設定の端末で何も起きないのを防ぐ)。
+// 許可が拒否されていたら、オンにできない(戻り値は false)。
 export async function setDevicePushEnabled(studentId, on) {
-  setPushOffByUser(!on);
   const fcm = await import('./fcm');
   try {
-    if (on) await fcm.refreshFcmTokenIfGranted(studentId);
-    else await fcm.removeFcmTokenForThisDevice(studentId);
+    if (on) {
+      setPushOffByUser(false);
+      await fcm.enableFcmForStudent(studentId);
+    } else {
+      setPushOffByUser(true);
+      await fcm.removeFcmTokenForThisDevice(studentId);
+    }
   } catch (e) {
     console.warn('[setDevicePushEnabled]', e);
   }
   return getDevicePushEnabled();
+}
+
+// 通知の許可が、ブラウザで拒否されているか
+export function isPushDenied() {
+  return typeof Notification !== 'undefined' && Notification.permission === 'denied';
 }

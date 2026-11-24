@@ -1,15 +1,43 @@
 // お知らせ一覧の1枚のカード。
-import React from 'react';
+import React, { useRef } from 'react';
 import { KIND_LABELS } from './DetailView';
 import { courseThemeOrNull, shaded } from '../../lib/ui/courseTheme';
+import { t } from '../../lib/ui/text';
 
-export default function AnnouncementCard({ ann, openAnnouncement }) {
+// 長押し(この長さ以上押し続けたら、メニューを出す)
+const LONG_PRESS_MS = 500;
+
+export default function AnnouncementCard({ ann, openAnnouncement, onLongPress, pinned, reminderAt }) {
+  const timer = useRef(null);
+  const fired = useRef(false);
+  const cancel = () => {
+    if (timer.current) { clearTimeout(timer.current); timer.current = null; }
+  };
   return (
     <article
       role="link"
       tabIndex={0}
-      onClick={() => openAnnouncement(ann)}
+      onClick={() => {
+        // 長押しで開いたメニューの後のクリックは、詳細を開かない
+        if (fired.current) { fired.current = false; return; }
+        openAnnouncement(ann);
+      }}
       onKeyDown={(e) => { if (e.key === 'Enter') openAnnouncement(ann); }}
+      onPointerDown={(e) => {
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
+        fired.current = false;
+        cancel();
+        timer.current = setTimeout(() => {
+          timer.current = null;
+          fired.current = true;
+          if (navigator.vibrate) navigator.vibrate(10);
+          onLongPress?.(ann);
+        }, LONG_PRESS_MS);
+      }}
+      onPointerUp={cancel}
+      onPointerLeave={cancel}
+      onPointerCancel={cancel}
+      onContextMenu={(e) => e.preventDefault()}
       style={{
         position: 'relative',
         padding: ann.isUnread ? 'calc(1.143em - 1.5px)' : '1.143em',
@@ -57,6 +85,8 @@ export default function AnnouncementCard({ ann, openAnnouncement }) {
           )}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.429em' }}>
+          {pinned && <div style={{ color: 'var(--text-muted)', fontSize: '0.786em', fontWeight: '400' }}>{t('class.pinnedLabel')}</div>}
+          {reminderAt && <div style={{ color: 'var(--text-muted)', fontSize: '0.786em', fontWeight: '400' }}>{t('class.reminderBadge')}</div>}
           <div style={{ color: 'var(--text-muted)', fontSize: '0.786em', fontWeight: '400', position: 'relative', top: '-0.214em', fontVariantNumeric: 'tabular-nums' }}>
             {ann.time}
           </div>

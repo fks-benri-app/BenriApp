@@ -19,6 +19,10 @@ import { currentFontSize } from '../lib/ui/fontSize';
 import { buildCourseOptions, filterAnnouncements } from '../lib/announce/filters';
 import { peekBootOpen, takeBootOpen } from '../lib/announce/bootOpen';
 import { courseTheme } from '../lib/ui/courseTheme';
+import { usePins } from '../lib/announce/pins';
+import { useReminders } from '../lib/announce/reminders';
+import AnnouncementMenu from './class/AnnouncementMenu';
+import { ReminderDialog, DueReminderDialog } from './class/ReminderDialog';
 
 // ヘッダー用アイコン
 import { t } from '../lib/ui/text';
@@ -39,6 +43,13 @@ export default function Class() {
   const schoolEmail = useSchoolEmail(identity?.id);
   // 通知の状態(届いていない可能性・この端末の通知がオンか)。確認と付け直しも、このフックの中で行う
   const { pushBroken, devicePushOn } = useDevicePushState(identity?.id);
+  // ピン留め・リマインド(端末に残す)と、長押しのメニュー・リマインドの画面の状態
+  const { pinnedIds, togglePin } = usePins(identity?.id);
+  const pinSet = useMemo(() => new Set(pinnedIds), [pinnedIds]);
+  const { reminders, setReminder } = useReminders(identity?.id);
+  const [menuId, setMenuId] = useState(null);
+  const [remindId, setRemindId] = useState(null);
+  const [dueIds, setDueIds] = useState([]);
 
   // 詳細画面。端末の戻るボタンでも、一覧に戻れるように、履歴(history)に積む
   const [detailId, setDetailId] = useState(() => window.history.state?.__detail ?? peekBootOpen() ?? null);
@@ -149,6 +160,42 @@ export default function Class() {
     return () => { alive = false; };
   }, [detailId, isListed, identity?.id, fetched]);
 
+  // リマインドの時刻になったお知らせを集める(アプリを開いている間、30秒ごとと、戻ってきたとき)
+  useEffect(() => {
+    function check() {
+      const now = Date.now();
+      const due = Object.keys(reminders).filter((id) => reminders[id] <= now);
+      if (due.length === 0) return;
+      setDueIds((prev) => [...new Set([...prev, ...due])]);
+      due.forEach((id) => setReminder(id, null));
+    }
+    check();
+    const timerId = setInterval(check, 30000);
+    document.addEventListener('visibilitychange', check);
+    return () => {
+      clearInterval(timerId);
+      document.removeEventListener('visibilitychange', check);
+    };
+  }, [reminders, setReminder]);
+
+  const menuAnn = menuId ? items.find((a) => a.id === menuId) || null : null;
+  const remindAnn = remindId ? items.find((a) => a.id === remindId) || null : null;
+  const dueAnns = items.filter((a) => dueIds.includes(a.id));
+  // ピン留めは、絞り込み・検索をしていない「すべて」の一覧のときだけ、一番上に出す
+  const plainView = activeFilter === 'all' && !courseValue && !kind && !query.trim();
+  const pinnedShown = plainView ? filteredAnnouncements.filter((a) => pinSet.has(a.id)) : [];
+  const restShown = plainView ? filteredAnnouncements.filter((a) => !pinSet.has(a.id)) : filteredAnnouncements;
+  const renderCard = (ann) => (
+    <AnnouncementCard
+      key={ann.id}
+      ann={ann}
+      openAnnouncement={openAnnouncement}
+      onLongPress={(a) => setMenuId(a.id)}
+      pinned={pinSet.has(ann.id)}
+      reminderAt={reminders[ann.id]}
+    />
+  );
+
   const emptyMessage =
     status === 'loading'
       ? ''
@@ -231,11 +278,15 @@ export default function Class() {
           </div>
         )}
         {filteredAnnouncements.length > 0 ? (
-          filteredAnnouncements.map((ann) => {
-            return (
-        <AnnouncementCard key={ann.id} ann={ann} openAnnouncement={openAnnouncement} />
-            );
-          })
+          <>
+            {pinnedShown.length > 0 && (
+              <div style={{ gridColumn: '1 / -1', fontSize: '0.857em', fontWeight: 600, color: 'var(--text-muted)', padding: '0 0.286em' }}>
+                {t('class.pinnedLabel')}
+              </div>
+            )}
+            {pinnedShown.map(renderCard)}
+            {restShown.map(renderCard)}
+          </>
         ) : (
           <div style={{ padding: '3em 0', textAlign: 'center', color: 'var(--text-faint)', gridColumn: '1 / -1', userSelect: 'none' }}>
             {emptyMessage}
@@ -262,6 +313,34 @@ export default function Class() {
 
       {readAllAsk && (
         <ReadAllDialog unreadCount={unreadShown.length} onCancel={() => setReadAllAsk(false)} onConfirm={confirmReadAll} />
+      )}
+
+      {menuAnn && (
+        <AnnouncementMenu
+          ann={menuAnn}
+          pinned={pinSet.has(menuAnn.id)}
+          hasReminder={!!reminders[menuAnn.id]}
+          onTogglePin={() => { togglePin(menuAnn.id); setMenuId(null); }}
+          onRemind={() => {
+            if (reminders[menuAnn.id]) setReminder(menuAnn.id, null);
+            else setRemindId(menuAnn.id);
+            setMenuId(null);
+          }}
+          onClose={() => setMenuId(null)}
+        />
+      )}
+
+      {remindAnn && (
+        <ReminderDialog
+          ann={remindAnn}
+          hasReminder={!!reminders[remindAnn.id]}
+          onCancel={() => setRemindId(null)}
+          onSave={(ms) => { setReminder(remindAnn.id, ms); setRemindId(null); }}
+        />
+      )}
+
+      {dueAnns.length > 0 && (
+        <DueReminderDialog items={dueAnns} onClose={() => setDueIds([])} />
       )}
 
       {detail && (

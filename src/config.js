@@ -1,5 +1,8 @@
 // ここだけ書き換えれば環境が変わっても対応できるように、設定値は全部ここに集める。
 export const CONFIG = {
+  // 学校のメールのドメイン(お知らせ本文から、宛先の行を取り除くときに使う)
+  SCHOOL_EMAIL_DOMAIN: 'g.nagano-c.ed.jp',
+
   // GAS ウェブアプリのデプロイURL
   GAS_URL: 'https://script.google.com/a/macros/g.nagano-c.ed.jp/s/AKfycbwrd_6ENel5PrSCeV8CzNZh1d200460-b_7O5Vb7o7Z8aZMe2bYDhkGSOIRDQ7rR6gm/exec',
 
