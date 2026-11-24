@@ -6,6 +6,7 @@ import Icon from '../components/Icon';
 import Switch from '../components/Switch';
 import { currentFontSize } from '../lib/ui/fontSize';
 import { useAnnouncements } from '../lib/announce/announcements';
+import { peekLive, rememberValue } from '../lib/data/liveStore';
 import { DAY_OPTIONS, HOUR_OPTIONS, courseIdOf, saveNotifyPrefs, useNotifyPrefs, getDevicePushEnabled, setDevicePushEnabled, isPushDenied } from '../lib/push/notifications';
 import { t } from '../lib/ui/text';
 
@@ -34,19 +35,23 @@ export default function NotifySettings() {
   // お知らせに出てくる授業の一覧(授業ID → 表示名)。届いたことがない授業は出ない
   // 表示名は授業名の全体(例「２-CF② 公共」)。「公共」だけだと別クラスの同じ教科と見分けがつかないため。
   // それでも同じ名前の授業が複数あるときは、授業IDの末尾4文字を添えて区別する。
+  // 授業名は端末に覚えておく。お知らせは直近の数十件しか購読していないので、古い授業も一覧から消えないようにする
+  const courseKey = studentId ? 'courseNames:' + studentId : null;
+  const [knownCourses] = useState(() => (courseKey ? peekLive(courseKey) || [] : []));
   const courses = useMemo(() => {
-    const map = new Map();
+    const map = new Map(knownCourses);
     items.forEach((a) => {
       const id = courseIdOf(a.link);
-      if (id && !map.has(id)) map.set(id, a.courseFull || a.courseLabel || a.subject || '授業');
+      if (id) map.set(id, a.courseFull || a.courseLabel || a.subject || '授業');
     });
+    if (courseKey && map.size) rememberValue(courseKey, Array.from(map));
     const counts = new Map();
     map.forEach((label) => counts.set(label, (counts.get(label) || 0) + 1));
     return Array.from(map, ([id, name]) => ({
       id,
       label: counts.get(name) > 1 ? `${name}(ID …${id.slice(-4)})` : name,
     })).sort((x, y) => x.label.localeCompare(y.label, 'ja'));
-  }, [items]);
+  }, [items, knownCourses, courseKey]);
 
   async function toggleDevice() {
     if (deviceOn === null) return;

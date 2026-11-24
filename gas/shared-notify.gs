@@ -76,7 +76,21 @@ function ensureMember_(studentId, courseId) {
 }
 
 // 授業のメンバー(生徒ID)の一覧
+// 授業のメンバー一覧は CacheService に30分覚える(入れ替わりは少ない)。
+// 覚えにない新入りは、送り先に入らないだけ。その人は自分の見回りで、取りこぼしなく自分に送る(notifyShared_ の後半)。
+const MEMBERS_CACHE_SEC = 1800;
 function listMembers_(courseId) {
+  const cacheKey = 'members:' + courseId;
+  try {
+    const hit = CacheService.getScriptCache().get(cacheKey);
+    if (hit) return JSON.parse(hit);
+  } catch (e) { /* 覚えが壊れていれば、読み直す */ }
+  const ids = listMembersRemote_(courseId);
+  try { CacheService.getScriptCache().put(cacheKey, JSON.stringify(ids), MEMBERS_CACHE_SEC); } catch (e) { /* 覚えられなくても続ける */ }
+  return ids;
+}
+
+function listMembersRemote_(courseId) {
   const ids = [];
   let pageToken = '';
   for (let i = 0; i < 5; i++) {
@@ -216,12 +230,10 @@ function notifyShared_(studentId, item) {
   if (claim === 'error') return false;
   if (claim === 'won') return sendToCourse_(studentId, item, ref);
 
-  // 先に、ほかの人が送る役を取っていた
-  const c = readClaim_(ref.postKey);
-  if (!c) return false;
-  if (c.sentAtMs) return c.notified.indexOf(studentId) >= 0; // 自分が送り先に入っていなければ、自分で送る
-  if (Date.now() - c.claimedAtMs > SHARE_CLAIM_STALE_MS) return false; // 送る役が止まっている
-  addPendingShared_(item, ref.postKey); // 送信中: 少しあとで、もう一度確かめる
+  // 先に、ほかの人が送る役を取っていた。送られたかは、次の見回り(flushPendingShared_)で1回だけ確かめる。
+  // ここで読むと、授業の全員が投稿ごとに何度も読むことになるため。
+  // 送る役が止まっていた場合も、見回りで自分に送る。
+  addPendingShared_(item, ref.postKey);
   return true;
 }
 
@@ -338,11 +350,21 @@ function notifyPrefsFrom_(fields) {
 }
 
 // 生徒1人の設定を読む(新しい投稿が見つかったときの、本人の分)
+// 設定は滅多に変わらないので、CacheService に10分覚える(1分ごとの確認で、毎回 Firestore を読まないため)。
+// 変更の反映は最大10分おくれる。読めなかったときは覚えない(既定値を10分続けない)。
+const NOTIFY_PREFS_CACHE_SEC = 600;
 function getNotifyPrefs_(studentId) {
+  const cacheKey = 'prefs:' + studentId;
+  try {
+    const hit = CacheService.getScriptCache().get(cacheKey);
+    if (hit) return JSON.parse(hit);
+  } catch (e) { /* 覚えが壊れていれば、読み直す */ }
   try {
     const res = fsRequest_(fsDocUrl_('/users/' + encodeURIComponent(studentId)) + '?mask.fieldPaths=notifyPrefs', 'get');
     if (res.getResponseCode() !== 200) return NOTIFY_PREFS_DEFAULT;
-    return notifyPrefsFrom_(JSON.parse(res.getContentText()).fields);
+    const prefs = notifyPrefsFrom_(JSON.parse(res.getContentText()).fields);
+    try { CacheService.getScriptCache().put(cacheKey, JSON.stringify(prefs), NOTIFY_PREFS_CACHE_SEC); } catch (e) { /* 覚えられなくても続ける */ }
+    return prefs;
   } catch (e) {
     console.error('通知設定の読み取りに失敗: ' + e);
     return NOTIFY_PREFS_DEFAULT;
@@ -354,9 +376,19 @@ function getNotifyPrefs_(studentId) {
 function getNotifyPrefsMany_(ids) {
   const out = {};
   const unique = ids.filter(function (id, i) { return ids.indexOf(id) === i; });
+  // まず覚えを見る(getNotifyPrefs_ と同じ鍵)。覚えにない人だけ Firestore から読む
+  let known = {};
+  try { known = CacheService.getScriptCache().getAll(unique.map(function (id) { return 'prefs:' + id; })); } catch (e) { known = {}; }
+  const misses = [];
+  unique.forEach(function (id) {
+    const hit = known['prefs:' + id];
+    if (hit) { try { out[id] = JSON.parse(hit); return; } catch (e) { /* 壊れていれば読み直す */ } }
+    misses.push(id);
+  });
+  const fresh = {};
   const base = 'projects/' + FIRESTORE_PROJECT_ID + '/databases/(default)/documents';
-  for (let i = 0; i < unique.length; i += 100) {
-    const chunk = unique.slice(i, i + 100);
+  for (let i = 0; i < misses.length; i += 100) {
+    const chunk = misses.slice(i, i + 100);
     try {
       const res = fsRequest_(
         'https://firestore.googleapis.com/v1/projects/' + FIRESTORE_PROJECT_ID + '/databases/(default)/documents:batchGet',
@@ -368,10 +400,17 @@ function getNotifyPrefsMany_(ids) {
         if (!row.found) return;
         const id = row.found.name.split('/').pop();
         out[id] = notifyPrefsFrom_(row.found.fields);
+        fresh[id] = out[id];
       });
     } catch (e) {
       console.error('通知設定のまとめ読み取りに失敗: ' + e);
     }
+  }
+  // 読めた分だけ覚える(読めなかった人は覚えない)
+  const toPut = {};
+  Object.keys(fresh).forEach(function (id) { toPut['prefs:' + id] = JSON.stringify(fresh[id]); });
+  if (Object.keys(toPut).length) {
+    try { CacheService.getScriptCache().putAll(toPut, NOTIFY_PREFS_CACHE_SEC); } catch (e) { /* 覚えられなくても続ける */ }
   }
   return out;
 }
