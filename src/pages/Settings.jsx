@@ -210,6 +210,7 @@ export default function Settings() {
                 width: '4em',
                 height: '4em',
                 borderRadius: '50%',
+                overflow: 'hidden',
                 background: 'var(--surface-2)',
                 display: 'flex',
                 alignItems: 'center',
