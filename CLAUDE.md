@@ -35,7 +35,7 @@
 - 購読とキャッシュの入口は `src/lib/data/liveStore.js` だけ。画面ごとに独自のキャッシュを持たない。
 - 通知の設定(授業ごと・端末のオン/オフ)は `src/lib/push/notifications.js` が窓口。
 - Firestore の項目の約束は `docs/firestore-schema.md`。項目を変えるときは、この順に直す: 文書 → `firestore.rules` → GAS → アプリ。
-- 画面の文章は `src/data/text.json` に置き、`t('key')` で取り出す。アイコンは `Icon` 部品(線は Lucide、ロゴは react-icons)。色は `themes.json` と `courseThemes.json`。ホームの動きの数値は `homeConfig.json`。直書きしない。
+- 画面の文章は `src/data/text.json` に置き、`t('key')` で取り出す。アイコンは `Icon` 部品(線は Tabler Icons、ロゴは react-icons)。色は `themes.json` と `courseThemes.json`。ホームの動きの数値は `homeConfig.json`。直書きしない。
 - 各ファイルの先頭に、何をするファイルかの1行説明のコメントを書く。
 - 飾りのコメント(`=====`、`★`)や、`/* */` のブロックコメントは使わない。ふつうの `//` にする。
 - フォルダ: `src/lib/` は data / announce / push / ui / timetable に分ける。`src/pages/class/` は お知らせ画面の部品、`src/pages/home/` はホームの部品、`src/pages/dev/` は開発用の試験画面。
