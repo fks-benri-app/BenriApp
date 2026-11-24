@@ -7,6 +7,24 @@ import { t } from '../../lib/ui/text';
 // 長押し(この長さ以上押し続けたら、メニューを出す)
 const LONG_PRESS_MS = 500;
 
+// 要素が、見えている範囲(画面・スクロール欄・上下のバー)の中に全部入っているか。
+// 中心と上下の端の点が、どれも要素自身に当たるかで、上に重なるバーも判定する
+function isFullyVisible(el) {
+  const r = el.getBoundingClientRect();
+  if (r.top < 0 || r.bottom > window.innerHeight || r.left < 0 || r.right > window.innerWidth) return false;
+  for (let p = el.parentElement; p && p !== document.body; p = p.parentElement) {
+    const cs = getComputedStyle(p);
+    if (!/(auto|hidden|scroll|clip)/.test(cs.overflowY + cs.overflowX)) continue;
+    const pr = p.getBoundingClientRect();
+    if (r.top < pr.top || r.bottom > pr.bottom || r.left < pr.left || r.right > pr.right) return false;
+  }
+  const x = r.left + r.width / 2;
+  return [r.top + 2, r.top + r.height / 2, r.bottom - 2].every((y) => {
+    const hit = document.elementFromPoint(x, y);
+    return !!hit && el.contains(hit);
+  });
+}
+
 export default function AnnouncementCard({ ann, openAnnouncement, onLongPress, pinned, reminderAt }) {
   const timer = useRef(null);
   const fired = useRef(false);
@@ -29,8 +47,11 @@ export default function AnnouncementCard({ ann, openAnnouncement, onLongPress, p
         cancel();
         // 押した場所の大きさ(メニューを、このお知らせのそばに出すため)
         const rect = e.currentTarget.getBoundingClientRect();
+        const el = e.currentTarget;
         timer.current = setTimeout(() => {
           timer.current = null;
+          // 画面の外・バーの下・スクロール欄から切れているカードでは、メニューを出さない
+          if (!isFullyVisible(el)) return;
           fired.current = true;
           if (navigator.vibrate) navigator.vibrate(10);
           onLongPress?.(ann, { top: rect.top, left: rect.left, width: rect.width, height: rect.height, bottom: rect.bottom });

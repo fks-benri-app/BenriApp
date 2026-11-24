@@ -283,12 +283,10 @@ export default function Class() {
         )}
         {filteredAnnouncements.length > 0 ? (
           <>
-            {pinnedShown.length > 0 && (
-              <div style={{ gridColumn: '1 / -1', fontSize: '0.857em', fontWeight: 600, color: 'var(--text-muted)', padding: '0 0.286em' }}>
-                {t('class.pinnedLabel')}
-              </div>
-            )}
             {pinnedShown.map(renderCard)}
+            {pinnedShown.length > 0 && restShown.length > 0 && (
+              <div aria-hidden="true" style={{ gridColumn: '1 / -1', height: 1, background: 'var(--line)', margin: '0.429em 1.429em' }} />
+            )}
             {restShown.map(renderCard)}
           </>
         ) : (
