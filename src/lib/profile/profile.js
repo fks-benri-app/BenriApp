@@ -48,9 +48,10 @@ export function useProfile(studentId) {
 
 // 講座と選択教科を保存する(本人だけが書けるよう、ルールで2つの項目に限っている)
 export async function saveProfile(studentId, { courseLetter, electiveSubjects }) {
-  const data = { electiveSubjects };
+  const data = {};
   if (courseLetter !== undefined) data.courseLetter = courseLetter;
-  await updateUserDoc(studentId, data);
+  if (electiveSubjects !== undefined) data.electiveSubjects = electiveSubjects;
+  if (Object.keys(data).length) await updateUserDoc(studentId, data);
 }
 
 // アイコン画像(端末だけに保存。サーバーには送らない。端末を変えると消える)

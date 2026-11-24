@@ -40,13 +40,21 @@ export default function ProfileDialog({ studentId, profile, avatar, onAvatarChan
   }
 
   async function save() {
+    // 変わった項目だけ書く(変わっていなければ、書かずに閉じる)
+    const course = showCourse && draftCourse !== (profile.courseLetter || '') ? draftCourse : undefined;
+    const subjectsChanged = draftSubjects.length !== profile.electiveSubjects.length
+      || draftSubjects.some((x) => !profile.electiveSubjects.includes(x));
+    if (course === undefined && !subjectsChanged) { onClose(); return; }
     setBusy(true);
     setNote('');
     try {
-      await saveProfile(studentId, { courseLetter: showCourse ? draftCourse : undefined, electiveSubjects: draftSubjects });
+      await saveProfile(studentId, { courseLetter: course, electiveSubjects: subjectsChanged ? draftSubjects : undefined });
       onClose();
-    } catch {
-      setNote('保存できませんでした。通信を確かめてもう一度お試しください。');
+    } catch (e) {
+      console.error(e);
+      setNote(e && e.code === 'permission-denied'
+        ? '保存が許可されていません。管理者の設定(ルール)を確かめてください。'
+        : '保存できませんでした。通信を確かめてもう一度お試しください。');
       setBusy(false);
     }
   }
@@ -78,7 +86,6 @@ export default function ProfileDialog({ studentId, profile, avatar, onAvatarChan
           <section>
             <div style={{ fontSize: '0.857em', color: 'var(--text-muted)', marginBottom: '0.5em' }}>講座</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5em' }}>
-              <button type="button" onClick={() => setDraftCourse('')} style={chip(draftCourse === '')}>なし</button>
               {OPTIONS.courseLetters.map((l) => (
                 <button key={l} type="button" onClick={() => setDraftCourse(l)} style={chip(draftCourse === l)}>{l}</button>
               ))}
