@@ -3,6 +3,8 @@ import React from 'react';
 import { t } from '../../lib/ui/text';
 import Icon from '../../components/Icon';
 import searchIcon from '../../assets/images/icons/search.svg';
+import bellIcon from '../../assets/images/icons/bell.svg';
+import bellOffIcon from '../../assets/images/icons/bell-off.svg';
 import { useNavigate } from 'react-router-dom';
 
 export default function TitleRow({ searchOpen, searchInputRef, query, setQuery, closeSearch, readAllShown, unreadShown, devicePushOn, openSearch }) {
@@ -114,7 +116,7 @@ export default function TitleRow({ searchOpen, searchInputRef, query, setQuery, 
                 touchAction: 'manipulation'
               }}
             >
-              <Icon name={devicePushOn ? 'bell' : 'bellOff'} size="1.571em" />
+              <img className="icon-ink" src={devicePushOn ? bellIcon : bellOffIcon} alt="" aria-hidden="true" draggable={false} style={{ width: '1.571em', height: '1.571em', objectFit: 'contain', display: 'block' }} />
             </button>
             <img className="icon-ink" src={searchIcon} alt="検索" />
           </div>
