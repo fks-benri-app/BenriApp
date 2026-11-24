@@ -32,7 +32,7 @@ function doGet(e) {
   template.studentId = studentId;
   template.schoolEmail = schoolEmail;
   return template.evaluate()
-    .setTitle('Classroom通知連携')
+    .setTitle('BenriApp連携')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
 
