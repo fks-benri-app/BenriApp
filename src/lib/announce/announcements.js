@@ -1,9 +1,8 @@
 // お知らせの取得(liveStore 経由)と、既読の管理。
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { loadFirestore } from '../data/firestoreLazy';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { loadFirestore, markAnnouncementReadRemote, saveReadStateRemote } from '../data/firestoreLazy';
 import { watchLive, peekLive } from '../data/liveStore';
 import { storage } from '../data/storage';
-import { markAnnouncementReadRemote } from '../data/firestoreLazy';
 import { cleanTeacher, cleanText, courseKey, courseLabel, joinTitleAndBody, kindOf, shortCourse } from './filters';
 
 const READ_KEY = 'readIds';
@@ -16,14 +15,55 @@ const ANNOUNCEMENT_LIMIT = 30;
 const CACHE_SAVE_MAX = 30;
 const cacheKey = (studentId) => 'announcements:' + studentId;
 
+// 授業ごとの投稿(courses/{授業ID}/posts)を読むか。false にすると、生徒ごとの announcements を読む(切り戻し用)。
+// 既読は授業の投稿なら users/{ID}/readState/main に書く。生徒ごとの announcements の既読(GAS の未読通知が見る)も続けて書く。
+const USE_COURSE_POSTS = true;
+// 「where in」で指定できる授業IDの数の上限(Firestore の制限)
+const COURSE_IDS_LIMIT = 30;
+const coursesKey = (studentId) => 'courses:' + studentId;
+const readStateKey = (studentId) => 'readState:' + studentId;
+
+// 読む元を決める。授業ごとの場合は ids(本人が入っている授業ID)で絞る。
+// key は覚えておく場所の名前、query(fs, db, after) は一覧の問い合わせ(after が無いと先頭から)
+function sourceOf(studentId, ids) {
+  if (!USE_COURSE_POSTS) {
+    return {
+      key: cacheKey(studentId),
+      query: (fs, db, after) => fs.query(
+        fs.collection(db, 'users', studentId, 'announcements'),
+        fs.orderBy('receivedAt', 'desc'),
+        ...(after ? [fs.startAfter(after)] : []),
+        fs.limit(ANNOUNCEMENT_LIMIT)
+      ),
+    };
+  }
+  if (!ids.length) return { key: null, empty: true };
+  return {
+    key: 'posts:' + studentId + ':' + ids.join(','),
+    query: (fs, db, after) => fs.query(
+      fs.collectionGroup(db, 'posts'),
+      fs.where('courseId', 'in', ids),
+      fs.orderBy('receivedAt', 'desc'),
+      ...(after ? [fs.startAfter(after)] : []),
+      fs.limit(ANNOUNCEMENT_LIMIT)
+    ),
+  };
+}
+
+// 授業の投稿(リンクから作る)に対応する、生徒ごとの announcements の文書ID(授業ID.種類.投稿ID)
+function personalDocIdOf(link) {
+  const m = typeof link === 'string' && link.match(/\/c\/([^/]+)\/(p|a|m|sa)\/([^/?#]+)/);
+  return m ? m[1] + '.' + m[2] + '.' + m[3] : null;
+}
+
 // 古いページ(「もっと見る」で読んだもの)を、生徒ごとに、この画面のセッションの間だけ覚えておく。
 // 購読の先頭(head)は、購読が届くたびに更新する。cursor は次のページの開始位置(読んだ最後の文書)。
-const olderStore = new Map(); // studentId → { head, cursor, items, hasMore, loading }
-function olderFor(studentId) {
-  let o = olderStore.get(studentId);
+const olderStore = new Map(); // 読む元の key → { head, cursor, items, hasMore, loading }
+function olderFor(key) {
+  let o = olderStore.get(key);
   if (!o) {
     o = { head: null, cursor: null, items: [], hasMore: true, loading: false };
-    olderStore.set(studentId, o);
+    olderStore.set(key, o);
   }
   return o;
 }
@@ -99,36 +139,66 @@ function toAnnouncement(doc) {
 // 将来ログインを入れて保存先のパスが変わっても、ここだけ直せば画面は変わらない。
 // @returns {{ status: 'loading'|'ready'|'error', items: Array, markRead: (id: string) => void, markAllRead: (ids: string[]) => void }}
 export function useAnnouncements(studentId, { limitTo } = {}) {
+  // 本人の授業ID(授業ごとの投稿を読むときに使う)。まだ届いていなければ null
+  const [courseIds, setCourseIds] = useState(() => (studentId && USE_COURSE_POSTS ? peekLive(coursesKey(studentId)) : null));
+  // サーバーに保存された既読(授業の投稿の既読。postId の集合)
+  const [serverReads, setServerReads] = useState(() => new Set((studentId && USE_COURSE_POSTS && peekLive(readStateKey(studentId))) || []));
+  const idsKey = courseIds === null ? null : courseIds.slice(0, COURSE_IDS_LIMIT).join(',');
+  const source = useMemo(() => {
+    if (!studentId) return null;
+    if (USE_COURSE_POSTS && idsKey === null) return null; // 授業IDがまだ届いていない
+    return sourceOf(studentId, idsKey ? idsKey.split(',') : []);
+  }, [studentId, idsKey]);
+
   const [state, setState] = useState(() => {
-    const cached = studentId ? peekLive(cacheKey(studentId), reviveItems) : null;
+    const cached = source && !source.empty ? peekLive(source.key, reviveItems) : null;
     return cached ? { status: 'ready', items: cached } : { status: 'loading', items: [] };
   });
   const [readIds, setReadIds] = useState(loadReadIds);
   const [older, setOlder] = useState(() => {
-    const o = studentId ? olderFor(studentId) : null;
+    const o = source && !source.empty ? olderFor(source.key) : null;
     return { items: o ? o.items : [], hasMore: o ? o.hasMore : false, loading: false };
   });
 
+  // 本人の授業ID(入っている授業)を購読する。授業に入ると GAS が users/{id}/courses に書く
   useEffect(() => {
-    if (!studentId) return undefined;
-    const o = olderFor(studentId);
+    if (!studentId || !USE_COURSE_POSTS) return undefined;
+    return watchLive(
+      coursesKey(studentId),
+      ({ fs, db }) => fs.collection(db, 'users', studentId, 'courses'),
+      { onValue: (ids) => setCourseIds(ids) },
+      { derive: (snap) => snap.docs.map((d) => d.id), toStored: (v) => v }
+    );
+  }, [studentId]);
+
+  // 既読(授業の投稿)を購読する
+  useEffect(() => {
+    if (!studentId || !USE_COURSE_POSTS) return undefined;
+    return watchLive(
+      readStateKey(studentId),
+      ({ fs, db }) => fs.doc(db, 'users', studentId, 'readState', 'main'),
+      { onValue: (ids) => setServerReads(new Set(ids)) },
+      { derive: (snap) => Object.keys((snap.exists() && snap.data().reads) || {}), toStored: (v) => v }
+    );
+  }, [studentId]);
+
+  useEffect(() => {
+    if (!studentId || !source) return undefined;
+    if (source.empty) { setState({ status: 'ready', items: [] }); return undefined; }
+    const o = olderFor(source.key);
     setOlder({ items: o.items, hasMore: o.hasMore, loading: o.loading });
-    const cached = peekLive(cacheKey(studentId), reviveItems);
+    const cached = peekLive(source.key, reviveItems);
     setState((prev) => (prev.items.length || prev.status === 'ready' ? prev : cached ? { status: 'ready', items: cached } : { status: 'loading', items: [] }));
     // 購読は端末で1つだけ。画面を開き直しても読み直さず、覚えてある値をすぐ出す。変わったところだけ届く
     return watchLive(
-      cacheKey(studentId),
-      ({ fs, db }) => fs.query(
-        fs.collection(db, 'users', studentId, 'announcements'),
-        fs.orderBy('receivedAt', 'desc'),
-        fs.limit(ANNOUNCEMENT_LIMIT)
-      ),
+      source.key,
+      ({ fs, db }) => source.query(fs, db, null),
       {
         // 購読の先頭の最後の文書を覚える(「もっと見る」の開始位置に使う)。上限より少なければ、もう古いものは無い
         onSnap: (snap) => {
-          const o = olderFor(studentId);
-          o.head = snap.docs[snap.docs.length - 1] || null;
-          if (!o.cursor) o.hasMore = snap.size >= ANNOUNCEMENT_LIMIT;
+          const o2 = olderFor(source.key);
+          o2.head = snap.docs[snap.docs.length - 1] || null;
+          if (!o2.cursor) o2.hasMore = snap.size >= ANNOUNCEMENT_LIMIT;
         },
         onValue: (items) => setState({ status: 'ready', items }),
         onError: (error) => {
@@ -139,13 +209,27 @@ export function useAnnouncements(studentId, { limitTo } = {}) {
       },
       { derive: (snap) => snap.docs.map(toAnnouncement).filter((a) => !a.deleted), toStored: itemsToStored }
     );
-  }, [studentId]);
+  }, [studentId, source]);
+
+  // 画面に出している一覧を、既読の書き込みから引けるように覚える
+  const itemsRef = useRef([]);
 
   // 既読は端末にも、Firestore にも書く(サーバーが未読の再通知を判断するため)
   const syncRead = useCallback((ids) => {
-    if (!studentId) return;
+    if (!studentId || !ids.length) return;
+    const warn = (e) => console.warn('既読を保存できませんでした', e && e.code);
+    if (!USE_COURSE_POSTS) {
+      ids.forEach((id) => markAnnouncementReadRemote(studentId, id).catch(warn));
+      return;
+    }
+    // 授業の投稿の既読(readState/main に、投稿ID → 時刻)
+    const now = Date.now();
+    saveReadStateRemote(studentId, Object.fromEntries(ids.map((id) => [id, now]))).catch(warn);
+    // GAS の未読通知が見る、生徒ごとの announcements の既読も付ける(無い文書は読めないので、失敗しても続ける)
     ids.forEach((id) => {
-      markAnnouncementReadRemote(studentId, id).catch((e) => console.warn('既読を保存できませんでした', e && e.code));
+      const item = itemsRef.current.find((a) => a.id === id);
+      const docId = item && personalDocIdOf(item.link);
+      if (docId) markAnnouncementReadRemote(studentId, docId).catch(() => {});
     });
   }, [studentId]);
 
@@ -175,8 +259,8 @@ export function useAnnouncements(studentId, { limitTo } = {}) {
 
   // 古いページを1つ読み足す。読んだ分は olderStore に残すので、画面を開き直しても読み直さない
   const loadMore = useCallback(async () => {
-    if (!studentId) return;
-    const o = olderFor(studentId);
+    if (!studentId || !source || source.empty) return;
+    const o = olderFor(source.key);
     if (o.loading || !o.hasMore) return;
     const after = o.cursor || o.head;
     if (!after) return; // 購読がまだ届いていない
@@ -184,12 +268,7 @@ export function useAnnouncements(studentId, { limitTo } = {}) {
     setOlder((prev) => ({ ...prev, loading: true }));
     try {
       const { fs, db } = await loadFirestore();
-      const snap = await fs.getDocs(fs.query(
-        fs.collection(db, 'users', studentId, 'announcements'),
-        fs.orderBy('receivedAt', 'desc'),
-        fs.startAfter(after),
-        fs.limit(ANNOUNCEMENT_LIMIT)
-      ));
+      const snap = await fs.getDocs(source.query(fs, db, after));
       const page = snap.docs.map(toAnnouncement).filter((a) => !a.deleted);
       o.items = [...o.items, ...page];
       if (snap.docs.length) o.cursor = snap.docs[snap.docs.length - 1];
@@ -200,7 +279,7 @@ export function useAnnouncements(studentId, { limitTo } = {}) {
       o.loading = false;
       setOlder({ items: o.items, hasMore: o.hasMore, loading: false });
     }
-  }, [studentId]);
+  }, [studentId, source]);
 
   // 購読の先頭と、読み足した古いページをつなぐ。同じお知らせは先頭の方(新しい版)を使う
   const merged = useMemo(() => {
@@ -213,9 +292,11 @@ export function useAnnouncements(studentId, { limitTo } = {}) {
     return state.items.concat(extra);
   }, [state.items, older.items]);
 
+  itemsRef.current = merged;
+
   const items = useMemo(
-    () => (limitTo ? merged.slice(0, limitTo) : merged).map((a) => ({ ...a, isUnread: !readIds.has(a.id) })),
-    [merged, readIds, limitTo]
+    () => (limitTo ? merged.slice(0, limitTo) : merged).map((a) => ({ ...a, isUnread: !(readIds.has(a.id) || serverReads.has(a.id)) })),
+    [merged, readIds, serverReads, limitTo]
   );
 
   return {

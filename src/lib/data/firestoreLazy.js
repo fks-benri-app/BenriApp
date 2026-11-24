@@ -74,6 +74,13 @@ export async function deleteFcmTokenRemote(studentId, token) {
   await fs.deleteDoc(fs.doc(db, 'users', studentId, 'fcmTokens', docId));
 }
 
+// 授業の投稿の既読を、本人の users/{id}/readState/main に書く(投稿ID → 既読にした時刻のミリ秒)。
+// merge なので、ほかの既読は残る。ルールは reads だけを許す。
+export async function saveReadStateRemote(studentId, reads) {
+  const { fs, db } = await loadFirestore();
+  await fs.setDoc(fs.doc(db, 'users', studentId, 'readState', 'main'), { reads }, { merge: true });
+}
+
 // お知らせを既読にする(本人が書けるのは、read と readAt の2つだけ。ルールで制限している)
 export async function markAnnouncementReadRemote(studentId, docId) {
   const { fs, db } = await loadFirestore();
