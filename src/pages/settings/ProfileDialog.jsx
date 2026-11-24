@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import ModalDialog, { DialogButton } from '../../components/ModalDialog';
 import { OPTIONS, canChooseCourse, clearAvatar, cropToAvatar, saveAvatar, saveProfile } from '../../lib/profile/profile';
 import AvatarCropper from './AvatarCropper';
+import Checkbox from '../../components/Checkbox';
 
 const chip = (on) => ({
   padding: '0.5em 0.9em', borderRadius: '999px', border: on ? 'none' : '1px solid var(--line)', fontFamily: 'inherit',
@@ -150,7 +151,7 @@ export default function ProfileDialog({ studentId, profile, avatar, onAvatarChan
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6em' }}>
               {OPTIONS.electiveSubjects.map((name) => (
                 <label key={name} style={{ display: 'flex', alignItems: 'center', gap: '0.6em', color: 'var(--text-strong)', cursor: 'pointer' }}>
-                  <input type="checkbox" checked={draftSubjects.includes(name)} onChange={() => toggleSubject(name)} style={{ width: '1.357em', height: '1.357em', margin: 0, accentColor: 'var(--ink)' }} />
+                  <Checkbox checked={draftSubjects.includes(name)} onCheckedChange={() => toggleSubject(name)} aria-label={name} />
                   {name}
                 </label>
               ))}

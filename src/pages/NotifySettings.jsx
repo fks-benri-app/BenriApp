@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useIdentity } from '../auth/identity';
 import Icon from '../components/Icon';
 import Switch from '../components/Switch';
+import Checkbox from '../components/Checkbox';
 import { currentFontSize } from '../lib/ui/fontSize';
 import { useAnnouncements } from '../lib/announce/announcements';
 import { peekLive, rememberValue } from '../lib/data/liveStore';
@@ -128,16 +129,7 @@ export default function NotifySettings() {
             <div>
               <div style={{ color: 'var(--text-strong)', fontWeight: 600 }}>この端末で通知を受け取る</div>
             </div>
-            <button
-              type="button"
-              onClick={toggleDevice}
-              disabled={deviceOn === null}
-              aria-pressed={!!deviceOn}
-              aria-label={t('notifySettings.deviceToggle')}
-              style={{ border: 'none', background: 'transparent', padding: 0, cursor: deviceOn === null ? 'default' : 'pointer', flexShrink: 0 }}
-            >
-              <Switch on={!!deviceOn} disabled={deviceOn === null} />
-            </button>
+            <Switch checked={!!deviceOn} disabled={deviceOn === null} onCheckedChange={toggleDevice} aria-label={t('notifySettings.deviceToggle')} />
           </div>
         </div>
 
@@ -155,14 +147,7 @@ export default function NotifySettings() {
                   {i > 0 && <div style={divider} />}
                   <div style={{ ...rowStyle, opacity: deviceOn ? 1 : 0.45 }}>
                     <div style={{ color: 'var(--text-strong)', fontWeight: 600, minWidth: 0, overflowWrap: 'anywhere' }}>{c.label}</div>
-                    <input
-                      type="checkbox"
-                      checked={on}
-                      onChange={() => toggleCourse(c.id)}
-                      disabled={!loaded || !deviceOn}
-                      aria-label={`${c.label}の通知`}
-                      style={{ width: '1.357em', height: '1.357em', margin: 0, flexShrink: 0, accentColor: 'var(--ink)', cursor: 'pointer' }}
-                    />
+                    <Checkbox checked={on} onCheckedChange={() => toggleCourse(c.id)} disabled={!loaded || !deviceOn} aria-label={`${c.label}の通知`} />
                   </div>
                 </React.Fragment>
               );
@@ -177,16 +162,7 @@ export default function NotifySettings() {
               課題の期限を知らせる
               <div style={{ color: 'var(--text-muted)', fontSize: '0.857em', fontWeight: 400, marginTop: '0.2em' }}>毎日18時以降に知らせます</div>
             </div>
-            <button
-              type="button"
-              onClick={() => saveRemind({ remindAssignment: { ...prefs.remindAssignment, on: !prefs.remindAssignment.on } })}
-              disabled={!loaded}
-              aria-pressed={prefs.remindAssignment.on}
-              aria-label={t('notifySettings.assignmentRemind')}
-              style={{ border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', flexShrink: 0 }}
-            >
-              <Switch on={prefs.remindAssignment.on} disabled={!loaded} />
-            </button>
+            <Switch checked={prefs.remindAssignment.on} disabled={!loaded} onCheckedChange={() => saveRemind({ remindAssignment: { ...prefs.remindAssignment, on: !prefs.remindAssignment.on } })} aria-label={t('notifySettings.assignmentRemind')} />
           </div>
           {prefs.remindAssignment.on && (
             <>
@@ -210,16 +186,7 @@ export default function NotifySettings() {
               未読のお知らせを知らせる
               <div style={{ color: 'var(--text-muted)', fontSize: '0.857em', fontWeight: 400, marginTop: '0.2em' }}>読んでいないお知らせを、もう一度知らせます</div>
             </div>
-            <button
-              type="button"
-              onClick={() => saveRemind({ remindUnread: { ...prefs.remindUnread, on: !prefs.remindUnread.on } })}
-              disabled={!loaded}
-              aria-pressed={prefs.remindUnread.on}
-              aria-label={t('notifySettings.unreadRemind')}
-              style={{ border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', flexShrink: 0 }}
-            >
-              <Switch on={prefs.remindUnread.on} disabled={!loaded} />
-            </button>
+            <Switch checked={prefs.remindUnread.on} disabled={!loaded} onCheckedChange={() => saveRemind({ remindUnread: { ...prefs.remindUnread, on: !prefs.remindUnread.on } })} aria-label={t('notifySettings.unreadRemind')} />
           </div>
           {prefs.remindUnread.on && (
             <>
