@@ -513,6 +513,25 @@ function saveDisplayName_(studentId) {
   if (saved.getResponseCode() >= 300) throw new Error('name保存失敗: ' + saved.getContentText());
 }
 
+// 氏名を、今すぐ保存し直す(エディタから手動で実行する)。設定の名前が「ログイン中のアカウント」のままのときに使う。
+// 結果は実行ログに出る。失敗したら、その理由(権限が足りない、氏名が空など)が分かる。
+function refreshDisplayName() {
+  const props = PropertiesService.getUserProperties();
+  const studentId = props.getProperty('studentId');
+  if (!studentId) {
+    Logger.log('連携されていません(先に setupClassroomNotification を実行してください)');
+    return;
+  }
+  props.deleteProperty('nameSaved');
+  try {
+    saveDisplayName_(studentId);
+    props.setProperty('nameSaved', 'true');
+    Logger.log('氏名を保存しました: ' + studentId);
+  } catch (e) {
+    Logger.log('氏名の保存に失敗: ' + e);
+  }
+}
+
 // 権限の許可用(エディタから一度だけ実行する)
 function authorizeProfile() {
   Logger.log(UrlFetchApp.fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
