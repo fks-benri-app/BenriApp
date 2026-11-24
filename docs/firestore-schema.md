@@ -48,6 +48,17 @@ GAS(サービスアカウント)とアプリが、同じ Firestore を読み書�
 - 同じ `投稿ID` に保存すると上書きになるので、重複しない。
 - アプリが書けるのは `read` と `readAt` だけ。
 
+### `courses/{授業ID}/posts/{投稿ID}`(授業ごとの投稿。全員宛て)
+
+- 書くのは GAS だけ。読めるのは、その授業に所属する本人(`users/{生徒ID}/courses/{授業ID}` があるとき)。
+- 中身は `users/.../announcements` と同じ項目(表示用・本文・期限・添付など)。既読は含めない。
+- `USE_COURSE_STORE` が false の間は、GAS がまだ書かない。ルールだけ先に入れている。
+
+### `users/{生徒ID}/readState/main`(授業単位に移ったあとの既読)
+
+- `reads`: 投稿ID → 既読の時刻(ミリ秒)の map。本人だけが読み書きできる。
+- 書けるのは `reads` だけ。移行の完了後に、お知らせの既読(`announcements` の `read`)の代わりに使う。
+
 ### `users/{生徒ID}/fcmTokens/{ハッシュ}`(端末の登録トークン。1端末1件)
 
 - 文書ID: トークンの SHA-256 を URL で使える Base64 にしたもの(アプリと GAS で同じ計算)。
