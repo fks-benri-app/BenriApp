@@ -6,24 +6,34 @@
 //  2. setupCleanupTrigger() を手動で1回実行する(毎日 3 時に cleanupExpiredPosts を動かす設定)。
 //
 // 仕組み
-//  expireAt(Timestamp)が今より前の posts/{鍵} を探して削除する。
-//  expireAt は shared-notify.gs の claimPost_ が「作成から SHARE_RECORD_TTL_DAYS 日後」に入れている。
+//  expireAt(Timestamp)が今より前の posts を探して削除する。対象は次の2つ。
+//    ・posts/{鍵}(shared-notify.gs の claimPost_。作成から SHARE_RECORD_TTL_DAYS 日後)
+//    ・courses/{授業ID}/posts/{投稿ID}(course-store.gs の saveCoursePost_。作成から COURSE_POST_TTL_DAYS 日後)
+//  後者は別の階層にあるので、collectionGroup(allDescendants)で両方を探す。
+//  1回の実行は CLEANUP_TIME_BUDGET_MS で止める(GAS の 6 分の上限を超えないため。残りは翌日の実行で消える)。
 //  Firestore の課金は不要(GAS から REST で呼ぶだけ)。
 // ==================================================
 const CLEANUP_BATCH_SIZE = 300;   // 1回の問い合わせで取る件数
 const CLEANUP_MAX_ROUNDS = 50;    // 1回の実行での上限(暴走防止)
+const CLEANUP_TIME_BUDGET_MS = 4 * 60 * 1000; // 1回の実行の時間の上限(GAS の 6 分より前で止める)
 
 function cleanupExpiredPosts() {
   const nowIso = new Date().toISOString();
+  const startedAt = Date.now();
   let deletedTotal = 0;
   for (let round = 0; round < CLEANUP_MAX_ROUNDS; round++) {
+    if (Date.now() - startedAt > CLEANUP_TIME_BUDGET_MS) {
+      console.log('time budget reached; rest will be done next run');
+      break;
+    }
     const res = fsRequest_(
       'https://firestore.googleapis.com/v1/projects/' + FIRESTORE_PROJECT_ID +
         '/databases/(default)/documents:runQuery',
       'POST',
       {
         structuredQuery: {
-          from: [{ collectionId: 'posts' }],
+          // allDescendants: true で、posts/{鍵} と courses/{授業ID}/posts/{投稿ID} の両方を探す
+          from: [{ collectionId: 'posts', allDescendants: true }],
           where: {
             fieldFilter: {
               field: { fieldPath: 'expireAt' },

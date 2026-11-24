@@ -4,7 +4,7 @@
 // 保存先: courses/{授業ID}/posts/{投稿ID}(全員宛て・授業ごとに1件)
 //  ・書くのは GAS だけ。読めるのは、その授業のメンバー(セキュリティルールは移行前に検証する)。
 //  ・updatedAt は、差分の同期(アプリ側)で使う。deleted は、削除の印。
-//  ・expireAt は、古いデータの掃除で使う。掃除の対象に含めるのは、クリーンアップを拡張してから。
+//  ・expireAt は、古いデータの掃除で使う(cleanup-expired-posts.gs が courses/*/posts も対象にする)。
 //
 // 注意
 //  ・USE_COURSE_STORE が false の間は、どこからも呼ばれない。既存の保存の動きは変わらない。
