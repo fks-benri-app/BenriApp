@@ -42,7 +42,7 @@ function fsRequest_(url, method, bodyObj) {
 function parsePostLink_(link) {
   const m = String(link || '').match(/\/c\/([^/]+)\/(p|a|m|sa)\/([^/?#]+)/);
   if (!m) return null;
-  return { courseId: m[1], postKey: m[1] + '.' + m[2] + '.' + m[3] };
+  return { courseId: m[1], postId: m[3], postKey: m[1] + '.' + m[2] + '.' + m[3] };
 }
 
 // この授業のメンバーとして、自分を登録(初回だけ。登録ずみなら何もしない)
@@ -241,6 +241,15 @@ function notifyShared_(studentId, item) {
 function sendToCourse_(studentId, item, ref) {
   const members = listMembers_(ref.courseId);
   if (members.indexOf(studentId) < 0) members.push(studentId);
+
+  // 授業単位の保存(USE_COURSE_STORE が true のときだけ)。送る役の1人だけが、投稿を1件書く
+  if (USE_COURSE_STORE) {
+    try {
+      saveCoursePost_(ref.courseId, ref.postId, item.rec, Date.now(), false);
+    } catch (e) {
+      console.error('授業の投稿の保存に失敗: ' + e); // 個人宛ての保存と通知は、これまでどおり続ける
+    }
+  }
 
   // 自分の分は保存ずみ。ほかの人の分を保存し、書けた人だけを送り先にする
   const saved = saveAnnouncementsFor_(members.filter(function (m) { return m !== studentId; }), item.docId, item.rec);
