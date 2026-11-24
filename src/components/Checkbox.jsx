@@ -26,8 +26,8 @@ export default function Checkbox({ checked, onCheckedChange, disabled = false, '
         transition: 'background 0.15s, border-color 0.15s',
       }}
     >
-      <RadixCheckbox.Indicator>
-        <Check size={16} strokeWidth={3} aria-hidden="true" />
+      <RadixCheckbox.Indicator style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
+        <Check size={16} strokeWidth={3} aria-hidden="true" style={{ display: 'block' }} />
       </RadixCheckbox.Indicator>
     </RadixCheckbox.Root>
   );

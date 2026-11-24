@@ -4,6 +4,8 @@ import ModalDialog, { DialogButton } from '../../components/ModalDialog';
 import { OPTIONS, canChooseCourse, clearAvatar, cropToAvatar, saveAvatar, saveProfile } from '../../lib/profile/profile';
 import AvatarCropper from './AvatarCropper';
 import Checkbox from '../../components/Checkbox';
+import FilterSelect from '../class/FilterSelect';
+import { courseTheme } from '../../lib/ui/courseTheme';
 
 const chip = (on) => ({
   padding: '0.5em 0.9em', borderRadius: '999px', border: on ? 'none' : '1px solid var(--line)', fontFamily: 'inherit',
@@ -133,12 +135,18 @@ export default function ProfileDialog({ studentId, profile, avatar, onAvatarChan
         </section>
 
         {showCourse && (
-          <section>
-            <div style={{ fontSize: '0.857em', color: 'var(--text-muted)', marginBottom: '0.5em' }}>講座</div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5em' }}>
-              {OPTIONS.courseLetters.map((l) => (
-                <button key={l} type="button" onClick={() => setDraftCourse(l)} style={chip(draftCourse === l)}>{l}</button>
-              ))}
+          <section style={{ display: 'flex', flexDirection: 'column', gap: '0.5em' }}>
+            <div style={{ fontSize: '0.857em', color: 'var(--text-muted)' }}>講座</div>
+            <div>
+              <FilterSelect
+                fontPx={16}
+                label="講座"
+                value={draftCourse}
+                onChange={setDraftCourse}
+                allLabel="講座を選ぶ"
+                theme={courseTheme(undefined)}
+                options={OPTIONS.courseLetters.map((l) => ({ id: l, label: `講座 ${l}` }))}
+              />
             </div>
           </section>
         )}
