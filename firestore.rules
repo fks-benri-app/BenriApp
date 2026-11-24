@@ -21,6 +21,24 @@ service cloud.firestore {
       allow create, delete: if false;
     }
 
+    // 授業ごとの投稿(全員宛て)。書くのは GAS だけ。読めるのは、その授業のメンバーだけ。
+    // メンバーかどうかは、本人の users/{生徒ID}/courses/{授業ID} があるかで決める(GAS が登録する)。
+    match /courses/{courseId}/posts/{postId} {
+      allow read: if request.auth != null
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid)/courses/$(courseId));
+      allow write: if false;
+    }
+
+    // 既読の印(授業単位の保存に移ったあとの、生徒ごとの既読)。本人だけが読み書きできる。
+    // reads は 投稿ID → 既読の時刻(ミリ秒)。ほかの項目は書けない。
+    match /users/{studentId}/readState/{docId} {
+      allow read: if request.auth != null && request.auth.uid == studentId;
+      allow create, update: if request.auth != null && request.auth.uid == studentId
+        && request.resource.data.keys().hasOnly(['reads'])
+        && request.resource.data.reads is map;
+      allow delete: if false;
+    }
+
     // 通知の登録トークン(端末ごとに1件)。本人だけが読み書き・削除できる。
     // 書けるのは token と updatedAt だけ。token は文字列で512文字以下、updatedAt はサーバーの時刻に限る。
     match /users/{studentId}/fcmTokens/{tokenId} {
