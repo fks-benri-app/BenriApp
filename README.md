@@ -4,7 +4,7 @@ Google Classroom のお知らせ・課題を、スマホのプッシュ通知で
 画面は GitHub Pages で配信する React アプリです。新着の検知と通知の送信は、Google Apps Script(GAS)が行います。
 
 > **現在の状態**
-> 通知の送信は、登録トークンがある端末は FCM、ない端末は OneSignal です。OneSignal の廃止と、お知らせの授業単位での保存は進行中です。
+> 通知は FCM だけで送ります(OneSignal は撤去済み)。お知らせの授業単位での保存は、次の作業です。
 > 計画の詳細は [通知の仕様(改訂版)](docs/notification-spec.md) を見てください。
 
 ## 目次
@@ -28,8 +28,8 @@ Google Classroom のお知らせ・課題を、スマホのプッシュ通知で
 | 役割 | 使っているもの |
 | --- | --- |
 | 画面(PWA) | React + Vite、GitHub Pages で配信 |
-| 新着の検知・通知の送信 | Google Apps Script(Gmail の監視、OneSignal の REST API) |
-| プッシュ通知 | OneSignal(Web Push)。FCM へ移行中 |
+| 新着の検知・通知の送信 | Google Apps Script(Gmail の監視、FCM の送信) |
+| プッシュ通知 | FCM(Firebase Cloud Messaging、Web Push) |
 | ログイン・データ保存 | Firebase Authentication、Firestore |
 
 ### ログインから通知までの流れ
@@ -40,11 +40,11 @@ Google Classroom のお知らせ・課題を、スマホのプッシュ通知で
 [GAS]     学校のアカウントで認証 → ログイン用のトークンを発行
    ↓ #token=… を付けてアプリへ戻る
 [アプリ]  Firebase にログイン → 「通知を許可」のダイアログ
-   ↓ OneSignal の購読を作成し、External ID に通知用キー(pushKey)をひもづける
+   ↓ 通知を許可 → FCM の登録トークンを users/{生徒ID}/fcmTokens に保存
 [アプリ]  お知らせ画面(/class)
 ```
 
-GAS は新着を検知すると、`pushKey` を宛先にして OneSignal へ送信します。`pushKey` は、秘密の文字列と生徒 ID から GAS が作る、推測できない値です。Firestore の `users/{生徒ID}.pushKey` に保存されます。生徒 ID そのものを宛先にしないのは、他人の ID を指定するだけで、他人の通知を受け取れてしまうのを防ぐためです。
+GAS は新着を検知すると、その生徒の登録トークンに FCM で送ります。授業のお知らせは、授業のトピック(`course_授業ID`)にも送ります。`pushKey` は、以前の OneSignal の宛先に使っていた値です。今の送信では使っていません。
 
 ## 主な機能
 
@@ -57,7 +57,7 @@ GAS は新着を検知すると、`pushKey` を宛先にして OneSignal へ送�
 - 検索: 教科・先生・本文で検索できます。
 - PWA 対応: iPhone・Android では、ホーム画面に追加する手順を案内します。iPhone では、ホーム画面から開かないと通知が届きません。
 - 通知の修復: 通知が届いていない可能性があるときは、お知らせ画面に「通知を直す」を表示します。修復ページで端末側の古い記録を消し、登録し直せます。
-- 推測できない通知キー: 通知の宛先は `pushKey` です(HMAC-SHA256 で生成した 32 文字)。
+- 端末ごとの通知: 通知の宛先は、端末ごとの FCM の登録トークンです。生徒 ID を宛先にしません。
 - 本人だけが読める: Firestore のルールで、`users/{生徒ID}` は本人だけが読めます。書き込みは GAS だけが行います。
 
 ## 利用する(生徒)
@@ -82,17 +82,17 @@ npm run preview # ビルド結果の確認
 - `vite.config.js` の `base` は、リポジトリ名(`/BenriApp/`)に合わせてあります。変えると、JS・CSS が読み込めず、画面が真っ白になります。
 - ライブラリは、チャンクに分けて配信します(`vite.config.js` の `manualChunks`)。`vendor-react` と `vendor-firebase` は起動時に読み、`vendor-firestore` は必要になったときに読みます。
 - Firestore は直接 import しないでください。`src/lib/data/firestoreLazy.js` から使います。購読は `subscribe`、保存は `updateUserDoc` を使います。
-- 設定値(GAS の URL、OneSignal の App ID)は `src/config.js` にあります。
+- 設定値(GAS の URL、FCM の公開鍵 VAPID、Firebase の設定)は `src/config.js` にあります。
 
 ## リポジトリの構成
 
 ```
-public/                       そのまま配信されるファイル(manifest、OneSignal の Service Worker、修復ページ repair.html)
-src/config.js                 GAS_URL、OneSignal App ID、Firebase の設定
+public/                       そのまま配信されるファイル(manifest、FCM の Service Worker(fcm/)、修復ページ repair.html)
+src/config.js                 GAS_URL、FCM の公開鍵(VAPID)、Firebase の設定
 src/auth/identity.jsx         ログイン状態の窓口(GAS のトークンで Firebase にログイン)
 src/lib/data/                 Firebase・Firestore・購読の共有(liveStore)・localStorage・アカウント名
 src/lib/announce/             お知らせの取得と既読、絞り込み、通知から開いたときの判定
-src/lib/push/                 通知。OneSignal・FCM・購読の状態・端末のオン/オフと授業ごとの設定(notifications.js が窓口)
+src/lib/push/                 通知。FCM・購読の状態・端末のオン/オフと授業ごとの設定(notifications.js が窓口)
 src/lib/ui/                   テーマの色、文字サイズ、ホームのマス目と配置
 src/lib/timetable/            時間割読み取り(テスト機能)。OCR・表の組み立て・授業名との照合
 src/gadgets/gadgets.json      ホームに置けるガジェットの設定
@@ -159,9 +159,7 @@ firestore.rules               Firestore のセキュリティルール
 
 GAS のコードは `gas/` にあります。ただし、GAS のプロジェクト本体は Google 側にあります。このリポジトリを push しても、自動では反映されません。反映するには、GAS エディタにコピーするか、clasp などを使います。
 
-- スクリプトプロパティ: `PUSH_KEY_SECRET`(通知キーの元になる秘密の値)、`FIREBASE_SERVICE_ACCOUNT`、OneSignal の REST API キー
-- **`PUSH_KEY_SECRET` は、一度設定したら再生成しないでください。** 変えると、全員の通知キーが変わり、通知が止まります。
-- `INCLUDE_LEGACY_ID`: 生徒 ID を宛先にしている旧方式の端末に送るための設定です。旧方式の端末が残っている間は `true` にします。現在の `main` では `false` になっています。反映する前に、OneSignal で生徒 ID の購読が残っていないかを確認してください(仕様書の移行 2 番)。
+- スクリプトプロパティ: `FIREBASE_SERVICE_ACCOUNT`(FCM と Firestore の認証)、`PUSH_KEY_SECRET`(旧・通知キーの元になる値。今の送信では使いません)
 - リマインド: `gas/assignment-reminder.gs` にあります。`setupDueReminderTrigger` を 1 回実行して、毎時の trigger を設定してください。
   - 課題の期限: 生徒が設定した「何日前」(1〜3 日)に、JST の 18 時以降に知らせます。
   - 未読のお知らせ: 受け取ってから、設定した時間(12 時間・1 日・3 日)がたった未読を、1 回だけ知らせます。
@@ -238,7 +236,7 @@ iPhone で、再連携の画面から戻れないときは、左下の「←」�
 
 ### 通知の仕組みの改善
 
-通知の移行(OneSignal から FCM へ、授業単位の保存へ)は、[通知の仕様(改訂版)](docs/notification-spec.md)にまとめています。
+通知は FCM に移行済みです。授業単位の保存は次の作業で、[通知の仕様(改訂版)](docs/notification-spec.md)にまとめています。
 
 将来は、通知までの遅れ(ラグ)を減らすことも考えています。
 
@@ -250,8 +248,7 @@ iPhone で、再連携の画面から戻れないときは、左下の「←」�
 
 ### 将来の拡張メモ
 
-- Service Worker: 1 つのスコープに置けるのは 1 つだけです。いまは OneSignal のワーカーがそれです。`vite-plugin-pwa` を導入するときは `injectManifest` を使い、自前の `sw.js` の先頭で `importScripts("https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js")` を読み込んでください。別々に登録すると、後から登録した方が前のものを置き換え、通知が届かなくなります。
-- FCM への移行に入ったら、OneSignal の Service Worker と FCM の Service Worker のどちらを使うかを、先に決めてください。
+- Service Worker: 画面のキャッシュ(`public/sw.js`、スコープはアプリ全体)と、通知(`public/fcm/firebase-messaging-sw.js`、スコープは `fcm/`)は別々に登録しています。`vite-plugin-pwa` などを導入するときは、この 2 つを両方残してください。同じスコープに置くと、後から登録したものが前のものを置き換えます。
 
 ## ライセンス
 
@@ -263,6 +260,6 @@ iPhone で、再連携の画面から戻れないときは、左下の「←」�
 
 - [React](https://react.dev/)、[Vite](https://vitejs.dev/)、[React Router](https://reactrouter.com/)
 - [Firebase](https://firebase.google.com/)(Authentication、Firestore)
-- [OneSignal](https://onesignal.com/)(Web Push)
+- [Firebase Cloud Messaging](https://firebase.google.com/docs/cloud-messaging)(Web Push)
 - [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR)(PP-OCRv5、時間割読み取り)、[ONNX Runtime Web](https://onnxruntime.ai/)
 - ログイン画面のイラスト: [unDraw](https://undraw.co/)(`src/assets/images/other_svgs/login.svg`)
