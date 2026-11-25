@@ -195,7 +195,6 @@ export default function Class() {
       ann={ann}
       openAnnouncement={openAnnouncement}
       onLongPress={(a, rect) => { setMenuAnchor(rect); setMenuId(a.id); }}
-      pinned={pinSet.has(ann.id)}
       reminderAt={reminders[ann.id]}
     />
   );

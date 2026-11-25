@@ -25,7 +25,7 @@ function isFullyVisible(el) {
   });
 }
 
-export default function AnnouncementCard({ ann, openAnnouncement, onLongPress, pinned, reminderAt }) {
+export default function AnnouncementCard({ ann, openAnnouncement, onLongPress, reminderAt }) {
   const timer = useRef(null);
   const fired = useRef(false);
   const cancel = () => {
@@ -63,7 +63,7 @@ export default function AnnouncementCard({ ann, openAnnouncement, onLongPress, p
       onContextMenu={(e) => e.preventDefault()}
       style={cardStyle(ann)}
     >
-      <AnnouncementCardFace ann={ann} pinned={pinned} reminderAt={reminderAt} />
+      <AnnouncementCardFace ann={ann} reminderAt={reminderAt} />
     </article>
   );
 }
@@ -89,7 +89,7 @@ export function cardStyle(ann) {
   };
 }
 
-export function AnnouncementCardFace({ ann, pinned, reminderAt }) {
+export function AnnouncementCardFace({ ann, reminderAt }) {
   return (
     <>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -121,8 +121,6 @@ export function AnnouncementCardFace({ ann, pinned, reminderAt }) {
           )}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.429em' }}>
-          {pinned && <div style={{ color: 'var(--text-muted)', fontSize: '0.786em', fontWeight: '400' }}>{t('class.pinnedLabel')}</div>}
-          {reminderAt && <div style={{ color: 'var(--text-muted)', fontSize: '0.786em', fontWeight: '400' }}>{t('class.reminderBadge')}</div>}
           <div style={{ color: 'var(--text-muted)', fontSize: '0.786em', fontWeight: '400', position: 'relative', top: '-0.214em', fontVariantNumeric: 'tabular-nums' }}>
             {ann.time}
           </div>
@@ -133,6 +131,12 @@ export function AnnouncementCardFace({ ann, pinned, reminderAt }) {
       <div style={{ color: 'var(--text-body)', fontSize: '1em', fontWeight: 400, lineHeight: 1.4286, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
         {ann.content}
       </div>
+      {/* リマインドの時刻になると、お知らせ画面が解除する(表示は自動で消える) */}
+      {reminderAt && (
+        <div style={{ marginTop: '0.714em', color: 'var(--text-muted)', fontSize: '0.786em', fontWeight: '400', fontVariantNumeric: 'tabular-nums' }}>
+          {t('class.reminderFooter')} {new Date(reminderAt).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+        </div>
+      )}
     </>
   );
 }
