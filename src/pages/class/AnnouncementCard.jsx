@@ -3,6 +3,7 @@ import React, { useRef } from 'react';
 import { KIND_LABELS } from './DetailView';
 import { courseThemeOrNull, shaded } from '../../lib/ui/courseTheme';
 import { t } from '../../lib/ui/text';
+import pinIcon from '../../assets/images/icons/pin.png';
 
 // 長押し(この長さ以上押し続けたら、メニューを出す)
 const LONG_PRESS_MS = 500;
@@ -25,7 +26,7 @@ function isFullyVisible(el) {
   });
 }
 
-export default function AnnouncementCard({ ann, openAnnouncement, onLongPress, reminderAt }) {
+export default function AnnouncementCard({ ann, openAnnouncement, onLongPress, pinned, reminderAt }) {
   const timer = useRef(null);
   const fired = useRef(false);
   const cancel = () => {
@@ -63,7 +64,7 @@ export default function AnnouncementCard({ ann, openAnnouncement, onLongPress, r
       onContextMenu={(e) => e.preventDefault()}
       style={cardStyle(ann)}
     >
-      <AnnouncementCardFace ann={ann} reminderAt={reminderAt} />
+      <AnnouncementCardFace ann={ann} pinned={pinned} reminderAt={reminderAt} />
     </article>
   );
 }
@@ -89,7 +90,7 @@ export function cardStyle(ann) {
   };
 }
 
-export function AnnouncementCardFace({ ann, reminderAt }) {
+export function AnnouncementCardFace({ ann, pinned, reminderAt }) {
   return (
     <>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -121,6 +122,7 @@ export function AnnouncementCardFace({ ann, reminderAt }) {
           )}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.429em' }}>
+          {pinned && <img src={pinIcon} alt="" aria-hidden="true" draggable={false} style={{ width: '1.2em', height: '1.2em', objectFit: 'contain' }} />}
           <div style={{ color: 'var(--text-muted)', fontSize: '0.786em', fontWeight: '400', fontVariantNumeric: 'tabular-nums', lineHeight: 1, whiteSpace: 'nowrap' }}>
             {ann.time}
           </div>

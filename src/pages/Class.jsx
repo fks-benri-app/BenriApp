@@ -195,6 +195,7 @@ export default function Class() {
       ann={ann}
       openAnnouncement={openAnnouncement}
       onLongPress={(a, rect) => { setMenuAnchor(rect); setMenuId(a.id); }}
+      pinned={pinSet.has(ann.id)}
       reminderAt={reminders[ann.id]}
     />
   );
@@ -322,7 +323,7 @@ export default function Class() {
           anchor={menuAnchor}
           pinned={pinSet.has(menuAnn.id)}
           reminderAt={reminders[menuAnn.id]}
-          onTogglePin={() => { togglePin(menuAnn.id); setMenuId(null); }}
+          onTogglePin={() => { if (!pinSet.has(menuAnn.id)) markRead(menuAnn.id); togglePin(menuAnn.id); setMenuId(null); }}
           onRemind={() => {
             if (reminders[menuAnn.id]) setReminder(menuAnn.id, null);
             else setRemindId(menuAnn.id);
