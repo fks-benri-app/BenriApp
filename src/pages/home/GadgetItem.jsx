@@ -1,11 +1,10 @@
 // ホームに置く、ガジェット1枚分の枠(中身のガジェット・見出し・編集中の操作部分)。
-import React from 'react';
+import React, { forwardRef, useRef } from 'react';
 import { gadgetById } from '../../gadgets';
 import Icon from '../../components/Icon';
-import { t } from '../../lib/ui/text';
 import homeConfig from '../../data/homeConfig.json';
 
-const { accent: ACCENT, radiusXl: R_XL, gapPx: GAP } = homeConfig;
+const { radiusXl: R_XL, holdMs: HOLD_MS, slopPx: SLOP } = homeConfig;
 
 // タイトルのカプセル(記号は付けない)と、> のカプセル。色は今の面の色(--surface-3)と文字色を使う
 const capsuleStyle = {
@@ -20,56 +19,52 @@ const chevronStyle = {
   background: 'var(--surface-3)', display: 'flex', alignItems: 'center', justifyContent: 'center',
 };
 
-export default function GadgetItem({ it, activeId, activeType, animReady, cell, editing, onGadgetPointerDown, onGadgetPointerMove, onGadgetPointerUp, onGadgetClick, identity, startGesture }) {
+// 長押しで編集に入る(タップは開く)。動く・大きさを変えるのは react-grid-layout が受け持つ。
+// forwardRef と ...rest は、react-grid-layout が枠に付ける位置・ドラッグの仕掛けを、そのまま根の要素に渡すため。
+const GadgetItem = forwardRef(function GadgetItem(
+  { it, editing, onLongPress, onOpen, identity, style, className, children, ...rest },
+  ref,
+) {
   const g = gadgetById(it.id);
+  const press = useRef(null); // 長押しを待っている間の、始まりの位置とタイマー
   if (!g) return null;
   const { Component } = g;
-  const isActive = activeId === it.id;
-  const isMoving = isActive && activeType === 'move';
-  const isResizing = isActive && activeType === 'resize';
-  // 動かしている間は指にぴったり付いて(位置は即時)、少し持ち上がって見える。
-  // 他の枠は、押し下げられたり詰められたりしたときに滑らかに移る。
-  const transition = isActive
-    ? (isResizing
-      ? 'transform 0.18s ease, width 0.12s ease, height 0.12s ease'
-      : 'transform 0.18s ease, background 0.18s ease')
-    : (animReady ? 'left 0.18s ease, top 0.18s ease, width 0.18s ease, height 0.18s ease, transform 0.18s ease' : 'none');
+
+  const endPress = () => {
+    if (press.current) clearTimeout(press.current.timer);
+    press.current = null;
+  };
+  const onPointerDown = (e) => {
+    if (editing) return;
+    const start = { x: e.clientX, y: e.clientY };
+    press.current = { ...start, timer: setTimeout(() => { press.current = null; onLongPress(it.id); }, HOLD_MS) };
+  };
+  const onPointerMove = (e) => {
+    if (!press.current) return;
+    if (Math.hypot(e.clientX - press.current.x, e.clientY - press.current.y) > SLOP) endPress();
+  };
+
   return (
-    <div
-      key={it.id}
-      style={{
-        position: 'absolute',
-        left: it.x * cell + GAP / 2,
-        top: it.y * cell + GAP / 2,
-        width: it.w * cell - GAP,
-        height: it.h * cell - GAP,
-        zIndex: isActive ? 3 : 1,
-        transform: isMoving ? 'scale(1.04)' : 'scale(1)',
-        transformOrigin: 'center center',
-        transition,
-      }}
-    >
+    <div ref={ref} style={style} className={className} {...rest}>
       <section
         role={editing ? undefined : 'link'}
         tabIndex={editing ? -1 : 0}
         aria-label={g.title || g.type}
-        onPointerDown={(e) => onGadgetPointerDown(e, it.id)}
-        onPointerMove={onGadgetPointerMove}
-        onPointerUp={onGadgetPointerUp}
-        onPointerCancel={onGadgetPointerUp}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={endPress}
+        onPointerCancel={endPress}
         onContextMenu={(e) => e.preventDefault()}
-        onClick={() => onGadgetClick(g)}
-        onKeyDown={(e) => { if (e.key === 'Enter') onGadgetClick(g); }}
+        onClick={() => { if (!editing && g.path) onOpen(g); }}
+        onKeyDown={(e) => { if (e.key === 'Enter' && !editing && g.path) onOpen(g); }}
         style={{
           width: '100%',
           height: '100%',
           boxSizing: 'border-box',
           position: 'relative',
           containerType: 'size', // 中のカプセルの大きさを、枠の小さいほうの辺(cqmin)で決める
-          padding: 0,
-          // 影は使わない。動かしている間は、面の色を変えて浮いて見せる
-          background: isMoving ? 'var(--surface)' : 'var(--surface-2)',
-          border: `1px solid ${isMoving ? 'var(--line-strong)' : 'transparent'}`,
+          background: 'var(--surface-2)',
+          border: '1px solid transparent',
           borderRadius: R_XL,
           overflow: 'hidden',
           display: 'flex',
@@ -102,58 +97,9 @@ export default function GadgetItem({ it, activeId, activeType, animReady, cell, 
           <Component identity={identity} />
         </div>
       </section>
-
-      {isResizing && (
-        <div
-          style={{
-            position: 'absolute',
-            top: -12,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            background: 'var(--ink)',
-            color: 'var(--on-ink)',
-            borderRadius: 999,
-            padding: '3px 12px',
-            fontSize: '0.786em',
-            fontWeight: 600,
-            whiteSpace: 'nowrap',
-            pointerEvents: 'none',
-            zIndex: 5,
-          }}
-        >
-          {it.w} × {it.h}
-        </div>
-      )}
-
-      {editing && (
-        <div
-          role="button"
-          aria-label={t('home.resize', { title: g.title })}
-          onPointerDown={(e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            startGesture('resize', it.id, e.clientX, e.clientY);
-          }}
-          style={{
-            position: 'absolute',
-            right: -8,
-            bottom: -8,
-            width: 32,
-            height: 32,
-            borderRadius: '50%',
-            background: ACCENT,
-            color: 'var(--on-accent)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            touchAction: 'none',
-            cursor: 'nwse-resize',
-            zIndex: 4,
-          }}
-        >
-          <Icon name="closeSmall" size={14} />
-        </div>
-      )}
+      {children}
     </div>
   );
-}
+});
+
+export default GadgetItem;
