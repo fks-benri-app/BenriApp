@@ -21,7 +21,7 @@ export default function AnnouncementMenu({ ann, anchor, pinned, reminderAt, onTo
       {/* 基準の位置は押したカード。下に空きがなければ、Radix が自動で上に出す */}
       <DropdownMenu.Root open modal={false} onOpenChange={(open) => { if (!open) onClose(); }}>
         <DropdownMenu.Trigger asChild>
-          <span aria-hidden="true" style={{ position: 'fixed', top: anchor.top, left: anchor.left, width: 40, height: anchor.height, pointerEvents: 'none' }} />
+          <span aria-hidden="true" style={{ position: 'fixed', top: anchor.top, left: anchor.left, width: 88, height: anchor.height, pointerEvents: 'none' }} />
         </DropdownMenu.Trigger>
         <DropdownMenu.Portal>
           <DropdownMenu.Content
