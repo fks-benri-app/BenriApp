@@ -51,33 +51,37 @@ function courseIdOfLink_(s) {
 }
 
 // この授業のメンバーとして、自分を登録(初回だけ。登録ずみなら何もしない)
-// 生徒の所属授業も users/{生徒ID}/courses/{授業ID} に記録する(トピック購読の同期で使う)
+// この授業の名簿(courses/{授業ID}/members)と、生徒の所属(users/{生徒ID}/courses)を、1回のまとめ書きで記録する。
+// 2つは同じ事実なので、必ず一緒に書く(片方だけ残らないように)。登録ずみなら何もしない。
+// flag 名を変えてあるので、以前に片方だけ書かれた生徒も、1回やり直して揃う(補う)。
 function ensureMember_(studentId, courseId) {
   const props = PropertiesService.getUserProperties();
-  const flag = 'memberCourse_' + courseId; // 以前の flag(member_)とは分けて、既存の生徒も1回は記録する
+  const flag = 'memberCourse2_' + courseId;
   if (props.getProperty(flag) === '1') return;
-  const now = { timestampValue: new Date().toISOString() };
-  const res = fsRequest_(
-    fsDocUrl_('/courses/' + encodeURIComponent(courseId) + '/members/' + encodeURIComponent(studentId)) +
-      '?updateMask.fieldPaths=joinedAt',
-    'patch',
-    { fields: { joinedAt: now } }
-  );
+  const now = new Date().toISOString();
+  const res = fsCommit_([
+    joinWrite_('/courses/' + encodeURIComponent(courseId) + '/members/' + encodeURIComponent(studentId), now),
+    joinWrite_('/users/' + encodeURIComponent(studentId) + '/courses/' + encodeURIComponent(courseId), now),
+  ]);
   if (res.getResponseCode() >= 300) {
-    console.error('メンバー登録失敗: ' + res.getContentText());
-    return;
-  }
-  const courseRes = fsRequest_(
-    fsDocUrl_('/users/' + encodeURIComponent(studentId) + '/courses/' + encodeURIComponent(courseId)) +
-      '?updateMask.fieldPaths=joinedAt',
-    'patch',
-    { fields: { joinedAt: now } }
-  );
-  if (courseRes.getResponseCode() >= 300) {
-    console.error('授業の記録失敗: ' + courseRes.getContentText()); // flag は立てない。次回やり直す
+    console.error('所属の記録失敗(あとで再試行): ' + res.getContentText());
     return;
   }
   props.setProperty(flag, '1');
+}
+
+// 文書の joinedAt だけを書く(まとめ書きの1件分)
+function joinWrite_(path, iso) {
+  return {
+    update: { name: 'projects/' + FIRESTORE_PROJECT_ID + '/databases/(default)/documents' + path, fields: { joinedAt: { timestampValue: iso } } },
+    updateMask: { fieldPaths: ['joinedAt'] },
+  };
+}
+
+// 複数の書き込みを、全部書けるか、全部書けないかの単位で送る(Firestore の commit)
+function fsCommit_(writes) {
+  const url = 'https://firestore.googleapis.com/v1/projects/' + FIRESTORE_PROJECT_ID + '/databases/(default)/documents:commit';
+  return fsRequest_(url, 'post', { writes: writes });
 }
 
 // 在籍の授業(Classroom の授業一覧)を、メンバーとして記録する。
