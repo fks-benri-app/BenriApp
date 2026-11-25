@@ -22,6 +22,7 @@ const BATCH_THRESHOLD = 5;         // 新着がこの件数以上なら1通に�
 
 // Webアプリ表示
 function doGet(e) {
+  if (e && e.parameter && e.parameter.fileId) return materialResponse_(e.parameter); // 資料の取得(material-cache.gs)
   const props = PropertiesService.getUserProperties();
   const isAlreadySet = props.getProperty('isSetup') === 'true';
   const studentId = props.getProperty('studentId') || '';
@@ -304,7 +305,7 @@ function fetchPost_(link) {
     else { post = Classroom.Courses.CourseWorkMaterials.get(courseId, postId); text = post.description; title = post.title; }
     
     const attachments = (post.materials || []).map(function (x) {
-      if (x.driveFile) { const f = x.driveFile.driveFile || {}; return { type: 'drive', title: f.title, url: f.alternateLink, thumb: f.thumbnailUrl || '' }; }
+      if (x.driveFile) { const f = x.driveFile.driveFile || {}; return { type: 'drive', title: f.title, url: f.alternateLink, thumb: f.thumbnailUrl || '', fileId: f.id || '' }; }
       if (x.link) return { type: 'link', title: x.link.title || x.link.url, url: x.link.url, thumb: x.link.thumbnailUrl || '' };
       if (x.youtubeVideo) return { type: 'youtube', title: x.youtubeVideo.title, url: x.youtubeVideo.alternateLink, thumb: x.youtubeVideo.thumbnailUrl || '' };
       if (x.form) return { type: 'form', title: x.form.title, url: x.form.formUrl, thumb: x.form.thumbnailUrl || '' };
