@@ -29,8 +29,10 @@ export default function AnnouncementMenu({ ann, anchor, pinned, reminderAt, onTo
             align="start"
             sideOffset={10}
             collisionPadding={12}
-            style={{ zIndex: 62, width: 248, boxSizing: 'border-box', overflow: 'hidden', background: 'var(--surface)', borderRadius: '14px', boxShadow: '0 12px 32px rgba(0,0,0,0.28)', userSelect: 'none', WebkitUserSelect: 'none' }}
+            style={{ zIndex: 62, width: 248, boxSizing: 'border-box', background: 'var(--surface)', borderRadius: '14px', boxShadow: '0 12px 32px rgba(0,0,0,0.28)', userSelect: 'none', WebkitUserSelect: 'none' }}
           >
+            {/* カードに向かう吹き出しのしっぽ(本体と同じ色) */}
+            <DropdownMenu.Arrow width={20} height={10} style={{ fill: 'var(--surface)', display: 'block' }} />
             <DropdownMenu.Item onSelect={onTogglePin} style={ITEM}>
               {pinned ? <TbPinnedOff size={20} aria-hidden="true" /> : <TbPin size={20} aria-hidden="true" />}
               {pinned ? t('class.menu.unpin') : t('class.menu.pin')}
