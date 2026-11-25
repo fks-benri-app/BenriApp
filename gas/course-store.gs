@@ -12,7 +12,7 @@
 //  ・testCourseStore は、テスト用の授業(test-course)に1件だけ書く。
 //    掃除の対象になるまで、Firestore のコンソールで手動で消す。
 // ==================================================
-const USE_COURSE_STORE = false; // テストが済むまで false のまま。切り替えは別のPRで行う
+const USE_COURSE_STORE = true; // アプリは授業の投稿(courses/*/posts)を読むので、true で書く
 const COURSE_POST_TTL_DAYS = 14;
 
 // 授業の投稿の中身(Firestore の fields)。個人の既読などは含めない
