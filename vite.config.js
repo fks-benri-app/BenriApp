@@ -10,7 +10,8 @@ function precacheManifest() {
     name: 'precache-manifest',
     apply: 'build',
     generateBundle(_, bundle) {
-      const files = Object.keys(bundle).filter((f) => !f.endsWith('.map')).sort();
+      // 文字(.woff2)は、初めて使うときに読んで保存する(インストールで全部は入れない)
+      const files = Object.keys(bundle).filter((f) => !f.endsWith('.map') && !f.endsWith('.woff2')).sort();
       const hash = createHash('sha256');
       files.forEach((f) => hash.update(f + (bundle[f].code ?? bundle[f].source ?? '')));
       const extra = ['icon-v2-192.png', 'icon-v2-512.png', 'manifest.json'];
