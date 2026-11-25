@@ -145,6 +145,8 @@ function checkNewAssignments() {
     }
   }
 
+  // 在籍の授業を、メンバーとして記録する(失敗しても、メールの見回りは続ける)
+  try { syncCourses_(studentId); } catch (e) { console.error('授業の同期に失敗: ' + e); }
   // 他の人が送信中だった投稿を、もう一度確認する(送られていなければ、自分で送る)
   try { flushPendingShared_(studentId); } catch (e) { console.error(e); }
   if (props.getProperty('nameSaved') !== 'true') {

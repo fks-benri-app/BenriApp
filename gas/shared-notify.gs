@@ -75,6 +75,26 @@ function ensureMember_(studentId, courseId) {
   props.setProperty(flag, '1');
 }
 
+// 在籍の授業(Classroom の授業一覧)を、メンバーとして記録する。
+// 投稿のメールが来た授業だけでは、授業の全員・全授業が揃わないため(見えない授業、通知の取りこぼし)。
+// 6時間に1回だけ読む(見回りの回数ぶん Classroom を呼ばない)。
+const COURSES_SYNC_INTERVAL_MS = 6 * 60 * 60 * 1000;
+function syncCourses_(studentId) {
+  const props = PropertiesService.getUserProperties();
+  if (Date.now() - Number(props.getProperty('coursesSyncedMs') || 0) < COURSES_SYNC_INTERVAL_MS) return;
+  let token = '';
+  do {
+    const opts = { courseStates: ['ACTIVE'], pageSize: 100 };
+    if (token) opts.pageToken = token;
+    const res = Classroom.Courses.list(opts);
+    (res.courses || []).forEach(function (c) {
+      try { ensureMember_(studentId, c.id); } catch (e) { console.error(e); } // 失敗した授業は、次回(6時間後)にもう一度試す
+    });
+    token = res.nextPageToken || '';
+  } while (token);
+  props.setProperty('coursesSyncedMs', String(Date.now()));
+}
+
 // 授業のメンバー(生徒ID)の一覧
 // 授業のメンバー一覧は CacheService に30分覚える(入れ替わりは少ない)。
 // 覚えにない新入りは、送り先に入らないだけ。その人は自分の見回りで、取りこぼしなく自分に送る(notifyShared_ の後半)。
