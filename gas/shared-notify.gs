@@ -246,6 +246,16 @@ function notifyShared_(studentId, item) {
   const ref = parsePostLink_(item.info.link);
   if (!ref || item.docId !== ref.postKey || !item.rec) return false;
 
+  // 授業単位の投稿は、見つけた人なら誰でも書く(同じIDに上書きするだけなので2回書かれても平気)。
+  // 送る役が古い版の生徒だと書かれず、アプリに出ないため。
+  if (USE_COURSE_STORE) {
+    try {
+      saveCoursePost_(ref.courseId, ref.postId, item.rec, Date.now(), false);
+    } catch (e) {
+      console.error('授業の投稿の保存に失敗: ' + e); // 個人宛ての保存と通知は、これまでどおり続ける
+    }
+  }
+
   const claim = claimPost_(ref.postKey, studentId);
   if (claim === 'error') return false;
   if (claim === 'won') return sendToCourse_(studentId, item, ref);
@@ -261,15 +271,6 @@ function notifyShared_(studentId, item) {
 function sendToCourse_(studentId, item, ref) {
   const members = listMembers_(ref.courseId);
   if (members.indexOf(studentId) < 0) members.push(studentId);
-
-  // 授業単位の保存(USE_COURSE_STORE が true のときだけ)。送る役の1人だけが、投稿を1件書く
-  if (USE_COURSE_STORE) {
-    try {
-      saveCoursePost_(ref.courseId, ref.postId, item.rec, Date.now(), false);
-    } catch (e) {
-      console.error('授業の投稿の保存に失敗: ' + e); // 個人宛ての保存と通知は、これまでどおり続ける
-    }
-  }
 
   // 自分の分は保存ずみ。ほかの人の分を保存し、書けた人だけを送り先にする
   const saved = saveAnnouncementsFor_(members.filter(function (m) { return m !== studentId; }), item.docId, item.rec);
