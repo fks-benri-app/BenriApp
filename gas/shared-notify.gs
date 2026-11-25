@@ -100,6 +100,42 @@ function syncCourses_(studentId) {
   props.setProperty('coursesSyncedMs', String(Date.now()));
 }
 
+// アプリから呼ばれたとき、本人の権限で在籍の授業を記録する。生徒ごとの見回りが古くても、アプリを開けば揃う。
+function syncCoursesForCaller_() {
+  const info = parseStudentId_(Session.getActiveUser().getEmail());
+  if (!info) throw new Error('学校のアカウントではありません');
+  let token = '';
+  let count = 0;
+  do {
+    const opts = { courseStates: ['ACTIVE'], pageSize: 100 };
+    if (token) opts.pageToken = token;
+    const res = Classroom.Courses.list(opts);
+    (res.courses || []).forEach(function (c) {
+      try { ensureMember_(info.studentId, c.id); count++; } catch (e) { console.error(e); }
+    });
+    token = res.nextPageToken || '';
+  } while (token);
+  return { count: count };
+}
+
+function coursesResponse_(p) {
+  let res;
+  try {
+    res = syncCoursesForCaller_();
+  } catch (e) {
+    res = { error: String(e.message || e) };
+  }
+  return jsonpOut_(p.callback, res);
+}
+
+// JSONP の応答(callback が無ければ JSON のまま)
+function jsonpOut_(callback, obj) {
+  const cb = /^[A-Za-z_$][\w$]*$/.test(callback || '') ? callback : '';
+  const body = JSON.stringify(obj);
+  return ContentService.createTextOutput(cb ? cb + '(' + body + ')' : body)
+    .setMimeType(ContentService.MimeType.JAVASCRIPT);
+}
+
 // 授業のメンバー(生徒ID)の一覧
 // 授業のメンバー一覧は CacheService に30分覚える(入れ替わりは少ない)。
 // 覚えにない新入りは、送り先に入らないだけ。その人は自分の見回りで、取りこぼしなく自分に送る(notifyShared_ の後半)。
