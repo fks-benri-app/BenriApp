@@ -216,7 +216,12 @@ export function useAnnouncements(studentId, { limitTo } = {}) {
           o2.head = snap.docs[snap.docs.length - 1] || null;
           if (!o2.cursor) o2.hasMore = snap.size >= ANNOUNCEMENT_LIMIT;
         },
-        onValue: (items) => setState({ status: 'ready', items }),
+        onValue: (items) => {
+          // 先頭の文書が届く前(端末の保存から出したとき)は、「もっと見る」の開始位置が無い。表示中の最後の時刻で代える
+          const o2 = olderFor(source.key);
+          if (!o2.head && !o2.cursorMs && items.length) o2.cursorMs = items[items.length - 1].receivedAtMs;
+          setState({ status: 'ready', items });
+        },
         onError: (error) => {
           console.error(error);
           // 前回の内容が表示できているなら、それを消さない(オフラインなど)
