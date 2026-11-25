@@ -133,6 +133,8 @@ export function AnnouncementCardFace({ ann, pinned, reminderAt }) {
           </div>
         </div>
       </div>
+      {/* ピン留めのピンは、カードの上の辺に刺さったように、右上に少しはみ出して出す */}
+      {pinned && <img src={pinIcon} alt="" aria-hidden="true" draggable={false} style={{ position: 'absolute', top: '-0.8em', right: '1.4em', width: '1.6em', height: '1.6em', objectFit: 'contain', pointerEvents: 'none' }} />}
       <div style={{ color: 'var(--text-body)', fontSize: '1em', fontWeight: 400, lineHeight: 1.4286, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
         {ann.content}
       </div>
