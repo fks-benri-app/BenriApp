@@ -42,7 +42,12 @@ function fsRequest_(url, method, bodyObj) {
 function parsePostLink_(link) {
   const m = String(link || '').match(/\/c\/([^/]+)\/(p|a|m|sa)\/([^/?#]+)/);
   if (!m) return null;
-  return { courseId: m[1], postId: m[3], postKey: m[1] + '.' + m[2] + '.' + m[3] };
+  return { courseId: courseIdOfLink_(m[1]), postId: m[3], postKey: m[1] + '.' + m[2] + '.' + m[3] };
+}
+
+// リンクの授業 ID は base64 で入っている(数字の授業 ID に直す)。数字のままなら、そのまま
+function courseIdOfLink_(s) {
+  return /^\d+$/.test(s) ? s : decodeClassroomId_(s);
 }
 
 // この授業のメンバーとして、自分を登録(初回だけ。登録ずみなら何もしない)
@@ -453,5 +458,5 @@ function notifyAllowed_(prefs, courseId) {
 // 投稿のリンクから授業IDだけを取る。取れなければ null
 function courseIdFromLink_(link) {
   const m = String(link || '').match(/\/c\/([^/?#]+)/);
-  return m ? m[1] : null;
+  return m ? courseIdOfLink_(m[1]) : null;
 }
