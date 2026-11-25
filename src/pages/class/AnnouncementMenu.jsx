@@ -15,8 +15,8 @@ export default function AnnouncementMenu({ ann, anchor, pinned, reminderAt, onTo
   return (
     <>
       <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 60, background: 'var(--overlay)', backdropFilter: 'blur(3px)', WebkitBackdropFilter: 'blur(3px)' }} />
-      <div aria-hidden="true" style={{ ...cardStyle(ann), position: 'fixed', zIndex: 61, top: anchor.top, left: anchor.left, width: anchor.width, height: anchor.height, boxSizing: 'border-box', overflow: 'hidden', pointerEvents: 'none', boxShadow: '0 12px 32px rgba(0,0,0,0.28)' }}>
-        <AnnouncementCardFace ann={ann} reminderAt={reminderAt} />
+      <div aria-hidden="true" style={{ ...cardStyle(ann), position: 'fixed', zIndex: 61, top: anchor.top, left: anchor.left, width: anchor.width, height: anchor.height, boxSizing: 'border-box', pointerEvents: 'none', boxShadow: '0 12px 32px rgba(0,0,0,0.28)' }}>
+        <AnnouncementCardFace ann={ann} pinned={pinned} reminderAt={reminderAt} />
       </div>
       {/* 基準の位置は押したカード。下に空きがなければ、Radix が自動で上に出す */}
       <DropdownMenu.Root open modal={false} onOpenChange={(open) => { if (!open) onClose(); }}>
