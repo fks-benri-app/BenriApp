@@ -18,7 +18,12 @@ export function fetchMaterialFromGas(fileId) {
     window[cb] = (res) => {
       cleanup();
       if (!res || res.error) { reject(new Error(res?.error || '取得できませんでした')); return; }
-      resolve({ name: res.name, mimeType: res.mimeType, blob: base64ToBlob(res.base64, res.mimeType) });
+      resolve({
+        name: res.name,
+        mimeType: res.mimeType,
+        blob: base64ToBlob(res.base64, res.mimeType),
+        thumb: res.thumb ? base64ToBlob(res.thumb.base64, res.thumb.mimeType) : null,
+      });
     };
     script.onerror = () => { cleanup(); reject(new Error('GAS に届きませんでした')); };
     script.src = `${CONFIG.GAS_URL}?fileId=${encodeURIComponent(fileId)}&callback=${cb}`;
