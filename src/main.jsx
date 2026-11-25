@@ -1,5 +1,14 @@
 // アプリの入り口。配色を反映して、App を画面に出す。
 import React from 'react';
+// 文字は端末と同じ場所から読む(Google Fonts に頼らない)。日本語は Noto Sans JP の日本語の分割。
+import '@fontsource/inter/latin-400.css';
+import '@fontsource/inter/latin-600.css';
+import '@fontsource/inter/latin-700.css';
+import '@fontsource/inter/latin-800.css';
+import '@fontsource/noto-sans-jp/japanese-400.css';
+import '@fontsource/noto-sans-jp/japanese-600.css';
+import '@fontsource/noto-sans-jp/japanese-700.css';
+import '@fontsource/noto-sans-jp/japanese-800.css';
 import ReactDOM from 'react-dom/client';
 import { HashRouter } from 'react-router-dom';
 import App from './App';
