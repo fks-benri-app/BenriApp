@@ -42,11 +42,11 @@ function fsRequest_(url, method, bodyObj) {
 function parsePostLink_(link) {
   const m = String(link || '').match(/\/c\/([^/]+)\/(p|a|m|sa)\/([^/?#]+)/);
   if (!m) return null;
-  return { courseId: courseIdOfLink_(m[1]), postId: m[3], postKey: m[1] + '.' + m[2] + '.' + m[3] };
+  return { courseId: decodeCourseId_(m[1]), postId: m[3], postKey: m[1] + '.' + m[2] + '.' + m[3] };
 }
 
-// リンクの授業 ID は base64 で入っている(数字の授業 ID に直す)。数字のままなら、そのまま
-function courseIdOfLink_(s) {
+// 授業 ID は、リンクでは base64 になっていることがある(数字の授業 ID に直す)。数字のままなら、そのまま
+function decodeCourseId_(s) {
   return /^\d+$/.test(s) ? s : decodeClassroomId_(s);
 }
 
@@ -369,7 +369,7 @@ function notifyPrefsFrom_(fields) {
     const days = num(a.daysBefore);
     const hours = num(u.afterHours);
     return {
-      offCourses: list.map(function (v) { return v.stringValue; }).filter(Boolean),
+      offCourses: list.map(function (v) { return decodeCourseId_(v.stringValue); }).filter(Boolean),
       remindAssignment: {
         on: !(a.on && a.on.booleanValue === false),
         daysBefore: [1, 2, 3].indexOf(days) >= 0 ? days : 1,
@@ -458,5 +458,5 @@ function notifyAllowed_(prefs, courseId) {
 // 投稿のリンクから授業IDだけを取る。取れなければ null
 function courseIdFromLink_(link) {
   const m = String(link || '').match(/\/c\/([^/?#]+)/);
-  return m ? courseIdOfLink_(m[1]) : null;
+  return m ? decodeCourseId_(m[1]) : null;
 }
