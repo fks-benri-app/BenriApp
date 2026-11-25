@@ -1,6 +1,7 @@
 // お知らせの詳細画面(Classroom の投稿ページに合わせた見た目)。
-import React, { useState } from 'react';
+import React, { useState, useSyncExternalStore } from 'react';
 import Icon from '../../components/Icon';
+import { fileIdOf, getMaterialStatus, subscribeMaterialStatus } from '../../lib/material/sync';
 import { KIND_OPTIONS } from '../../lib/announce/filters';
 
 // 詳細画面(カードを押すと開く小窓。Classroom の投稿ページの見た目に合わせてある)
@@ -148,8 +149,27 @@ function attachmentLabel(f) {
   return map[ext] || 'Google ドライブ';
 }
 
+// 資料の保存状態の印(右下): 保存中は回転、保存済みはチェック、失敗はバツ
+const SAVE_BADGE = {
+  saving: { icon: 'spinner', color: 'var(--text-muted)', spin: true },
+  saved: { icon: 'check', color: '#188038' },
+  failed: { icon: 'closeSmall', color: '#d93025' },
+};
+
+function SaveBadge({ id }) {
+  const status = useSyncExternalStore(subscribeMaterialStatus, () => getMaterialStatus(id));
+  const b = status && SAVE_BADGE[status];
+  if (!b) return null;
+  return (
+    <span style={{ position: 'absolute', right: '4px', bottom: '4px', width: '22px', height: '22px', borderRadius: '50%', background: 'var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: b.color }}>
+      <Icon name={b.icon} size={16} style={b.spin ? { animation: 'spin 0.9s linear infinite' } : undefined} />
+    </span>
+  );
+}
+
 function AttachmentCard({ f, onOpen }) {
   const iconName = f.type === 'youtube' ? 'youtube' : f.type === 'link' ? 'link' : f.type === 'form' ? 'form' : 'file';
+  const materialId = fileIdOf(f);
   // サムネイル(画像など)があれば、アイコンの代わりに出す。読み込めなかったらアイコンに戻す
   const [thumbFailed, setThumbFailed] = useState(false);
   const showThumb = !!f.thumb && !thumbFailed;
@@ -176,6 +196,7 @@ function AttachmentCard({ f, onOpen }) {
         ) : (
           <Icon name={iconName} size={32} />
         )}
+        {materialId && <SaveBadge id={materialId} />}
       </span>
       <span style={{ flex: 1, minWidth: 0, padding: '12px 16px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '2px' }}>
         <span style={{ fontSize: '14px', lineHeight: '20px', fontWeight: 500, color: 'var(--text-strong)', wordBreak: 'break-all' }}>{f.title || f.url}</span>
