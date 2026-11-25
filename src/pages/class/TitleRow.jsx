@@ -71,7 +71,7 @@ export default function TitleRow({ searchOpen, searchInputRef, query, setQuery, 
           <div style={{
             color: 'var(--text-strong)',
             fontSize: '1.871em',
-            fontFamily: 'Inter',
+            fontFamily: 'Noto Sans JP',
             fontWeight: '800',
             userSelect: 'none'
           }}>

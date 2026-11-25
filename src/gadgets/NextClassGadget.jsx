@@ -64,12 +64,12 @@ export default function NextClassGadget() {
       }}>{LABEL}</div>
       <div style={{
         position: 'absolute', top: '23cqmin', left: `${MARGIN}cqmin`,
-        fontSize: `${(NAME_CQ * k).toFixed(2)}cqmin`, fontWeight: 800, fontFamily: 'Inter', lineHeight: 1.1,
+        fontSize: `${(NAME_CQ * k).toFixed(2)}cqmin`, fontWeight: 800, fontFamily: 'Noto Sans JP', lineHeight: 1.1,
         whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: `calc(100cqw - ${MARGIN * 2}cqmin)`,
       }}>{NEXT_CLASS.name}</div>
       <div style={{
         position: 'absolute', left: `${MARGIN}cqmin`, bottom: '13.5cqmin',
-        fontSize: `${(ROOM_CQ * k).toFixed(2)}cqmin`, fontWeight: 700, fontFamily: 'Inter', lineHeight: 1.3, whiteSpace: 'nowrap',
+        fontSize: `${(ROOM_CQ * k).toFixed(2)}cqmin`, fontWeight: 700, fontFamily: 'Noto Sans JP', lineHeight: 1.3, whiteSpace: 'nowrap',
       }}>
         <div>{NEXT_CLASS.room}</div>
         <div>{NEXT_CLASS.time}</div>

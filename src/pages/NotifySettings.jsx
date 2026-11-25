@@ -104,7 +104,7 @@ export default function NotifySettings() {
         position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column', background: 'var(--surface)',
         boxSizing: 'border-box', overflow: 'hidden', fontSize: `${fontPx}px`,
         userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none',
-        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Noto Sans JP', sans-serif",
+        fontFamily: "'Noto Sans JP', -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Noto Sans JP', sans-serif",
       }}
     >
       <header style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '0.857em', paddingTop: 'calc(2em + env(safe-area-inset-top))', paddingBottom: '1.143em', background: 'var(--surface)' }}>
@@ -118,7 +118,7 @@ export default function NotifySettings() {
             {/* 設定画面の矢印(Chevron)と同じ線の太さ・形を、向きだけ反転させる */}
             <Icon name="chevronRight" size="1.143em" color="var(--text-strong)" style={{ transform: 'scaleX(-1)' }} />
           </button>
-          <div style={{ color: 'var(--text-strong)', fontSize: '1.571em', fontFamily: 'Inter', fontWeight: 800 }}>通知設定</div>
+          <div style={{ color: 'var(--text-strong)', fontSize: '1.571em', fontFamily: 'Noto Sans JP', fontWeight: 800 }}>通知設定</div>
         </div>
       </header>
 

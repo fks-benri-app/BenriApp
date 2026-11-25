@@ -101,7 +101,7 @@ export default function InstallGuide({ onSkip }) {
   return (
     <div style={{ width: '100%', maxWidth: '26em', display: 'flex', flexDirection: 'column', gap: '2em' }}>
       <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '0.3em' }}>
-        <div style={{ color: 'var(--text-strong)', fontSize: '1.4em', fontFamily: 'Inter', fontWeight: 800 }}>
+        <div style={{ color: 'var(--text-strong)', fontSize: '1.4em', fontFamily: 'Noto Sans JP', fontWeight: 800 }}>
           ホーム画面に追加してください
         </div>
         <div style={{ color: 'var(--text-muted)', fontSize: '1em', lineHeight: '1.5em' }}>

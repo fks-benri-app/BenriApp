@@ -1,10 +1,10 @@
 // アプリの入り口。配色を反映して、App を画面に出す。
 import React from 'react';
-// 文字は端末と同じ場所から読む(Google Fonts に頼らない)。日本語は Noto Sans JP の日本語の分割。
-import '@fontsource/inter/latin-400.css';
-import '@fontsource/inter/latin-600.css';
-import '@fontsource/inter/latin-700.css';
-import '@fontsource/inter/latin-800.css';
+// 文字は端末と同じ場所から読む(Google Fonts に頼らない)。Noto Sans JP の、英数字(latin)と日本語(japanese)の分割
+import '@fontsource/noto-sans-jp/latin-400.css';
+import '@fontsource/noto-sans-jp/latin-600.css';
+import '@fontsource/noto-sans-jp/latin-700.css';
+import '@fontsource/noto-sans-jp/latin-800.css';
 import '@fontsource/noto-sans-jp/japanese-400.css';
 import '@fontsource/noto-sans-jp/japanese-600.css';
 import '@fontsource/noto-sans-jp/japanese-700.css';
