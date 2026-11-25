@@ -32,8 +32,7 @@
     "kindFilter": "形式で絞り込み",
     "allKinds": "すべての形式",
     "noMatch": "「{query}」に一致するお知らせはありません",
-    "pinnedLabel": "ピン留め",
-    "reminderBadge": "リマインド",
+    "reminderFooter": "リマインド",
     "menu": {
       "pin": "ピン留めする",
       "unpin": "ピン留めを外す",
