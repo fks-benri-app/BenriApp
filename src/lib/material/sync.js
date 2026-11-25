@@ -6,6 +6,22 @@ const GAP_MS = 2000;
 const URL_LIFETIME_MS = 10 * 60 * 1000;
 let running = false;
 const failed = new Set(); // このセッションで失敗したもの(何度も再試行しない)
+const statuses = new Map(); // fileId -> 'saving' | 'saved' | 'failed'(画面の印に使う)
+const listeners = new Set();
+
+function setStatus(id, s) {
+  if (s) statuses.set(id, s); else statuses.delete(id);
+  listeners.forEach((l) => l());
+}
+
+export function subscribeMaterialStatus(l) {
+  listeners.add(l);
+  return () => listeners.delete(l);
+}
+
+export function getMaterialStatus(id) {
+  return statuses.get(id) || null;
+}
 
 // 添付の Drive ファイル ID。古い投稿は fileId が無いので、URL から取り出す
 export function fileIdOf(a) {
@@ -28,15 +44,23 @@ export async function syncMaterials(items) {
       }
     }
     const have = new Set(await listMaterialIds());
-    for (const id of have) if (!wanted.has(id)) await deleteMaterial(id);
+    for (const id of wanted.keys()) if (!have.has(id) && !failed.has(id)) setStatus(id, 'saving'); // 待っているものも回転で出す
+    for (const id of have) if (!wanted.has(id)) { await deleteMaterial(id); setStatus(id, null); }
     for (const id of wanted.keys()) {
-      if (have.has(id) || failed.has(id)) continue;
-      if (!navigator.onLine) break;
+      if (have.has(id)) { setStatus(id, 'saved'); continue; }
+      if (failed.has(id)) { setStatus(id, 'failed'); continue; }
+      if (!navigator.onLine) { // 圏外なら、待っているものの印を消して止める
+        for (const r of wanted.keys()) if (statuses.get(r) === 'saving') setStatus(r, null);
+        break;
+      }
+      setStatus(id, 'saving');
       try {
         const f = await fetchMaterialFromGas(id);
         await putMaterial({ id, name: f.name, type: f.mimeType, blob: f.blob, savedAt: Date.now() });
+        setStatus(id, 'saved');
       } catch (e) {
         failed.add(id);
+        setStatus(id, 'failed');
         console.warn('資料の保存に失敗:', id, e.message);
       }
       await new Promise((r) => setTimeout(r, GAP_MS));
