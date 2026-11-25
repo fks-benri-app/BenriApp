@@ -158,6 +158,9 @@ html[data-theme="dark"] {
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* ホームを動かしている間の、行き先の枠(赤い半透明)は出さない */
+.home-grid .react-grid-placeholder { display: none !important; }
+
 /* 画像として読むアイコン(ベルなど)は、CSS の色を変えられない。ダークでは反転して明るくする */
 html[data-theme="dark"] img.icon-ink { filter: invert(1) hue-rotate(180deg) brightness(0.8); }
 /* 選択中の色付きアイコンは、タグと同じ程度に少し暗くする */

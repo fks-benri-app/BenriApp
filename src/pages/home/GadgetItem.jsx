@@ -93,7 +93,7 @@ const GadgetItem = forwardRef(function GadgetItem(
             </div>
           )}
         </div>
-        <div className="no-scrollbar" style={{ flex: 1, minHeight: 0, overflow: 'auto', display: 'flex', flexDirection: 'column', padding: g.flush ? 0 : '0.714em 1.143em 1.143em' }}>
+        <div className="no-scrollbar" style={{ flex: 1, minHeight: 0, overflow: 'auto', display: 'flex', flexDirection: 'column', padding: g.flush ? 0 : '0.714em 1.143em 0' }}>
           <Component identity={identity} />
         </div>
       </section>
