@@ -154,6 +154,7 @@ const SAVE_BADGE = {
   saving: { icon: 'spinner', color: 'var(--text-muted)', spin: true },
   saved: { icon: 'check', color: '#188038' },
   failed: { icon: 'closeSmall', color: '#d93025' },
+  denied: { icon: 'closeSmall', color: '#d93025' },
 };
 
 function SaveBadge({ id }) {

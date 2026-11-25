@@ -1,9 +1,10 @@
 // お知らせ画面。一覧・絞り込み・詳細を組み合わせる(部品は class/ にある)。
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fetchAnnouncementById, useAnnouncements } from '../lib/announce/announcements';
-import { localMaterialUrl, syncMaterials } from '../lib/material/sync';
+import { localMaterialUrl, materialNeedsPermission, subscribeMaterialStatus, syncMaterials } from '../lib/material/sync';
+import { buildGasLoginUrl } from '../config';
 import { goRepairNotifications, isPushRecentlyFixed } from '../lib/push/pushStatus';
 import TitleRow from './class/TitleRow';
 import TagChips from './class/TagChips';
@@ -31,6 +32,17 @@ import { t } from '../lib/ui/text';
 
 
 
+// 案内の帯(通知が届かないとき・資料の権限が無いとき)。枠線なしのベタ塗り
+const BANNER_STYLE = {
+  gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: '0.8em', flexWrap: 'wrap',
+  padding: '0.8em 1em', background: 'var(--warn-bg)', border: 'none',
+  borderRadius: '0.6em', color: 'var(--warn-fg)', fontSize: '0.9em', lineHeight: '1.5em'
+};
+const BANNER_BUTTON_STYLE = {
+  padding: '0.5em 1em', border: 'none', borderRadius: '999px', background: 'var(--ink)',
+  color: 'var(--on-ink)', fontSize: '1em', fontWeight: 600, cursor: 'pointer', touchAction: 'manipulation'
+};
+
 export default function Class() {
   const navigate = useNavigate();
   const { identity } = useIdentity();
@@ -43,6 +55,7 @@ export default function Class() {
     [real.items, real.readIds]
   );
   const schoolEmail = useSchoolEmail(identity?.id);
+  const materialDenied = useSyncExternalStore(subscribeMaterialStatus, materialNeedsPermission);
   // 表示中のお知らせの資料を、端末に保存しておく(バックグラウンド・1件ずつ)
   useEffect(() => { syncMaterials(real.items); }, [real.items]);
   // 保存済みの資料は端末から開く(オフラインでも開ける)。無ければ Drive のリンクを開く
@@ -271,21 +284,18 @@ export default function Class() {
         gap: '0.857em',
         alignContent: 'start'
       }}>
+        {materialDenied && (
+          <div style={BANNER_STYLE}>
+            <span style={{ flex: '1 1 14em' }}>{t('class.materialPermission')}</span>
+            <button type="button" onClick={() => openExternal(buildGasLoginUrl())} style={BANNER_BUTTON_STYLE}>
+              {t('class.materialPermissionButton')}
+            </button>
+          </div>
+        )}
         {pushBroken && !isPushRecentlyFixed() && (
-          <div style={{
-            gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: '0.8em', flexWrap: 'wrap',
-            padding: '0.8em 1em', background: 'var(--warn-bg)', border: '1px solid var(--warn-line)',
-            borderRadius: '0.6em', color: 'var(--warn-fg)', fontSize: '0.9em', lineHeight: '1.5em'
-          }}>
+          <div style={BANNER_STYLE}>
             <span style={{ flex: '1 1 14em' }}>この端末に通知が届いていない可能性があります。</span>
-            <button
-              type="button"
-              onClick={goRepairNotifications}
-              style={{
-                padding: '0.5em 1em', border: 'none', borderRadius: '999px', background: 'var(--ink)',
-                color: 'var(--on-ink)', fontSize: '1em', fontWeight: 600, cursor: 'pointer', touchAction: 'manipulation'
-              }}
-            >
+            <button type="button" onClick={goRepairNotifications} style={BANNER_BUTTON_STYLE}>
               通知を直す
             </button>
           </div>
