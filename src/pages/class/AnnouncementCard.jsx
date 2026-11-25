@@ -129,13 +129,11 @@ export function AnnouncementCardFace({ ann, pinned, reminderAt }) {
           {/* 未読の丸と、ピン留めのピンは同じ場所(右上)に出す */}
           <div style={{ position: 'relative', width: '0.571em', height: '0.571em', flexShrink: 0 }}>
             <div style={{ width: '100%', height: '100%', boxSizing: 'border-box', background: 'linear-gradient(135deg, #FF4D4D 0%, #FF8A1B 100%)', borderRadius: '50%', visibility: ann.isUnread && !pinned ? 'visible' : 'hidden' }} />
-            {pinned && <img src={pinIcon} alt="" aria-hidden="true" draggable={false} style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', width: '1.3em', height: '1.3em', objectFit: 'contain' }} />}
           </div>
         </div>
       </div>
       {/* ピン留めのピンは、カードの上の辺に刺さったように、右上に少しはみ出して出す */}
-      {pinned && <img src={pinIcon} alt="" aria-hidden="true" draggable={false} style={{ position: 'absolute', top: '-0.8em', right: '1.4em', width: '1.6em', height: '1.6em', objectFit: 'contain', pointerEvents: 'none' }} />}
-      <div style={{ color: 'var(--text-body)', fontSize: '1em', fontWeight: 400, lineHeight: 1.4286, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+      {pinned && <img src={pinIcon} alt="" aria-hidden="true" draggable={false} style={{ position: 'absolute', left: '53%', top: '-0.2em', transform: 'translate(-50%, -50%)', width: '1.3em', height: '1.3em', objectFit: 'contain', pointerEvents: 'none', zIndex: 1 }} />}      <div style={{ color: 'var(--text-body)', fontSize: '1em', fontWeight: 400, lineHeight: 1.4286, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
         {ann.content}
       </div>
       {/* リマインドの時刻になると、お知らせ画面が解除する(表示は自動で消える) */}
