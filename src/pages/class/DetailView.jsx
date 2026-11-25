@@ -148,7 +148,7 @@ function attachmentLabel(f) {
   return map[ext] || 'Google ドライブ';
 }
 
-function AttachmentCard({ f, onOpenUrl }) {
+function AttachmentCard({ f, onOpen }) {
   const iconName = f.type === 'youtube' ? 'youtube' : f.type === 'link' ? 'link' : f.type === 'form' ? 'form' : 'file';
   // サムネイル(画像など)があれば、アイコンの代わりに出す。読み込めなかったらアイコンに戻す
   const [thumbFailed, setThumbFailed] = useState(false);
@@ -156,7 +156,7 @@ function AttachmentCard({ f, onOpenUrl }) {
   return (
     <button
       type="button"
-      onClick={() => onOpenUrl(f.url)}
+      onClick={() => onOpen(f)}
       style={{
         display: 'flex', alignItems: 'stretch', width: '100%', minHeight: '72px', padding: 0, textAlign: 'left',
         background: 'var(--surface)', border: '1px solid var(--line-strong)', borderRadius: '8px', overflow: 'hidden',
@@ -187,7 +187,7 @@ function AttachmentCard({ f, onOpenUrl }) {
 
 const SHEET_CSS = '@keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}@keyframes fadeIn{from{opacity:0}to{opacity:1}}';
 
-export function DetailView({ ann, onBack, onOpenClassroom, onOpenUrl }) {
+export function DetailView({ ann, onBack, onOpenClassroom, onOpenUrl, onOpenAttachment }) {
   const style = POST_STYLES[ann.kind] || POST_STYLES.other;
   const attachments = ann.attachments || [];
   const isAnnouncement = ann.kind === 'announcement';
@@ -248,7 +248,7 @@ export function DetailView({ ann, onBack, onOpenClassroom, onOpenUrl }) {
             {/* 添付 */}
             {attachments.length > 0 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
-                {attachments.map((f, i) => <AttachmentCard key={i} f={f} onOpenUrl={onOpenUrl} />)}
+                {attachments.map((f, i) => <AttachmentCard key={i} f={f} onOpen={onOpenAttachment} />)}
               </div>
             )}
 

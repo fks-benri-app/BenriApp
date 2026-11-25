@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fetchAnnouncementById, useAnnouncements } from '../lib/announce/announcements';
+import { localMaterialUrl, syncMaterials } from '../lib/material/sync';
 import { goRepairNotifications, isPushRecentlyFixed } from '../lib/push/pushStatus';
 import TitleRow from './class/TitleRow';
 import TagChips from './class/TagChips';
@@ -42,6 +43,14 @@ export default function Class() {
     [real.items, real.readIds]
   );
   const schoolEmail = useSchoolEmail(identity?.id);
+  // 表示中のお知らせの資料を、端末に保存しておく(バックグラウンド・1件ずつ)
+  useEffect(() => { syncMaterials(real.items); }, [real.items]);
+  // 保存済みの資料は端末から開く(オフラインでも開ける)。無ければ Drive のリンクを開く
+  async function openAttachment(f) {
+    const local = await localMaterialUrl(f);
+    if (local) { window.open(local, '_blank'); return; }
+    openExternal(withAuthuser(f.url, schoolEmail));
+  }
   // 通知の状態(届いていない可能性・この端末の通知がオンか)。確認と付け直しも、このフックの中で行う
   const { pushBroken, devicePushOn } = useDevicePushState(identity?.id);
   // ピン留め・リマインド(端末に残す)と、長押しのメニュー・リマインドの画面の状態
@@ -352,6 +361,7 @@ export default function Class() {
           onBack={closeDetail}
           onOpenClassroom={() => openExternal(classroomUrl(detail.link, schoolEmail))}
           onOpenUrl={(u) => openExternal(withAuthuser(u, schoolEmail))}
+          onOpenAttachment={openAttachment}
         />
       )}
     </div>
