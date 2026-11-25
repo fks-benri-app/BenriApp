@@ -23,6 +23,11 @@ export function getMaterialStatus(id) {
   return statuses.get(id) || null;
 }
 
+// Drive の権限が無くて保存できない資料があるか(権限の案内を出すため)
+export function materialNeedsPermission() {
+  return [...statuses.values()].includes('denied');
+}
+
 // 添付の Drive ファイル ID。古い投稿は fileId が無いので、URL から取り出す
 export function fileIdOf(a) {
   if (!a || a.type !== 'drive') return null;
@@ -59,8 +64,10 @@ export async function syncMaterials(items) {
         await putMaterial({ id, name: f.name, type: f.mimeType, blob: f.blob, savedAt: Date.now() });
         setStatus(id, 'saved');
       } catch (e) {
-        failed.add(id);
-        setStatus(id, 'failed');
+        // 権限が無いときは、許可した後にまた試せるよう、失敗の一覧には入れない
+        const denied = /権限/.test(e.message);
+        if (!denied) failed.add(id);
+        setStatus(id, denied ? 'denied' : 'failed');
         console.warn('資料の保存に失敗:', id, e.message);
       }
       await new Promise((r) => setTimeout(r, GAP_MS));

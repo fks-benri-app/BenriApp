@@ -33,6 +33,8 @@
     "allKinds": "すべての形式",
     "noMatch": "「{query}」に一致するお知らせはありません",
     "reminderFooter": "リマインド",
+    "materialPermission": "資料を端末に保存するための権限が必要です。",
+    "materialPermissionButton": "権限を許可する",
     "menu": {
       "pin": "ピン留めする",
       "unpin": "ピン留めを外す",
