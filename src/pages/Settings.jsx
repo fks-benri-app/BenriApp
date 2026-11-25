@@ -170,7 +170,7 @@ export default function Settings() {
         }}
       >
         <div style={{ padding: '0 1.714em', height: '34px', display: 'flex', alignItems: 'center' }}>
-          <div style={{ color: 'var(--text-strong)', fontSize: '1.871em', fontFamily: 'Inter', fontWeight: '800', userSelect: 'none' }}>
+          <div style={{ color: 'var(--text-strong)', fontSize: '1.871em', fontFamily: 'Noto Sans JP', fontWeight: '800', userSelect: 'none' }}>
             設定
           </div>
         </div>
@@ -221,7 +221,7 @@ export default function Settings() {
               {avatar ? <img src={avatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Icon name="account" size="1.8em" color={GREY} />}
             </div>
             <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '0.286em' }}>
-              <div style={{ color: 'var(--text-strong)', fontSize: '1.286em', fontFamily: 'Inter', fontWeight: 700 }}>
+              <div style={{ color: 'var(--text-strong)', fontSize: '1.286em', fontFamily: 'Noto Sans JP', fontWeight: 700 }}>
                 {accountName || t('settings.account')}
               </div>
               <div style={{ color: 'var(--text-muted)', fontSize: '0.929em' }}>
