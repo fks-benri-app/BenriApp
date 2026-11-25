@@ -19,6 +19,12 @@ export function gradeOf(id) {
 
 export const canChooseCourse = (id) => OPTIONS.courseGrades.includes(gradeOf(id));
 
+// この生徒の学年で選べる講座の記号(学年ごとの一覧。学年が分からないときは空)
+export function courseLettersFor(id) {
+  const grade = gradeOf(id);
+  return grade ? (OPTIONS.courseLettersByGrade[String(grade)] || []) : [];
+}
+
 const EMPTY = { courseLetter: '', electiveSubjects: [] };
 const profileKey = (id) => 'profile:' + id;
 

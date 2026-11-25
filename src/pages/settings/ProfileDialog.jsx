@@ -1,7 +1,7 @@
 // 名前のカードを押したときの設定(アイコン画像・講座・選択教科)。ダイアログは共通の見た目。
 import React, { useEffect, useRef, useState } from 'react';
 import ModalDialog, { DialogButton } from '../../components/ModalDialog';
-import { OPTIONS, canChooseCourse, clearAvatar, cropToAvatar, saveAvatar, saveProfile } from '../../lib/profile/profile';
+import { OPTIONS, canChooseCourse, clearAvatar, courseLettersFor, cropToAvatar, saveAvatar, saveProfile } from '../../lib/profile/profile';
 import AvatarCropper from './AvatarCropper';
 import Checkbox from '../../components/Checkbox';
 import FilterSelect from '../class/FilterSelect';
@@ -146,7 +146,7 @@ export default function ProfileDialog({ studentId, profile, avatar, onAvatarChan
                 allLabel="講座を選ぶ"
                 plain
                 theme={courseTheme(undefined)}
-                options={OPTIONS.courseLetters.map((l) => ({ id: l, label: `${l}講座` }))}
+                options={courseLettersFor(studentId).map((l) => ({ id: l, label: `${l}講座` }))}
               />
             </div>
           </section>
