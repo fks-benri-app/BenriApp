@@ -1,7 +1,7 @@
 // お知らせの詳細画面(Classroom の投稿ページに合わせた見た目)。
-import React, { useState, useSyncExternalStore } from 'react';
+import React, { useEffect, useState, useSyncExternalStore } from 'react';
 import Icon from '../../components/Icon';
-import { fileIdOf, getMaterialStatus, subscribeMaterialStatus } from '../../lib/material/sync';
+import { fileIdOf, getMaterialStatus, localThumbUrl, subscribeMaterialStatus } from '../../lib/material/sync';
 import { KIND_OPTIONS } from '../../lib/announce/filters';
 
 // 詳細画面(カードを押すと開く小窓。Classroom の投稿ページの見た目に合わせてある)
@@ -173,7 +173,17 @@ function AttachmentCard({ f, onOpen }) {
   const materialId = fileIdOf(f);
   // サムネイル(画像など)があれば、アイコンの代わりに出す。読み込めなかったらアイコンに戻す
   const [thumbFailed, setThumbFailed] = useState(false);
-  const showThumb = !!f.thumb && !thumbFailed;
+  // 保存済みのサムネイルを先に端末から出す。確認が終わるまでは Drive の画像を読まない
+  const [local, setLocal] = useState(undefined); // undefined: 確認中 / null: 無い / URL
+  useEffect(() => {
+    if (!materialId) return undefined;
+    let url = null;
+    let alive = true;
+    localThumbUrl(materialId).then((u) => { url = u; if (alive) setLocal(u); else if (u) URL.revokeObjectURL(u); });
+    return () => { alive = false; if (url) URL.revokeObjectURL(url); };
+  }, [materialId]);
+  const thumbSrc = materialId ? (local === undefined ? null : local || f.thumb) : f.thumb;
+  const showThumb = !!thumbSrc && !thumbFailed;
   return (
     <button
       type="button"
@@ -187,7 +197,7 @@ function AttachmentCard({ f, onOpen }) {
       <span style={{ width: '88px', flexShrink: 0, background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-body)', borderRight: '1px solid var(--line-strong)', position: 'relative' }}>
         {showThumb ? (
           <img
-            src={f.thumb}
+            src={thumbSrc}
             alt=""
             loading="lazy"
             referrerPolicy="no-referrer"

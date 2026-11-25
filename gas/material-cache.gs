@@ -26,5 +26,10 @@ function fetchMaterial_(fileId) {
   const blob = isGoogleType ? file.getAs(MimeType.PDF) : file.getBlob();
   const bytes = blob.getBytes();
   if (bytes.length > MATERIAL_MAX_BYTES) throw new Error('ファイルが大きすぎます');
-  return { name: file.getName(), mimeType: blob.getContentType(), base64: Utilities.base64Encode(bytes) };
+  let thumb = null; // 一覧の見た目。Drive が作れないときは無し
+  try {
+    const t = file.getThumbnail();
+    if (t) thumb = { base64: Utilities.base64Encode(t.getBytes()), mimeType: t.getContentType() };
+  } catch (e) { /* サムネイル無しで続ける */ }
+  return { name: file.getName(), mimeType: blob.getContentType(), base64: Utilities.base64Encode(bytes), thumb: thumb };
 }
