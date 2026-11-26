@@ -2,6 +2,7 @@
 import { storage } from '../data/storage';
 import { gradeOf } from '../profile/profile';
 import subjects from '../../data/timetableSubjects.json';
+import settingsOptions from '../../data/settingsOptions.json';
 
 export const WEEKDAYS = ['月', '火', '水', '木', '金'];
 export const PERIODS = [1, 2, 3, 4, 5, 6, 7];
@@ -29,9 +30,9 @@ export function saveTimetable(key, table) {
   storage.set(storageKey(key), JSON.stringify(table));
 }
 
-// 読み取りで照合する教科名(学年の数字で引く)
+// 読み取りで照合する教科名(学年の教科 + 選択教科)
 export function subjectsFor(key) {
-  return subjects[key.split('-')[0]] || [];
+  return [...(subjects[key.split('-')[0]] || []), ...settingsOptions.electiveSubjects];
 }
 
 export function clearTimetable(key) {
@@ -51,13 +52,13 @@ function cellOf(cell) {
   const tokens = text.split(/\s+/).filter(Boolean);
   const name = cell.match ? cell.match.candidate : text.replace(/^\d年/, '').split(/\s+/)[0] || '';
   const room = tokens.find((x) => ROOM.test(x) && x !== name) || '';
-  return { name, room };
+  return { name, room, elective: settingsOptions.electiveSubjects.includes(name) };
 }
 
 // 保存の形(新: { name, room } / 旧: 文字だけ)を { name, room } にそろえる
 export function cellValue(v) {
-  if (!v) return { name: '', room: '' };
-  return typeof v === 'string' ? { name: v, room: '' } : { name: v.name || '', room: v.room || '' };
+  if (!v) return { name: '', room: '', elective: false };
+  return typeof v === 'string' ? { name: v, room: '', elective: false } : { name: v.name || '', room: v.room || '', elective: !!v.elective };
 }
 
 // buildGridByLabels の結果を、曜日→時限→授業名の表にする(読めなかった枠は空のまま)
