@@ -4,7 +4,7 @@
 // 1回の実行で書く数に上限(MIGRATE_MAX_WRITES)を置く。Firestore の書き込みは 1日 20,000 件まで。
 
 const MIGRATE_MAX_WRITES = 4000;   // 1回の実行で書く生徒ごとの文書の数の上限
-const MIGRATE_POST_LIMIT = 300;    // 1回の範囲で読む投稿の上限(超えたら、範囲を狭めて再実行する)
+const MIGRATE_POST_LIMIT = 300;    // 1つの授業で読む投稿の上限(超えたら、範囲を狭めて再実行する)
 
 function migratePersonalDryRun() {
   return migratePersonal_(7, 0, false);
@@ -21,7 +21,6 @@ function migratePersonal_(fromDaysAgo, toDaysAgo, write) {
   const from = new Date(now - fromDaysAgo * DAY_MS).toISOString();
   const to = new Date(now - toDaysAgo * DAY_MS).toISOString();
   const posts = fetchPostsInWindow_(from, to);
-  if (posts.length >= MIGRATE_POST_LIMIT) console.warn('投稿が上限に達しました。範囲を狭めて再実行してください');
 
   for (let i = 0; i < posts.length; i++) {
     const p = posts[i];
@@ -65,29 +64,32 @@ function recordFromPostFields_(f) {
   };
 }
 
-// 範囲の投稿(courses/*/posts)を、受信日時で読む(コレクション グループ)
-// shortcut: 上限 MIGRATE_POST_LIMIT を超える範囲は、1回では全部読めない。範囲を分けて実行する
+// 範囲の投稿を、授業ごとに読む(courses/{授業}/posts)。
+// コレクション グループ(全授業をまとめて検索)は複合インデックスが要るため使わない。授業ごとなら既定の索引で足りる。
+// shortcut: 授業の一覧は documents.list で読むため、文書の無い授業(親だけの残りもの)の投稿は読まない。読めない投稿が多ければ、索引を作って collection group に戻す
 function fetchPostsInWindow_(fromIso, toIso) {
-  const url = 'https://firestore.googleapis.com/v1/projects/' + FIRESTORE_PROJECT_ID +
-    '/databases/(default)/documents:runQuery';
-  const res = fsRequest_(url, 'post', {
-    structuredQuery: {
-      from: [{ collectionId: 'posts', allDescendants: true }],
-      where: {
-        compositeFilter: {
-          op: 'AND',
-          filters: [
-            { fieldFilter: { field: { fieldPath: 'receivedAt' }, op: 'GREATER_THAN_OR_EQUAL', value: { timestampValue: fromIso } } },
-            { fieldFilter: { field: { fieldPath: 'receivedAt' }, op: 'LESS_THAN', value: { timestampValue: toIso } } },
-          ],
+  const posts = [];
+  fsListDocs_('/courses').forEach(function (course) {
+    const res = fsRequest_('https://firestore.googleapis.com/v1/' + course.name + ':runQuery', 'post', {
+      structuredQuery: {
+        from: [{ collectionId: 'posts' }],
+        where: {
+          compositeFilter: {
+            op: 'AND',
+            filters: [
+              { fieldFilter: { field: { fieldPath: 'receivedAt' }, op: 'GREATER_THAN_OR_EQUAL', value: { timestampValue: fromIso } } },
+              { fieldFilter: { field: { fieldPath: 'receivedAt' }, op: 'LESS_THAN', value: { timestampValue: toIso } } },
+            ],
+          },
         },
+        orderBy: [{ field: { fieldPath: 'receivedAt' }, direction: 'ASCENDING' }],
+        limit: MIGRATE_POST_LIMIT,
       },
-      orderBy: [{ field: { fieldPath: 'receivedAt' }, direction: 'ASCENDING' }],
-      limit: MIGRATE_POST_LIMIT,
-    },
+    });
+    if (res.getResponseCode() >= 300) throw new Error('投稿の取得失敗: ' + res.getContentText());
+    JSON.parse(res.getContentText()).forEach(function (row) {
+      if (row.document) posts.push(row.document);
+    });
   });
-  if (res.getResponseCode() >= 300) throw new Error('投稿の取得失敗: ' + res.getContentText());
-  return JSON.parse(res.getContentText())
-    .filter(function (row) { return row.document; })
-    .map(function (row) { return row.document; });
+  return posts;
 }
