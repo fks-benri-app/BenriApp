@@ -193,12 +193,14 @@ export default function Calendar() {
           flex: 1,
           minHeight: 0,
           overflow: 'hidden',
-          padding: '0.571em 0',
+          padding: '1em 0',
           paddingLeft: 'max(16px, env(safe-area-inset-left, 0px))',
           paddingRight: 'max(16px, env(safe-area-inset-right, 0px))',
           boxSizing: 'border-box',
         }}
       >
+        {/* 参考の構成: 白い角丸の面の中に、曜日の見出しと 1〜7限の表を置く */}
+        <div style={{ height: '100%', boxSizing: 'border-box', background: 'var(--surface-2, var(--surface))', borderRadius: '1.714em', outline: '1px var(--line) solid', outlineOffset: '-1px', padding: '1.143em' }}>
         <div
           style={{
             height: '100%',
@@ -243,6 +245,7 @@ export default function Calendar() {
               })}
             </React.Fragment>
           ))}
+        </div>
         </div>
       </main>
 
