@@ -32,6 +32,8 @@ service cloud.firestore {
     match /{path=**}/posts/{postId} {
       allow read: if request.auth != null
         && resource.data.keys().hasAny(['courseId'])
+        && resource.data.courseId is string
+        && resource.data.courseId.matches('^[0-9]+$') // 数字以外の ID は、パスを作る前に外す(判定の失敗を防ぐ)
         && exists(/databases/$(database)/documents/users/$(request.auth.uid)/courses/$(resource.data.courseId));
       allow write: if false;
     }
