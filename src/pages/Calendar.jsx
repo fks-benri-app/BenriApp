@@ -5,7 +5,7 @@ import BottomNav from '../components/BottomNav';
 import { TitleHeader } from '../components/ClassBackdrop';
 import { useIdentity } from '../auth/identity';
 import { useProfile } from '../lib/profile/profile';
-import { recognizeWithPaddle } from '../lib/timetable/paddleOcr';
+import { recognizeWithPaddle, loadPaddle } from '../lib/timetable/paddleOcr';
 import { buildGridByLabels } from '../lib/timetable/timetableGrid';
 import { WEEKDAYS, PERIODS, timetableKeyOf, loadTimetable, saveTimetable, emptyTable, tableFromOcr } from '../lib/timetable/ownTimetable';
 import { t } from '../lib/ui/text';
@@ -99,6 +99,13 @@ export default function Calendar() {
   useEffect(() => {
     setTable(key ? loadTimetable(key) : null);
   }, [key]);
+
+  // 授業表がまだ無いときは、OCR の部品を裏で読んでおく(押してから待たないように)。表がある人は読まない
+  useEffect(() => {
+    if (table || !key) return undefined;
+    const id = setTimeout(() => loadPaddle().catch(() => {}), 500);
+    return () => clearTimeout(id);
+  }, [key, table]);
 
   function onSelectTab(id) {
     if (id === 'home') navigate('/');
