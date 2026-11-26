@@ -13,7 +13,7 @@ import { courseThemeOrNull, shaded } from '../lib/ui/courseTheme';
 import settingsOptions from '../data/settingsOptions.json';
 import { THEMES } from '../lib/ui/themes';
 
-const COLUMNS = [...WEEKDAYS, '特']; // 特: 特別な予定の列(まだ読み取りはしない)
+const COLUMNS = [...WEEKDAYS, '土']; // 土: 土曜日の列
 const WEEKDAY_NAMES = ['日', '月', '火', '水', '木', '金', '土'];
 
 const BASE_FONT_SIZE = 14;
