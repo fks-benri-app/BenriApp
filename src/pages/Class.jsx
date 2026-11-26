@@ -48,7 +48,7 @@ export default function Class() {
   const navigate = useNavigate();
   const { identity } = useIdentity();
   const real = useAnnouncements(identity?.id);
-  const { markRead, markAllRead, hasMore, loadingMore, loadMore } = real;
+  const { markRead, markAllRead, hasMore, loadingMore, loadMore, loadError } = real;
   // 開発用: DEV_MOCK を true にすると、先頭にモックが加わる(本番は false のまま)
   const status = DEV_MOCK ? 'ready' : real.status;
   const items = useMemo(
@@ -326,6 +326,7 @@ export default function Class() {
             >
               {loadingMore ? t('class.loadingMore') : t('class.loadMore')}
             </button>
+            {loadError && <div style={{ width: '100%', textAlign: 'center', marginTop: '0.6em', fontSize: '0.85em', color: 'var(--text-muted)' }}>読み込めませんでした({loadError})</div>}
           </div>
         )}
       </main>

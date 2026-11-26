@@ -285,7 +285,8 @@ export function useAnnouncements(studentId, { limitTo } = {}) {
     if (o.loading || !o.hasMore) return;
     if (!o.cursor && !o.cursorMs && !o.head) return; // 購読がまだ届いていない
     o.loading = true;
-    setOlder((prev) => ({ ...prev, loading: true }));
+    let failed = null;
+    setOlder((prev) => ({ ...prev, loading: true, error: null }));
     try {
       const { fs, db } = await loadFirestore();
       // 続きの位置: この画面で読んだ最後の文書 → 端末に残した最後の時刻 → 先頭ページの最後
@@ -301,9 +302,10 @@ export function useAnnouncements(studentId, { limitTo } = {}) {
       saveOlder(source.key, o);
     } catch (e) {
       console.error(e);
+      failed = String(e?.code || e?.message || e); // 画面にも出す(端末でコンソールを見なくても分かるように)
     } finally {
       o.loading = false;
-      setOlder({ items: o.items, hasMore: o.hasMore, loading: false });
+      setOlder({ items: o.items, hasMore: o.hasMore, loading: false, error: failed });
     }
   }, [studentId, source]);
 
@@ -333,6 +335,7 @@ export function useAnnouncements(studentId, { limitTo } = {}) {
     readIds,
     hasMore: older.hasMore,
     loadingMore: older.loading,
+    loadError: older.error || null,
     loadMore,
   };
 }
