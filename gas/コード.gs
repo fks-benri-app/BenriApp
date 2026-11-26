@@ -23,6 +23,7 @@ const BATCH_THRESHOLD = 5;         // 新着がこの件数以上なら1通に�
 // Webアプリ表示
 function doGet(e) {
   if (e && e.parameter && e.parameter.fileId) return materialResponse_(e.parameter); // 資料の取得(material-cache.gs)
+  if (e && e.parameter && e.parameter.action === 'courses') return coursesResponse_(e.parameter); // 在籍の授業の記録(shared-notify.gs)
   DriveApp.getRootFolder(); // 資料の読み取り権限(drive.readonly)を、この画面で許可してもらう
   const props = PropertiesService.getUserProperties();
   const isAlreadySet = props.getProperty('isSetup') === 'true';

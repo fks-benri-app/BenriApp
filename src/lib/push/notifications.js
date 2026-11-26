@@ -23,10 +23,20 @@ export const DEFAULT_PREFS = {
   remindUnread: { on: true, afterHours: 24 },
 };
 
+// 授業 ID は、リンクでは base64 になっていることがある。数字の授業 ID に直す(数字のままなら、そのまま)
+export function decodeCourseId(s) {
+  if (/^\d+$/.test(s)) return s;
+  try {
+    return atob(s.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(s.length / 4) * 4, '='));
+  } catch {
+    return s;
+  }
+}
+
 // 投稿のリンク(.../c/授業ID/p/投稿ID)から授業IDを取り出す。取れなければ null
 export function courseIdOf(link) {
   const m = String(link || '').match(/\/c\/([^/?#]+)/);
-  return m ? m[1] : null;
+  return m ? decodeCourseId(m[1]) : null;
 }
 
 // 形式がおかしい値は、既定値に戻す
@@ -34,7 +44,7 @@ export function normalizePrefs(p) {
   const a = (p && p.remindAssignment) || {};
   const u = (p && p.remindUnread) || {};
   return {
-    offCourses: Array.isArray(p && p.offCourses) ? p.offCourses.filter((x) => typeof x === 'string') : [],
+    offCourses: Array.isArray(p && p.offCourses) ? [...new Set(p.offCourses.filter((x) => typeof x === 'string').map(decodeCourseId))] : [],
     remindAssignment: {
       on: a.on !== false,
       daysBefore: DAY_OPTIONS.includes(a.daysBefore) ? a.daysBefore : 1,

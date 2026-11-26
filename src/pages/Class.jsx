@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useRef, useState, useSyncExternalStore } fro
 import { useNavigate } from 'react-router-dom';
 import { fetchAnnouncementById, useAnnouncements } from '../lib/announce/announcements';
 import { localMaterialUrl, materialNeedsPermission, subscribeMaterialStatus, syncMaterials } from '../lib/material/sync';
+import { syncMyCourses } from '../lib/announce/courseSync';
 import { buildGasLoginUrl } from '../config';
 import { goRepairNotifications, isPushRecentlyFixed } from '../lib/push/pushStatus';
 import TitleRow from './class/TitleRow';
@@ -58,6 +59,8 @@ export default function Class() {
   const materialDenied = useSyncExternalStore(subscribeMaterialStatus, materialNeedsPermission);
   // 表示中のお知らせの資料を、端末に保存しておく(バックグラウンド・1件ずつ)
   useEffect(() => { syncMaterials(real.items); }, [real.items]);
+  // 在籍の授業を揃える(生徒ごとの見回りが古くても、アプリを開けば記録される)
+  useEffect(() => { if (identity?.id) syncMyCourses(); }, [identity?.id]);
   // 保存済みの資料は端末から開く(オフラインでも開ける)。無ければ Drive のリンクを開く
   async function openAttachment(f) {
     const local = await localMaterialUrl(f);

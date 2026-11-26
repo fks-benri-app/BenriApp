@@ -42,42 +42,46 @@ function fsRequest_(url, method, bodyObj) {
 function parsePostLink_(link) {
   const m = String(link || '').match(/\/c\/([^/]+)\/(p|a|m|sa)\/([^/?#]+)/);
   if (!m) return null;
-  return { courseId: courseIdOfLink_(m[1]), postId: m[3], postKey: m[1] + '.' + m[2] + '.' + m[3] };
+  return { courseId: decodeCourseId_(m[1]), postId: m[3], postKey: m[1] + '.' + m[2] + '.' + m[3] };
 }
 
-// リンクの授業 ID は base64 で入っている(数字の授業 ID に直す)。数字のままなら、そのまま
-function courseIdOfLink_(s) {
+// 授業 ID は、リンクでは base64 になっていることがある(数字の授業 ID に直す)。数字のままなら、そのまま
+function decodeCourseId_(s) {
   return /^\d+$/.test(s) ? s : decodeClassroomId_(s);
 }
 
 // この授業のメンバーとして、自分を登録(初回だけ。登録ずみなら何もしない)
-// 生徒の所属授業も users/{生徒ID}/courses/{授業ID} に記録する(トピック購読の同期で使う)
+// この授業の名簿(courses/{授業ID}/members)と、生徒の所属(users/{生徒ID}/courses)を、1回のまとめ書きで記録する。
+// 2つは同じ事実なので、必ず一緒に書く(片方だけ残らないように)。登録ずみなら何もしない。
+// flag 名を変えてあるので、以前に片方だけ書かれた生徒も、1回やり直して揃う(補う)。
 function ensureMember_(studentId, courseId) {
   const props = PropertiesService.getUserProperties();
-  const flag = 'memberCourse_' + courseId; // 以前の flag(member_)とは分けて、既存の生徒も1回は記録する
+  const flag = 'memberCourse2_' + courseId;
   if (props.getProperty(flag) === '1') return;
-  const now = { timestampValue: new Date().toISOString() };
-  const res = fsRequest_(
-    fsDocUrl_('/courses/' + encodeURIComponent(courseId) + '/members/' + encodeURIComponent(studentId)) +
-      '?updateMask.fieldPaths=joinedAt',
-    'patch',
-    { fields: { joinedAt: now } }
-  );
+  const now = new Date().toISOString();
+  const res = fsCommit_([
+    joinWrite_('/courses/' + encodeURIComponent(courseId) + '/members/' + encodeURIComponent(studentId), now),
+    joinWrite_('/users/' + encodeURIComponent(studentId) + '/courses/' + encodeURIComponent(courseId), now),
+  ]);
   if (res.getResponseCode() >= 300) {
-    console.error('メンバー登録失敗: ' + res.getContentText());
-    return;
-  }
-  const courseRes = fsRequest_(
-    fsDocUrl_('/users/' + encodeURIComponent(studentId) + '/courses/' + encodeURIComponent(courseId)) +
-      '?updateMask.fieldPaths=joinedAt',
-    'patch',
-    { fields: { joinedAt: now } }
-  );
-  if (courseRes.getResponseCode() >= 300) {
-    console.error('授業の記録失敗: ' + courseRes.getContentText()); // flag は立てない。次回やり直す
+    console.error('所属の記録失敗(あとで再試行): ' + res.getContentText());
     return;
   }
   props.setProperty(flag, '1');
+}
+
+// 文書の joinedAt だけを書く(まとめ書きの1件分)
+function joinWrite_(path, iso) {
+  return {
+    update: { name: 'projects/' + FIRESTORE_PROJECT_ID + '/databases/(default)/documents' + path, fields: { joinedAt: { timestampValue: iso } } },
+    updateMask: { fieldPaths: ['joinedAt'] },
+  };
+}
+
+// 複数の書き込みを、全部書けるか、全部書けないかの単位で送る(Firestore の commit)
+function fsCommit_(writes) {
+  const url = 'https://firestore.googleapis.com/v1/projects/' + FIRESTORE_PROJECT_ID + '/databases/(default)/documents:commit';
+  return fsRequest_(url, 'post', { writes: writes });
 }
 
 // 在籍の授業(Classroom の授業一覧)を、メンバーとして記録する。
@@ -98,6 +102,42 @@ function syncCourses_(studentId) {
     token = res.nextPageToken || '';
   } while (token);
   props.setProperty('coursesSyncedMs', String(Date.now()));
+}
+
+// アプリから呼ばれたとき、本人の権限で在籍の授業を記録する。生徒ごとの見回りが古くても、アプリを開けば揃う。
+function syncCoursesForCaller_() {
+  const info = parseStudentId_(Session.getActiveUser().getEmail());
+  if (!info) throw new Error('学校のアカウントではありません');
+  let token = '';
+  let count = 0;
+  do {
+    const opts = { courseStates: ['ACTIVE'], pageSize: 100 };
+    if (token) opts.pageToken = token;
+    const res = Classroom.Courses.list(opts);
+    (res.courses || []).forEach(function (c) {
+      try { ensureMember_(info.studentId, c.id); count++; } catch (e) { console.error(e); }
+    });
+    token = res.nextPageToken || '';
+  } while (token);
+  return { count: count };
+}
+
+function coursesResponse_(p) {
+  let res;
+  try {
+    res = syncCoursesForCaller_();
+  } catch (e) {
+    res = { error: String(e.message || e) };
+  }
+  return jsonpOut_(p.callback, res);
+}
+
+// JSONP の応答(callback が無ければ JSON のまま)
+function jsonpOut_(callback, obj) {
+  const cb = /^[A-Za-z_$][\w$]*$/.test(callback || '') ? callback : '';
+  const body = JSON.stringify(obj);
+  return ContentService.createTextOutput(cb ? cb + '(' + body + ')' : body)
+    .setMimeType(ContentService.MimeType.JAVASCRIPT);
 }
 
 // 授業のメンバー(生徒ID)の一覧
@@ -369,7 +409,7 @@ function notifyPrefsFrom_(fields) {
     const days = num(a.daysBefore);
     const hours = num(u.afterHours);
     return {
-      offCourses: list.map(function (v) { return v.stringValue; }).filter(Boolean),
+      offCourses: list.map(function (v) { return decodeCourseId_(v.stringValue); }).filter(Boolean),
       remindAssignment: {
         on: !(a.on && a.on.booleanValue === false),
         daysBefore: [1, 2, 3].indexOf(days) >= 0 ? days : 1,
@@ -458,5 +498,5 @@ function notifyAllowed_(prefs, courseId) {
 // 投稿のリンクから授業IDだけを取る。取れなければ null
 function courseIdFromLink_(link) {
   const m = String(link || '').match(/\/c\/([^/?#]+)/);
-  return m ? courseIdOfLink_(m[1]) : null;
+  return m ? decodeCourseId_(m[1]) : null;
 }

@@ -4,16 +4,13 @@
 const MATERIAL_MAX_BYTES = 4 * 1024 * 1024; // shortcut: 4MB まで(base64 で約 5.4MB を JSONP で返す), 大きい資料は Classroom で開く
 
 function materialResponse_(p) {
-  const callback = /^[A-Za-z_$][\w$]*$/.test(p.callback || '') ? p.callback : '';
   let res;
   try {
     res = fetchMaterial_(String(p.fileId || ''));
   } catch (e) {
     res = { error: String(e.message || e) };
   }
-  const body = JSON.stringify(res);
-  return ContentService.createTextOutput(callback ? callback + '(' + body + ')' : body)
-    .setMimeType(ContentService.MimeType.JAVASCRIPT);
+  return jsonpOut_(p.callback, res);
 }
 
 function fetchMaterial_(fileId) {
