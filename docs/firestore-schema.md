@@ -42,18 +42,19 @@ GAS(サービスアカウント)とアプリが、同じ Firestore を読み書�
 | `attachments` | 文字列(JSON) | GAS | `[{type,title,url,thumb?}]` |
 | `receivedAt` | 時刻 | GAS | 受け取った時刻(並び順に使う) |
 | `deleted` | 真偽 | GAS | 先生が削除した投稿(画面では出さない) |
-| `read` / `readAt` | 真偽 / 時刻 | GAS が `read:false` で作る。**アプリが既読にする** | 既読 |
+| `read` / `readAt` | 真偽 / 時刻 | GAS が `read:false` で作る(移行の分は `read:true`)。**アプリが既読にする** | 既読 |
 | `reminded` / `unreadNotified` | 真偽 | GAS | 期限の知らせ / 未読の再通知を送った印 |
 
 - 同じ `投稿ID` に保存すると上書きになるので、重複しない。
+- 古い投稿の移行(`gas/migrate-personal.gs`)は、`reminded:true`・`read:true` で書く。古い投稿で通知が鳴らないようにするため。既にある文書は上書きしない(`currentDocument.exists=false`)。
 - アプリが書けるのは `read` と `readAt` だけ。
 
 ### `courses/{授業ID}/posts/{投稿ID}`(授業ごとの投稿。全員宛て)
 
 - 書くのは GAS だけ。読めるのは、その授業に所属する本人(`users/{生徒ID}/courses/{授業ID}` があるとき)。
 - 中身は `users/.../announcements` と同じ項目(表示用・本文・期限・添付など)。既読は含めない。
-- `courseId`(文字列): 授業のID。授業の一覧(collection group)で読むときの条件に使う。GAS が書く。
-- `USE_COURSE_STORE` が false の間は、GAS がまだ書かない。ルールだけ先に入れている。
+- `courseId`(文字列): 授業のID(数字)。GAS が書く。
+- GAS は `USE_COURSE_STORE`(true)で書く。アプリは、お知らせを生徒ごとの文書から読むように切り替えたため、今は読まない(`USE_COURSE_POSTS` が false)。
 
 ### `users/{生徒ID}/readState/main`(授業単位に移ったあとの既読)
 
