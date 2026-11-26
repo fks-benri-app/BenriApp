@@ -113,6 +113,8 @@ src/pages/LinkPage.jsx        ログイン画面と、通知許可・再連携�
 src/components/               ログイン画面の部品、PWA の追加案内
 gas/                          GAS のソース(「GAS 側の設定」を参照)
 docs/notification-spec.md     通知の仕様(改訂版)
+docs/read-write-budget.md      読み取り・書き込みの見積もり(Spark の上限)
+docs/incident-log-2026-11.md  2026年11月の不具合の記録と方針
 firestore.rules               Firestore のセキュリティルール
 ```
 
