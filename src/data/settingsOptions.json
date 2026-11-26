@@ -25,5 +25,11 @@
       "O"
     ]
   },
-  "electiveSubjects": []
+  "electiveSubjects": [
+    "日本史",
+    "世界史",
+    "地理探究",
+    "生物",
+    "地学"
+  ]
 }
