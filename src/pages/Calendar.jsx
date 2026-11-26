@@ -7,7 +7,7 @@ import { useIdentity } from '../auth/identity';
 import { useProfile } from '../lib/profile/profile';
 import { recognizeWithPaddle } from '../lib/timetable/paddleOcr';
 import { buildGridByLabels } from '../lib/timetable/timetableGrid';
-import { WEEKDAYS, PERIODS, timetableKeyOf, loadTimetable, saveTimetable, clearTimetable, emptyTable, tableFromOcr, subjectsFor } from '../lib/timetable/ownTimetable';
+import { WEEKDAYS, PERIODS, timetableKeyOf, loadTimetable, saveTimetable, clearTimetable, emptyTable, tableFromOcr, subjectsFor, cellValue } from '../lib/timetable/ownTimetable';
 import { t } from '../lib/ui/text';
 
 const BASE_FONT_SIZE = 14;
@@ -134,7 +134,7 @@ export default function Calendar() {
   }
 
   function startEdit(day, period) {
-    setEditing({ day, period, value: table?.[day]?.[period] || '' });
+    setEditing({ day, period, value: cellValue(table?.[day]?.[period]).name });
   }
 
   function finishEdit() {
@@ -142,8 +142,9 @@ export default function Calendar() {
     const { day, period, value } = editing;
     setEditing(null);
     const text = value.trim();
-    if (text === (table?.[day]?.[period] || '')) return;
-    const next = { ...table, [day]: { ...table[day], [period]: text } };
+    const old = cellValue(table?.[day]?.[period]);
+    if (text === old.name) return;
+    const next = { ...table, [day]: { ...table[day], [period]: { name: text, room: old.room } } };
     commit(next);
   }
 
@@ -213,7 +214,7 @@ export default function Calendar() {
             <React.Fragment key={p}>
               <div style={labelStyle}>{p}</div>
               {WEEKDAYS.map((w) => {
-                const name = table?.[w]?.[p] || '';
+                const { name, room } = cellValue(table?.[w]?.[p]);
                 if (editing && editing.day === w && editing.period === p) {
                   return (
                     <input
@@ -229,7 +230,7 @@ export default function Calendar() {
                 }
                 return (
                   <button key={`${w}${p}`} type="button" onClick={() => startEdit(w, p)} aria-label={`${w}曜 ${p}限`} style={cellStyle}>
-                    {name || <span style={plusStyle} aria-hidden="true">+</span>}
+                    {name ? (<span>{name}{room && <span style={{ display: 'block', color: 'var(--text-muted)', fontSize: '0.857em' }}>{room}</span>}</span>) : <span style={plusStyle} aria-hidden="true">+</span>}
                   </button>
                 );
               })}
