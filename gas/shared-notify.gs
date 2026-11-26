@@ -226,10 +226,13 @@ function markClaimSent_(postKey, notifiedIds) {
 }
 
 // 複数の生徒の users/{ID}/announcements/{docId} にまとめて保存(saveAnnouncement_ と同じ項目)。
-// 書けた生徒の ID だけを返す。
-function saveAnnouncementsFor_(ids, docId, rec) {
+// 書けた生徒の ID だけを返す。opts(移行用): read=既読で書く、reminded=リマインド済みで書く、createOnly=既にあれば書かない。
+function saveAnnouncementsFor_(ids, docId, rec, opts) {
+  opts = opts || {};
   if (ids.length === 0) return [];
   const str = function (v) { return { stringValue: v || '' }; };
+  const due = dueFields_(rec);
+  if (opts.reminded && due.reminded) due.reminded = { booleanValue: true };
   const body = JSON.stringify({
     fields: {
       category: str(rec.category),
@@ -245,14 +248,15 @@ function saveAnnouncementsFor_(ids, docId, rec) {
       rawBody: str(rec.rawBody),
       postTitle: str(rec.postTitle),
       deleted: { booleanValue: !!rec.deleted },
-      ...dueFields_(rec),
-      read: { booleanValue: false },
+      ...due,
+      read: { booleanValue: !!opts.read },
     },
   });
   const token = getFirestoreToken_();
   const requests = ids.map(function (id) {
     return {
-      url: fsDocUrl_('/users/' + encodeURIComponent(id) + '/announcements/' + encodeURIComponent(docId)),
+      url: fsDocUrl_('/users/' + encodeURIComponent(id) + '/announcements/' + encodeURIComponent(docId)) +
+        (opts.createOnly ? '?currentDocument.exists=false' : ''),
       method: 'patch',
       contentType: 'application/json',
       headers: { Authorization: 'Bearer ' + token },
