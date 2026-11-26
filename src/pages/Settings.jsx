@@ -130,6 +130,7 @@ export default function Settings() {
   function onSelectTab(id) {
     if (id === 'home') navigate('/');
     else if (id === 'class') navigate('/class');
+    else if (id === 'calendar') navigate('/calendar');
   }
 
   function openFeedback() {

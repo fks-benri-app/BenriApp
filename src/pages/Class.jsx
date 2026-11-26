@@ -333,7 +333,7 @@ export default function Class() {
 
       <BottomNav
         active={activeTab}
-        onSelect={(id) => (id === 'settings' ? navigate('/settings') : id === 'home' ? navigate('/') : setActiveTab(id))}
+        onSelect={(id) => (id === 'settings' ? navigate('/settings') : id === 'home' ? navigate('/') : id === 'calendar' ? navigate('/calendar') : setActiveTab(id))}
       />
 
       {readAllAsk && (
