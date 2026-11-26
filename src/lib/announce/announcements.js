@@ -17,7 +17,7 @@ const cacheKey = (studentId) => 'announcements:' + studentId;
 
 // 授業ごとの投稿(courses/{授業ID}/posts)を読むか。false にすると、生徒ごとの announcements を読む(切り戻し用)。
 // 既読は授業の投稿なら users/{ID}/readState/main に書く。生徒ごとの announcements の既読(GAS の未読通知が見る)も続けて書く。
-const USE_COURSE_POSTS = true;
+const USE_COURSE_POSTS = false; // 生徒ごとの announcements を読む(授業ごとの投稿は読まない。読み取りの上限のため)
 // 「where in」で指定できる授業IDの数の上限(Firestore の制限)
 const COURSE_IDS_LIMIT = 30;
 const coursesKey = (studentId) => 'courses:' + studentId;
