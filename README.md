@@ -259,8 +259,24 @@ iPhone で、再連携の画面から戻れないときは、左下の「←」�
 
 ### 利用しているもの
 
-- [React](https://react.dev/)、[Vite](https://vitejs.dev/)、[React Router](https://reactrouter.com/)
-- [Firebase](https://firebase.google.com/)(Authentication、Firestore)
+画面(PWA)
+- [React](https://react.dev/)、[React DOM](https://react.dev/)、[React Router](https://reactrouter.com/)
+- [Vite](https://vitejs.dev/)(ビルド)、[@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react)
+- [Radix UI](https://www.radix-ui.com/)(チェックボックス・スイッチ・メニュー)
+- [react-grid-layout](https://github.com/react-grid-layout/react-grid-layout)(ホームのガジェットの配置)
+- [react-easy-crop](https://github.com/ValentinH/react-easy-crop)(プロフィール画像の切り抜き)
+- [react-icons](https://react-icons.github.io/react-icons/)(Tabler Icons の線のアイコン、ロゴ)
+- [Noto Sans JP](https://fontsource.org/fonts/noto-sans-jp)(`@fontsource/noto-sans-jp`、日本語フォント)
+
+データ・通知
+- [Firebase](https://firebase.google.com/)(Authentication、Firestore、Web SDK)
 - [Firebase Cloud Messaging](https://firebase.google.com/docs/cloud-messaging)(Web Push)
-- [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR)(PP-OCRv5、時間割読み取り)、[ONNX Runtime Web](https://onnxruntime.ai/)
+- [Google Apps Script](https://developers.google.com/apps-script)(Classroom・Gmail の取得、FCM の送信。Google 側の実行環境)
+
+時間割読み取り(テスト機能)
+- [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR)(PP-OCRv5)、[paddleocr](https://www.npmjs.com/package/paddleocr)(JavaScript 版)
+- [ONNX Runtime Web](https://onnxruntime.ai/)(`onnxruntime-web`)
+- [Tesseract.js](https://github.com/naptha/tesseract.js)(開発用の試験画面 `OcrTest` だけで使用)
+
+その他
 - ログイン画面のイラスト: [unDraw](https://undraw.co/)(`src/assets/images/other_svgs/login.svg`)
