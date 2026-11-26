@@ -7,7 +7,7 @@ import { useIdentity } from '../auth/identity';
 import { useProfile } from '../lib/profile/profile';
 import { recognizeWithPaddle } from '../lib/timetable/paddleOcr';
 import { buildGridByLabels } from '../lib/timetable/timetableGrid';
-import { WEEKDAYS, PERIODS, timetableKeyOf, loadTimetable, saveTimetable, emptyTable, tableFromOcr } from '../lib/timetable/ownTimetable';
+import { WEEKDAYS, PERIODS, timetableKeyOf, loadTimetable, saveTimetable, clearTimetable, emptyTable, tableFromOcr, subjectsFor } from '../lib/timetable/ownTimetable';
 import { t } from '../lib/ui/text';
 
 const BASE_FONT_SIZE = 14;
@@ -122,7 +122,7 @@ export default function Calendar() {
     setStatus(t('calendar.reading'));
     try {
       const items = await recognizeWithPaddle(file, { fine: true }, setStatus);
-      const grid = buildGridByLabels(items, []);
+      const grid = buildGridByLabels(items, subjectsFor(key));
       if (!grid) throw new Error(t('calendar.noHeading'));
       commit(tableFromOcr(grid));
     } catch (err) {
@@ -204,7 +204,7 @@ export default function Calendar() {
             gap: '0.429em',
           }}
         >
-          <div />
+          <button type="button" onClick={() => { clearTimetable(key); setTable(null); }} style={{ ...labelStyle, border: 'none', background: 'none', font: 'inherit', fontSize: '0.714em', color: 'var(--text-muted)', padding: 0, cursor: 'pointer' }}>{t('calendar.reset')}</button>
           {WEEKDAYS.map((w) => (
             <div key={w} style={{ ...labelStyle, color: 'var(--text-strong)', fontSize: '1em' }}>{w}</div>
           ))}

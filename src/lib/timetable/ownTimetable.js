@@ -1,6 +1,7 @@
 // 授業表(曜日×時限→授業名)の鍵・保存・OCR結果の変換。試作では端末にだけ保存する(GAS・スプレッドシートは次の段階)。
 import { storage } from '../data/storage';
 import { gradeOf } from '../profile/profile';
+import subjects from '../../data/timetableSubjects.json';
 
 export const WEEKDAYS = ['月', '火', '水', '木', '金'];
 export const PERIODS = [1, 2, 3, 4, 5, 6, 7];
@@ -28,8 +29,23 @@ export function saveTimetable(key, table) {
   storage.set(storageKey(key), JSON.stringify(table));
 }
 
+// 読み取りで照合する教科名(学年の数字で引く)
+export function subjectsFor(key) {
+  return subjects[key.split('-')[0]] || [];
+}
+
+export function clearTimetable(key) {
+  storage.remove(storageKey(key));
+}
+
 export function emptyTable() {
   return Object.fromEntries(WEEKDAYS.map((w) => [w, {}]));
+}
+
+// 教科名の候補に一致したら、その名前だけを使う(先生の名前・教室は入れない)。一致しなければ、学年の字と空白の後ろを落とす
+function nameOf(cell) {
+  if (cell.match) return cell.match.candidate;
+  return cell.lines.join('').replace(/^\d年/, '').split(/\s+/)[0] || '';
 }
 
 // buildGridByLabels の結果を、曜日→時限→授業名の表にする(読めなかった枠は空のまま)
@@ -38,7 +54,7 @@ export function tableFromOcr(grid) {
   grid.rows.forEach((row) => {
     row.cells.forEach((cell, c) => {
       const day = grid.dayLabels[c];
-      if (WEEKDAYS.includes(day) && cell.raw) table[day][row.period] = cell.lines.join(' ');
+      if (WEEKDAYS.includes(day) && cell.raw) table[day][row.period] = nameOf(cell);
     });
   });
   return table;
