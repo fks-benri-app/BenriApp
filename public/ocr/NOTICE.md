@@ -8,6 +8,7 @@
 | models/recognition/PP-OCRv5_mobile_rec_infer.onnx | 同上 | Apache-2.0 |
 | models/recognition/ppocrv5_dict.txt | 同上 | Apache-2.0 |
 | ort/ort.min.mjs、ort/ort-wasm-simd-threaded.* | npm `onnxruntime-web@1.30.0` | MIT(package.json の license 欄による) |
+| ort/ort-wasm-simd-threaded.jsep.* | npm `onnxruntime-web@1.30.0`(WebGPU・WebNN 用。ort.min.mjs が読みに行くため必要) | MIT |
 
 - 上の元の LICENSE 全文は、LICENSE-models.txt(モデル側)にあります。
 - onnxruntime-web の全文は、上流のリポジトリ(microsoft/onnxruntime)の LICENSE を参照してください。配布パッケージには同梱されていません。
