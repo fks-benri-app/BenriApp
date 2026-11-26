@@ -107,7 +107,8 @@ export default function Home() {
   function onSelectTab(id) {
     if (id === 'class') navigate('/class');
     else if (id === 'settings') navigate('/settings');
-    // ホームは今いる画面。カレンダーはまだ画面がない
+    else if (id === 'calendar') navigate('/calendar');
+    // ホームは今いる画面
   }
 
   return (

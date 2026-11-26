@@ -15,6 +15,7 @@ const OcrTest = lazy(() => import('./pages/dev/OcrTest'));
 const FcmTest = lazy(() => import('./pages/dev/FcmTest'));
 // お知らせ画面も、開いたときに読み込む(ホームの起動では読まない)
 const Class = lazy(() => import('./pages/Class'));
+const Calendar = lazy(() => import('./pages/Calendar'));
 // 通知の詳細設定は、ベルから開く大事な画面。オフラインでも開けるよう、遅延読み込みにしない
 // (遅延読み込みだと、読み込んだことがない部品がオフラインで取れず、真っ白になる)
 // ホームは起動直後に使うので、遅延読み込みにしない(切り替え時の白い点滅を防ぐ)
@@ -96,6 +97,7 @@ export default function App() {
           </RequireIdentity>
         }
       />
+      <Route path="/calendar" element={<Calendar />} />
       <Route path="/ocr-test" element={<OcrTest />} />
       <Route path="/fcm-test" element={<FcmTest />} />
       <Route path="*" element={<Navigate to="/" replace />} />
