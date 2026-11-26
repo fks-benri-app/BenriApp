@@ -43,7 +43,7 @@ function fsAllPosts_(fn) {
       orderBy: [{ field: { fieldPath: '__name__' }, direction: 'ASCENDING' }],
       limit: 300,
     };
-    if (last) q.startAfter = { values: [{ referenceValue: last }], before: false };
+    if (last) q.startAt = { values: [{ referenceValue: last }], before: false }; // before:false で、この文書の次から
     const res = fsRequest_(url, 'post', { structuredQuery: q });
     if (res.getResponseCode() >= 300) throw new Error('投稿の一覧の取得失敗: ' + res.getContentText());
     const rows = JSON.parse(res.getContentText()).filter(function (r) { return r.document; });
