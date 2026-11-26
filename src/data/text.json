@@ -1,7 +1,6 @@
 {
   "calendar": {
-    "title": "カレンダー",
-    "empty": "授業表はまだありません。"
+    "title": "カレンダー"
   },
   "link": {
     "gasUrlMissing": "src/config.js の GAS_URL がまだ設定されていません。",

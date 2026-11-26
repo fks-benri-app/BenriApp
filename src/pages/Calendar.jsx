@@ -1,4 +1,4 @@
-// カレンダー画面(試作): 月〜金 × 1〜7限の授業表の枠。中身(授業名)はまだ入れない。
+// カレンダー画面(試作): 月〜金 × 1〜7限の授業表の枠。画面いっぱいに並べ、授業名はまだ入れない。
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
@@ -22,13 +22,29 @@ const rootStyle = {
   flexDirection: 'column',
 };
 
+// 空の枠(あとで授業名を入れる)。右上に薄い「+」を置く
 const cellStyle = {
-  minHeight: '3.6em',
+  position: 'relative',
   borderRadius: '0.857em',
   background: 'var(--surface-2, var(--surface))',
   outline: '1px var(--line) solid',
   outlineOffset: '-1px',
   minWidth: 0,
+};
+
+const plusStyle = {
+  position: 'absolute',
+  right: '0.429em',
+  top: '0.429em',
+  width: '1.714em',
+  height: '1.714em',
+  borderRadius: '50%',
+  color: 'var(--text-faint)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  fontSize: '1em',
+  lineHeight: 1,
 };
 
 const labelStyle = {
@@ -50,8 +66,6 @@ export default function Calendar() {
     // カレンダーは今いる画面
   }
 
-  const gridCols = '2.2em repeat(5, minmax(0, 1fr))';
-
   return (
     <div style={rootStyle}>
       <TitleHeader title={t('calendar.title')} />
@@ -60,15 +74,23 @@ export default function Calendar() {
         style={{
           flex: 1,
           minHeight: 0,
-          overflowY: 'auto',
-          overscrollBehavior: 'contain',
-          padding: '0.857em 1.143em',
+          overflow: 'hidden',
+          padding: '0.571em 0',
           paddingLeft: 'max(16px, env(safe-area-inset-left, 0px))',
           paddingRight: 'max(16px, env(safe-area-inset-right, 0px))',
           boxSizing: 'border-box',
         }}
       >
-        <div style={{ display: 'grid', gridTemplateColumns: gridCols, gap: '0.429em' }}>
+        {/* 行: 見出し1行 + 1〜7限(高さは画面に合わせて均等に割る) */}
+        <div
+          style={{
+            height: '100%',
+            display: 'grid',
+            gridTemplateColumns: '1.6em repeat(5, minmax(0, 1fr))',
+            gridTemplateRows: 'auto repeat(7, minmax(0, 1fr))',
+            gap: '0.429em',
+          }}
+        >
           <div />
           {WEEKDAYS.map((w) => (
             <div key={w} style={{ ...labelStyle, color: 'var(--text-strong)', fontSize: '1em' }}>{w}</div>
@@ -78,15 +100,13 @@ export default function Calendar() {
             <React.Fragment key={p}>
               <div style={labelStyle}>{p}</div>
               {WEEKDAYS.map((w) => (
-                <div key={`${w}${p}`} style={cellStyle} aria-label={`${w}曜 ${p}限`} />
+                <div key={`${w}${p}`} style={cellStyle} aria-label={`${w}曜 ${p}限`}>
+                  <span style={plusStyle} aria-hidden="true">+</span>
+                </div>
               ))}
             </React.Fragment>
           ))}
         </div>
-
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.857em', margin: '1.143em 0 0', textAlign: 'center' }}>
-          {t('calendar.empty')}
-        </p>
       </main>
 
       <BottomNav active="calendar" onSelect={onSelectTab} />
