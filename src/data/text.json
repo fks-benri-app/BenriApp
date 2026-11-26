@@ -1,6 +1,14 @@
 {
   "calendar": {
-    "title": "カレンダー"
+    "title": "カレンダー",
+    "unavailable": "学年と講座(1年は組)がわかると、授業表を作れます。",
+    "upload": "画像をアップロード",
+    "manual": "手入力",
+    "camera": "カメラで撮影",
+    "reading": "読み取り中…",
+    "readFailed": "読み取りに失敗しました。",
+    "noHeading": "時間割の見出し(月曜日・1限目)が読めませんでした。撮り直すか、手入力してください。",
+    "localNote": "試作のため、この端末にだけ保存します。"
   },
   "link": {
     "gasUrlMissing": "src/config.js の GAS_URL がまだ設定されていません。",
