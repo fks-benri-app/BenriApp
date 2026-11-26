@@ -20,6 +20,25 @@ async function fetchBuffer(url) {
   return res.arrayBuffer();
 }
 
+// 裏で、読み込みに使うファイルを1つずつ取っておく。読むだけで、動かさない(ページの動きを重くしないため)
+export async function prefetchOcrParts() {
+  const urls = [
+    `${MODEL_BASE}/detection/PP-OCRv5_mobile_det_infer.ort`,
+    `${MODEL_BASE}/recognition/PP-OCRv5_mobile_rec_infer.onnx`,
+    `${MODEL_BASE}/recognition/ppocrv5_dict.txt`,
+    ORT_MODULE_URL,
+    `${ORT_BASE}ort-wasm-simd-threaded.mjs`,
+    `${ORT_BASE}ort-wasm-simd-threaded.wasm`,
+    `${ORT_BASE}ort-wasm-simd-threaded.jsep.mjs`,
+    `${ORT_BASE}ort-wasm-simd-threaded.jsep.wasm`,
+  ];
+  for (const u of urls) {
+    try {
+      await (await fetch(u, { cache: 'force-cache' })).arrayBuffer(); // 1つずつ(同時に持つ量を減らす)
+    } catch { /* 取れなければ、使うときにもう一度読む */ }
+  }
+}
+
 // 読み込みは1回だけ(2回目以降は、読み込み済みのものを使う)
 export function loadPaddle(onStatus = () => {}) {
   if (!servicePromise) {

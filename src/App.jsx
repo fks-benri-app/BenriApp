@@ -4,7 +4,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { useIdentity } from './auth/identity';
 import { markStartRedirectUsed, startsFromNotification } from './lib/announce/bootOpen';
 import { loadFirestore } from './lib/data/firestoreLazy';
-import { loadPaddle } from './lib/timetable/paddleOcr';
+import { prefetchOcrParts } from './lib/timetable/paddleOcr';
 import { listenForegroundMessages } from './lib/push/fcm';
 
 // 連携画面と設定画面は、開いたときに読み込む(最初の表示に必要な JS を減らす)
@@ -63,8 +63,8 @@ export default function App() {
       import('./pages/LinkPage').catch(() => {});
       import('./pages/NotifySettings').catch(() => {});
       loadFirestore().catch(() => {});
-      // 授業表の OCR の部品も裏で読む(省データモードの端末では読まない)
-      if (!navigator.connection?.saveData) loadPaddle().catch(() => {});
+      // 授業表の OCR の部品は、読むだけ取っておく(省データモードの端末では読まない)
+      if (!navigator.connection?.saveData) prefetchOcrParts();
     };
     const id = setTimeout(warm, 1500);
     return () => clearTimeout(id);
