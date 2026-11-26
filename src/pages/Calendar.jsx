@@ -9,6 +9,8 @@ import { recognizeWithPaddle } from '../lib/timetable/paddleOcr';
 import { buildGridByLabels } from '../lib/timetable/timetableGrid';
 import { WEEKDAYS, PERIODS, timetableKeyOf, loadTimetable, saveTimetable, clearTimetable, emptyTable, tableFromOcr, subjectsFor, cellValue } from '../lib/timetable/ownTimetable';
 import { t } from '../lib/ui/text';
+import { courseThemeOrNull, shaded } from '../lib/ui/courseTheme';
+import settingsOptions from '../data/settingsOptions.json';
 
 const BASE_FONT_SIZE = 14;
 
@@ -83,6 +85,7 @@ const buttonStyle = {
 
 export default function Calendar() {
   const navigate = useNavigate();
+  const todayIdx = new Date().getDay() - 1; // 月=0 … 金=4(土日は -1 や 5・6 になり、どこも光らない)
   const { identity } = useIdentity();
   const studentId = identity?.id;
   const profile = useProfile(studentId);
@@ -206,15 +209,19 @@ export default function Calendar() {
           }}
         >
           <button type="button" onClick={() => { clearTimetable(key); setTable(null); }} style={{ ...labelStyle, border: 'none', background: 'none', font: 'inherit', fontSize: '0.714em', color: 'var(--text-muted)', padding: 0, cursor: 'pointer' }}>{t('calendar.reset')}</button>
-          {WEEKDAYS.map((w) => (
-            <div key={w} style={{ ...labelStyle, color: 'var(--text-strong)', fontSize: '1em' }}>{w}</div>
+          {WEEKDAYS.map((w, i) => (
+            <div key={w} style={{ ...labelStyle, color: i === todayIdx ? 'var(--surface)' : 'var(--text-strong)', background: i === todayIdx ? 'var(--text-strong)' : 'none', borderRadius: '0.5em', fontSize: '1em' }}>{w}</div>
           ))}
 
           {PERIODS.map((p) => (
             <React.Fragment key={p}>
-              <div style={labelStyle}>{p}</div>
+              <div style={{ ...labelStyle, flexDirection: 'column', lineHeight: 1.2 }}>
+                <span>{p}</span>
+                <span style={{ fontSize: '0.714em', color: 'var(--text-muted)', fontWeight: 400 }}>{settingsOptions.periodTimes[p - 1]}</span>
+              </div>
               {WEEKDAYS.map((w) => {
                 const { name, room } = cellValue(table?.[w]?.[p]);
+                const theme = name ? courseThemeOrNull(name) : null; // 授業ごとの色(courseThemes.json)
                 if (editing && editing.day === w && editing.period === p) {
                   return (
                     <input
@@ -229,8 +236,8 @@ export default function Calendar() {
                   );
                 }
                 return (
-                  <button key={`${w}${p}`} type="button" onClick={() => startEdit(w, p)} aria-label={`${w}曜 ${p}限`} style={cellStyle}>
-                    {name ? (<span>{name}{room && <span style={{ display: 'block', color: 'var(--text-muted)', fontSize: '0.857em' }}>{room}</span>}</span>) : <span style={plusStyle} aria-hidden="true">+</span>}
+                  <button key={`${w}${p}`} type="button" onClick={() => startEdit(w, p)} aria-label={`${w}曜 ${p}限`} style={theme ? { ...cellStyle, background: shaded(theme.gradient), color: theme.textColor, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' } : cellStyle}>
+                    {name ? (<><span style={{ fontWeight: 600, lineHeight: 1.25 }}>{name}</span>{room && <span style={{ fontSize: '0.857em', opacity: 0.85 }}>{room}</span>}</>) : <span style={plusStyle} aria-hidden="true">+</span>}
                   </button>
                 );
               })}
