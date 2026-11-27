@@ -11,12 +11,14 @@ import { WEEKDAYS, PERIODS, timetableKeyOf, loadTimetable, saveTimetable, clearT
 import { t } from '../lib/ui/text';
 import { courseThemeOrNull, shaded } from '../lib/ui/courseTheme';
 import timeTemplates from '../data/timeTemplates.json';
+import subjectShort from '../data/subjectShort.json';
 import { THEMES } from '../lib/ui/themes';
 
 const COLUMNS = [...WEEKDAYS, '土']; // 土: 土曜日の列
 const LONG_PRESS_MS = 500; // カードを長押ししたら、授業名を直せる
 const TEMPLATE = timeTemplates.templates[timeTemplates.default]; // 時程(仮。運営が番号で管理する予定)
 const startOf = (p) => TEMPLATE.periods.find((x) => x.period === p)?.start || '';
+const shortName = (name) => subjectShort[name] || name; // 省略形(無ければ、そのまま)
 
 const BASE_FONT_SIZE = 14;
 
@@ -41,12 +43,13 @@ const cellStyle = {
   outlineOffset: '-1px',
   minWidth: 0,
   overflow: 'hidden',
-  padding: '0.286em',
+  padding: '0.143em 0.214em',
   boxSizing: 'border-box',
   textAlign: 'left',
-  fontSize: '0.714em', // 文字を小さくして、見切れないようにする
+  aspectRatio: '2 / 1', // 紙の時間割と同じ比率(幅の半分の高さ)
+  fontSize: '0.643em', // 文字を小さくして、見切れないようにする
   color: 'var(--text-strong)',
-  lineHeight: 1.25,
+  lineHeight: 1.15,
   border: 'none',
   font: 'inherit',
   WebkitTouchCallout: 'none', // 長押しで、メニューや文字選択を出さない
@@ -65,7 +68,7 @@ const nameStyle = {
   overflowWrap: 'anywhere',
 };
 
-const roomStyle = { fontSize: '0.9em', opacity: 0.85, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' };
+const roomStyle = { fontSize: '0.889em', opacity: 0.85, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' };
 
 const labelStyle = {
   color: 'var(--text-muted)',
@@ -288,9 +291,8 @@ export default function Calendar() {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: '2.6em repeat(6, minmax(0, 1fr))',
-              gridTemplateRows: 'auto repeat(7, 3.6em)',
-              gap: '0.357em',
+              gridTemplateColumns: '2.4em repeat(6, minmax(0, 1fr))',
+              gap: '0.214em',
             }}
           >
             <div />
@@ -318,14 +320,14 @@ export default function Calendar() {
                         onChange={(e) => setEditing({ ...editing, value: e.target.value })}
                         onBlur={finishEdit}
                         onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
-                        style={{ ...cellStyle, font: 'inherit', fontSize: '0.714em', padding: '0.214em', minWidth: 0 }}
+                        style={{ ...cellStyle, font: 'inherit', fontSize: '0.643em', padding: '0.143em', minWidth: 0 }}
                       />
                     );
                   }
                   const base = theme ? { ...cellStyle, background: shaded(theme.gradient), color: theme.textColor } : name ? cellStyle : emptyCellStyle;
                   return (
                     <div key={`${w}${p}`} role="button" tabIndex={0} aria-label={`${w}曜 ${p}限`} {...pressProps(w, p)} style={base}>
-                      {name && <span style={nameStyle}>{name}</span>}
+                      {name && <span style={nameStyle}>{shortName(name)}</span>}
                       {name && room && <span style={roomStyle}>{room}</span>}
                     </div>
                   );
