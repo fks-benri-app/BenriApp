@@ -108,6 +108,18 @@ const buttonStyle = {
   maxWidth: '20em',
 };
 
+// 読み取り中の処理を、画面の外で持つ(ページを離れて戻っても、読み取りの結果を受け取れるように)
+const readingByKey = new Map(); // 授業表の鍵 → 読み取りの処理
+
+// 写真を読んで、表にして、保存する。保存できたかを返す
+async function readPhoto(file, key, onStatus) {
+  const items = await recognizeWithPaddle(file, { fine: true }, onStatus);
+  const grid = buildGridByLabels(items, subjectsFor(key));
+  if (!grid) throw new Error(t('calendar.noHeading'));
+  const next = tableFromOcr(grid);
+  return { next, saved: saveTimetable(key, next) };
+}
+
 export default function Calendar() {
   const navigate = useNavigate();
   const todayIdx = new Date().getDay() - 1; // 月=0 … 金=4(土日は -1 や 5・6 になり、どこも光らない)
@@ -126,8 +138,19 @@ export default function Calendar() {
   const uploadRef = useRef(null);
   const cameraRef = useRef(null);
 
+  // 前の画面で始めた読み取りが続いていれば、その結果が出るまで待つ
   useEffect(() => {
     setTable(key ? loadTimetable(key) : null);
+    const reading = key && readingByKey.get(key);
+    if (!reading) return;
+    setBusy(true);
+    setStatus(t('calendar.reading'));
+    const done = () => {
+      setBusy(false);
+      setStatus('');
+      setTable(loadTimetable(key));
+    };
+    reading.then(done, done);
   }, [key]);
 
 
@@ -150,11 +173,12 @@ export default function Calendar() {
     setBusy(true);
     setError('');
     setStatus(t('calendar.reading'));
+    const reading = readPhoto(file, key, setStatus).finally(() => readingByKey.delete(key));
+    readingByKey.set(key, reading);
     try {
-      const items = await recognizeWithPaddle(file, { fine: true }, setStatus);
-      const grid = buildGridByLabels(items, subjectsFor(key));
-      if (!grid) throw new Error(t('calendar.noHeading'));
-      commit(tableFromOcr(grid));
+      const { next, saved } = await reading;
+      setTable(next);
+      if (!saved) setError(t('calendar.saveFailed'));
     } catch (err) {
       setError(err?.message || t('calendar.readFailed'));
     } finally {
