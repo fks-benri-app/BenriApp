@@ -39,7 +39,7 @@
    "theme": "shuiro"
   },
   {
-   "match": "論理表現",
+   "match": "論理・表現",
    "theme": "pink"
   },
   {
@@ -121,6 +121,10 @@
   {
    "match": "とんぼ祭",
    "theme": "orangeRed"
+  },
+  {
+   "match": "LHR",
+   "theme": "gray"
   },
   {
    "match": "組",
