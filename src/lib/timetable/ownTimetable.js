@@ -28,7 +28,7 @@ export function loadTimetable(key) {
 }
 
 export function saveTimetable(key, table) {
-  storage.set(storageKey(key), JSON.stringify(table));
+  return storage.set(storageKey(key), JSON.stringify(table));
 }
 
 // 読み取りで照合する教科名(学年の教科 + その学年の選択教科。重ならないように)
