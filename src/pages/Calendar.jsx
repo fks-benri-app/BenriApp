@@ -17,7 +17,10 @@ import { THEMES } from '../lib/ui/themes';
 const COLUMNS = [...WEEKDAYS, '土']; // 土: 土曜日の列
 const LONG_PRESS_MS = 500; // カードを長押ししたら、授業名を直せる
 const TEMPLATE = timeTemplates.templates[timeTemplates.default]; // 時程(仮。運営が番号で管理する予定)
-const startOf = (p) => TEMPLATE.periods.find((x) => x.period === p)?.start || '';
+const rangeOf = (p) => {
+  const x = TEMPLATE.periods.find((y) => y.period === p);
+  return x ? `${x.start}〜${x.end}` : '';
+};
 const shortName = (name) => subjectShort[name] || name; // 省略形(無ければ、そのまま)
 
 const BASE_FONT_SIZE = 14;
@@ -305,8 +308,8 @@ export default function Calendar() {
             {PERIODS.map((p) => (
               <React.Fragment key={p}>
                 <div style={{ ...labelStyle, flexDirection: 'column', fontSize: '1.19cqi', lineHeight: 1.2 }}>
-                  <span>{p}</span>
-                  <span style={{ fontSize: '0.9cqi', color: 'var(--text-muted)', fontWeight: 400 }}>{startOf(p)}</span>
+                  <span>{p}限</span>
+                  <span style={{ fontSize: '0.8cqi', color: 'var(--text-muted)', fontWeight: 400, whiteSpace: 'nowrap' }}>{rangeOf(p)}</span>
                 </div>
                 {COLUMNS.map((w) => {
                   const { name, room } = cellValue(table?.[w]?.[p]);
