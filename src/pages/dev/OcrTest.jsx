@@ -139,7 +139,7 @@ export default function OcrTest() {
           <div style={{ display: 'flex', gap: '0.6em', flexWrap: 'wrap' }}>
             <label style={pickBtn}>
               写真ライブラリから選ぶ
-              <input type="file" accept="image/*" onChange={onPick} style={hiddenInput} />
+              <input type="file" accept="image/*,application/pdf" onChange={onPick} style={hiddenInput} />
             </label>
             <label style={pickBtn}>
               カメラで撮る
