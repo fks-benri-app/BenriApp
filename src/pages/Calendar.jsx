@@ -40,13 +40,16 @@ const rootStyle = {
 
 const cellStyle = {
   position: 'relative',
-  borderRadius: '0.4cqi',
+  borderRadius: '0.7cqi',
+  display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'space-between', // 上に授業名、下に教室と時間(Canva の見本)
   background: 'var(--surface-2, var(--surface))',
   outline: '1px var(--line) solid',
   outlineOffset: '-1px',
   minWidth: 0,
   overflow: 'hidden',
-  padding: '0.7cqi',
+  padding: '1cqi',
   boxSizing: 'border-box',
   textAlign: 'left',
   aspectRatio: '1.95 / 1', // 紙の時間割と同じ比率(画像の実測。幅に対して高さが約半分)
@@ -62,15 +65,17 @@ const cellStyle = {
 const emptyCellStyle = { ...cellStyle, background: 'none', outline: 'none' };
 
 const nameStyle = {
-  fontWeight: 600,
-  display: '-webkit-box',
-  WebkitLineClamp: 2,
-  WebkitBoxOrient: 'vertical',
+  fontSize: '2.65cqi',
+  fontWeight: 700,
+  lineHeight: 1.15,
   overflow: 'hidden',
-  overflowWrap: 'anywhere',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
 };
 
-const roomStyle = { fontSize: '0.889em', opacity: 0.85, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' };
+const bottomRowStyle = { display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '0.5cqi', minWidth: 0 };
+const roomStyle = { fontSize: '1.78cqi', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' };
+const timeStyle = { fontSize: '1.54cqi', fontWeight: 400, opacity: 0.9, marginLeft: 'auto', whiteSpace: 'nowrap' };
 
 const labelStyle = {
   color: 'var(--text-muted)',
@@ -309,7 +314,6 @@ export default function Calendar() {
               <React.Fragment key={p}>
                 <div style={{ ...labelStyle, flexDirection: 'column', fontSize: '1.19cqi', lineHeight: 1.2 }}>
                   <span>{p}限</span>
-                  <span style={{ fontSize: '0.8cqi', color: 'var(--text-muted)', fontWeight: 400, whiteSpace: 'nowrap' }}>{rangeOf(p)}</span>
                 </div>
                 {COLUMNS.map((w) => {
                   const { name, room } = cellValue(table?.[w]?.[p]);
@@ -331,7 +335,12 @@ export default function Calendar() {
                   return (
                     <div key={`${w}${p}`} role="button" tabIndex={0} aria-label={`${w}曜 ${p}限`} {...pressProps(w, p)} style={base}>
                       {name && <span style={nameStyle}>{shortName(name)}</span>}
-                      {name && room && <span style={roomStyle}>{room}</span>}
+                      {name && (
+                        <div style={bottomRowStyle}>
+                          <span style={roomStyle}>{room}</span>
+                          <span style={timeStyle}>{rangeOf(p)}</span>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
