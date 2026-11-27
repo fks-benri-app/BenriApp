@@ -24,10 +24,19 @@ function loadService(post) {
       const ort = await import(/* @vite-ignore */ ORT_MODULE_URL);
       ort.env.wasm.wasmPaths = ORT_BASE;
       ort.env.wasm.numThreads = 1; // 複数スレッドには、特別な HTTP ヘッダーが要るので使わない
-      // 推論の実行先を WebGPU 優先にする(使えない端末は ORT が wasm に戻す)。paddleocr は設定を渡さないため、ここで包む
+      // 推論の実行先を WebGPU 優先にする。paddleocr は設定を渡さないため、ここで包む。
+      // WebGPU でセッションを作れないモデル(演算が未対応)は、wasm で作り直す
       const ortGpu = {
         ...ort,
-        InferenceSession: { create: (buf) => ort.InferenceSession.create(buf, { executionProviders: ['webgpu', 'wasm'] }) },
+        InferenceSession: {
+          create: async (buf) => {
+            try {
+              return await ort.InferenceSession.create(buf, { executionProviders: ['webgpu', 'wasm'] });
+            } catch {
+              return ort.InferenceSession.create(buf, { executionProviders: ['wasm'] });
+            }
+          },
+        },
       };
       const [detModel, recModel, dictText] = await Promise.all([
         fetchBuffer(`${MODEL_BASE}/detection/PP-OCRv5_mobile_det_infer.ort`),
