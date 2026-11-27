@@ -75,17 +75,28 @@ self.onmessage = async (e) => {
   const { id, file, fine } = e.data;
   const post = (msg) => self.postMessage({ id, ...msg });
   try {
+    const t0 = performance.now();
     const service = await loadService(post);
+    const tLoaded = performance.now();
     post({ type: 'status', text: '写真を読み込み中…' });
     const pixels = await fileToPixels(file);
     post({ type: 'status', text: '文字を探しています…' });
+    // 段階の時間: 読み込み(初回だけ大きい)・検出(最初の認識の知らせまで)・認識(残り)
+    const tStart = performance.now();
+    let tRec = null;
     const results = await service.recognize(pixels, {
       detection: detectionOptions(fine),
       onProgress(p) {
         if (p.type === 'det') post({ type: 'status', text: '文字を探しています…' });
-        else if (p.type === 'rec' && p.progress) post({ type: 'status', text: `読み取り中 ${p.progress.current}/${p.progress.total}` });
+        else if (p.type === 'rec' && p.progress) {
+          if (tRec === null) tRec = performance.now();
+          post({ type: 'status', text: `読み取り中 ${p.progress.current}/${p.progress.total}` });
+        }
       },
     });
+    const tEnd = performance.now();
+    const sec = (ms) => Math.round(ms / 100) / 10;
+    const timing = { load: sec(tLoaded - t0), detect: sec((tRec ?? tEnd) - tStart), recognize: sec(tEnd - (tRec ?? tEnd)) };
     const items = results
       .filter((r) => r.text && r.text.trim())
       .map((r) => ({
@@ -93,7 +104,7 @@ self.onmessage = async (e) => {
         confidence: Math.round(r.confidence * 100),
         bbox: { x0: r.box.x, y0: r.box.y, x1: r.box.x + r.box.width, y1: r.box.y + r.box.height },
       }));
-    post({ type: 'done', items });
+    post({ type: 'done', items, timing });
   } catch (err) {
     post({ type: 'error', message: err?.message || String(err) });
   }

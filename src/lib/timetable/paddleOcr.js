@@ -38,13 +38,16 @@ function getWorker() {
   if (!worker) {
     worker = new Worker(new URL('./ocr.worker.js', import.meta.url), { type: 'module' });
     worker.onmessage = (e) => {
-      const { id, type, text, items, message } = e.data;
+      const { id, type, text, items, message, timing } = e.data;
       const job = pending.get(id);
       if (!job) return;
       if (type === 'status') job.onStatus(text);
       else {
         pending.delete(id);
-        if (type === 'done') job.resolve(items);
+        if (type === 'done') {
+          job.onTiming(timing);
+          job.resolve(items);
+        }
         else job.reject(new Error(message));
       }
     };
@@ -60,10 +63,10 @@ function getWorker() {
 }
 
 // 写真を読んで、行ごとの { text, confidence(0〜100), bbox: {x0,y0,x1,y1} } を返す。文字認識は Worker で行う
-export function recognizeWithPaddle(file, { fine = true } = {}, onStatus = () => {}) {
+export function recognizeWithPaddle(file, { fine = true } = {}, onStatus = () => {}, onTiming = () => {}) {
   const id = ++seq;
   return new Promise((resolve, reject) => {
-    pending.set(id, { resolve, reject, onStatus });
+    pending.set(id, { resolve, reject, onStatus, onTiming });
     getWorker().postMessage({ id, file, fine });
   });
 }
