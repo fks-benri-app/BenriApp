@@ -51,7 +51,6 @@ const cellStyle = {
   color: 'var(--text-strong)',
   lineHeight: 1.2,
   border: 'none',
-  font: 'inherit',
   WebkitTouchCallout: 'none', // 長押しで、メニューや文字選択を出さない
   userSelect: 'none',
 };
