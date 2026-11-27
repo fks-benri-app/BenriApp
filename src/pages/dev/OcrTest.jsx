@@ -32,6 +32,7 @@ export default function OcrTest() {
   const [engine, setEngine] = useState('paddle'); // 'paddle' | 'tesseract'
   const [fine, setFine] = useState(true);        // PaddleOCR: 検出を細かくする(Zenn の記事の設定)
   const [elapsed, setElapsed] = useState(0);        // 読み取りにかかった時間(ミリ秒)
+  const [timing, setTiming] = useState(null);       // 段階ごとの時間(秒): load・detect・recognize
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState('');
   const [error, setError] = useState('');
@@ -70,12 +71,13 @@ export default function OcrTest() {
     setRaw(null);
     setEdits({});
     setElapsed(0);
+    setTiming(null);
     setProgress('文字認識を準備中…');
     const t0 = Date.now();
     try {
       if (engine === 'paddle') {
         // PaddleOCR: 行ごとに、文字・信頼度・位置が返る
-        const items = await recognizeWithPaddle(file, { fine }, setProgress);
+        const items = await recognizeWithPaddle(file, { fine }, setProgress, setTiming);
         setRaw({
           text: items.map((i) => i.text).join('\n'),
           lines: items.map((i) => ({ text: i.text, confidence: i.confidence })),
@@ -196,6 +198,7 @@ export default function OcrTest() {
         {busy && <div style={{ color: 'var(--text-muted)', fontSize: '0.857em' }}>{progress}</div>}
         {error && <div style={{ color: '#b91c1c', fontSize: '0.929em' }}>{error}</div>}
         {raw && elapsed > 0 && <div style={{ color: 'var(--text-muted)', fontSize: '0.786em' }}>読み取りにかかった時間: {(elapsed / 1000).toFixed(1)}秒(読み込みを含む)</div>}
+        {raw && timing && <div style={{ color: 'var(--text-muted)', fontSize: '0.786em' }}>内訳: 読み込み {timing.load}秒・検出 {timing.detect}秒・認識 {timing.recognize}秒</div>}
 
         {raw && (
           <>
