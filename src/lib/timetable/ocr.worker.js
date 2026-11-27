@@ -24,6 +24,11 @@ function loadService(post) {
       const ort = await import(/* @vite-ignore */ ORT_MODULE_URL);
       ort.env.wasm.wasmPaths = ORT_BASE;
       ort.env.wasm.numThreads = 1; // 複数スレッドには、特別な HTTP ヘッダーが要るので使わない
+      // 推論の実行先を WebGPU 優先にする(使えない端末は ORT が wasm に戻す)。paddleocr は設定を渡さないため、ここで包む
+      const ortGpu = {
+        ...ort,
+        InferenceSession: { create: (buf) => ort.InferenceSession.create(buf, { executionProviders: ['webgpu', 'wasm'] }) },
+      };
       const [detModel, recModel, dictText] = await Promise.all([
         fetchBuffer(`${MODEL_BASE}/detection/PP-OCRv5_mobile_det_infer.ort`),
         fetchBuffer(`${MODEL_BASE}/recognition/PP-OCRv5_mobile_rec_infer.onnx`),
@@ -39,7 +44,7 @@ function loadService(post) {
       const dictionary = ['', ...lines.slice(1), ' '];
       post({ type: 'status', text: '文字認識を準備中…' });
       return PaddleOcrService.createInstance({
-        ort,
+        ort: ortGpu,
         modelPreset: 'PP-OCRv5_mobile',
         detection: { modelBuffer: detModel },
         recognition: { modelBuffer: recModel, charactersDictionary: dictionary },
