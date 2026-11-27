@@ -140,7 +140,7 @@ export default function Calendar() {
 
   function commit(next) {
     setTable(next);
-    saveTimetable(key, next);
+    if (!saveTimetable(key, next)) setError(t('calendar.saveFailed'));
   }
 
   async function onPick(e) {
@@ -249,6 +249,7 @@ export default function Calendar() {
           </div>
         </div>
 
+        {error && <p style={{ color: 'var(--text-strong)', fontSize: '0.857em', margin: 0 }}>{error}</p>}
         {/* 週の表(曜日・日付・1〜7限)。日付を押すと、その日の授業が下の一覧に出る */}
         <div style={{ flexShrink: 0, background: 'var(--surface-2, var(--surface))', borderRadius: '1.714em', outline: '1px var(--line) solid', outlineOffset: '-1px', padding: '1.429em' }}>
           <div

@@ -15,11 +15,13 @@ export const storage = {
       return null;
     }
   },
+  // 保存できたら true。失敗したら false(呼び出し側が、利用者に知らせるかを決める)
   set(key, value) {
     try {
       localStorage.setItem(PREFIX + key, value);
+      return true;
     } catch {
-      // 保存できなくても動作は続ける
+      return false;
     }
   },
   remove(key) {
