@@ -37,19 +37,19 @@ const rootStyle = {
 
 const cellStyle = {
   position: 'relative',
-  borderRadius: '0.714em',
+  borderRadius: '0.4cqi',
   background: 'var(--surface-2, var(--surface))',
   outline: '1px var(--line) solid',
   outlineOffset: '-1px',
   minWidth: 0,
   overflow: 'hidden',
-  padding: '0.143em 0.214em',
+  padding: '0.7cqi',
   boxSizing: 'border-box',
   textAlign: 'left',
-  aspectRatio: '2 / 1', // 紙の時間割と同じ比率(幅の半分の高さ)
-  fontSize: '0.643em', // 文字を小さくして、見切れないようにする
+  aspectRatio: '1.95 / 1', // 紙の時間割と同じ比率(画像の実測。幅に対して高さが約半分)
+  fontSize: '1.19cqi', // 紙の時間割と同じ大きさ(表の幅に比例する。cqi は表の幅の1%)
   color: 'var(--text-strong)',
-  lineHeight: 1.15,
+  lineHeight: 1.2,
   border: 'none',
   font: 'inherit',
   WebkitTouchCallout: 'none', // 長押しで、メニューや文字選択を出さない
@@ -291,22 +291,23 @@ export default function Calendar() {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: '2.4em repeat(6, minmax(0, 1fr))',
-              gap: '0.214em',
+              containerType: 'inline-size', // 中の大きさを、表の幅に比例させる
+              gridTemplateColumns: '0.46fr repeat(6, 1fr)', // 時限の列は、曜日の列の約0.46倍(紙と同じ)
+              gap: 0,
             }}
           >
             <div />
             {COLUMNS.map((w, i) => (
-              <div key={w} style={{ ...labelStyle, fontSize: '0.857em', color: w === '土' ? 'var(--text-strong)' : 'var(--text-muted)' }}>
+              <div key={w} style={{ ...labelStyle, aspectRatio: '6.5 / 1', fontSize: '0.98cqi', color: w === '土' ? 'var(--text-strong)' : 'var(--text-muted)' }}>
                 {i === todayIdx ? <span style={todayStyle}>{w}</span> : w}
               </div>
             ))}
 
             {PERIODS.map((p) => (
               <React.Fragment key={p}>
-                <div style={{ ...labelStyle, flexDirection: 'column', lineHeight: 1.2 }}>
+                <div style={{ ...labelStyle, flexDirection: 'column', fontSize: '1.19cqi', lineHeight: 1.2 }}>
                   <span>{p}</span>
-                  <span style={{ fontSize: '0.643em', color: 'var(--text-muted)', fontWeight: 400 }}>{startOf(p)}</span>
+                  <span style={{ fontSize: '0.9cqi', color: 'var(--text-muted)', fontWeight: 400 }}>{startOf(p)}</span>
                 </div>
                 {COLUMNS.map((w) => {
                   const { name, room } = cellValue(table?.[w]?.[p]);
@@ -320,7 +321,7 @@ export default function Calendar() {
                         onChange={(e) => setEditing({ ...editing, value: e.target.value })}
                         onBlur={finishEdit}
                         onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
-                        style={{ ...cellStyle, font: 'inherit', fontSize: '0.643em', padding: '0.143em', minWidth: 0 }}
+                        style={{ ...cellStyle, font: 'inherit', fontSize: '1.19cqi', padding: '0.7cqi', minWidth: 0 }}
                       />
                     );
                   }
