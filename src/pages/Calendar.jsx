@@ -50,6 +50,9 @@ const cellStyle = {
   font: 'inherit',
 };
 
+// 空の枠は面の白の上に何も描かず、+ だけ置く(参考の表と同じ)
+const emptyCellStyle = { ...cellStyle, background: 'none', outline: 'none' };
+
 const plusStyle = {
   position: 'absolute',
   right: '0.429em',
@@ -212,7 +215,7 @@ export default function Calendar() {
         }}
       >
         {/* 表の面(白い角丸)。右下の丸いボタンは「作り直す」 */}
-        <div style={{ position: 'relative', flexShrink: 0, background: 'var(--surface-2, var(--surface))', borderRadius: '1.714em', outline: '1px var(--line) solid', outlineOffset: '-1px', padding: '1.143em' }}>
+        <div style={{ position: 'relative', flexShrink: 0, background: 'var(--surface-2, var(--surface))', borderRadius: '1.714em', outline: '1px var(--line) solid', outlineOffset: '-1px', padding: '1.429em' }}>
           <div
             style={{
               display: 'grid',
@@ -223,7 +226,9 @@ export default function Calendar() {
           >
             <div />
             {COLUMNS.map((w, i) => (
-              <div key={w} style={{ ...labelStyle, color: i === todayIdx ? 'var(--surface)' : 'var(--text-strong)', background: i === todayIdx ? 'var(--text-strong)' : 'none', borderRadius: '0.5em', fontSize: '1em' }}>{w}</div>
+              <div key={w} style={{ ...labelStyle, fontSize: '0.929em', color: w === '土' ? 'var(--text-strong)' : 'var(--text-muted)' }}>
+                <span style={i === todayIdx ? { width: '2.286em', height: '2.286em', borderRadius: '50%', background: shaded(THEMES.orangeRed.gradient), color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 } : undefined}>{w}</span>
+              </div>
             ))}
 
             {PERIODS.map((p) => (
@@ -249,7 +254,7 @@ export default function Calendar() {
                     );
                   }
                   return (
-                    <button key={`${w}${p}`} type="button" onClick={() => startEdit(w, p)} aria-label={`${w}曜 ${p}限`} style={theme ? { ...cellStyle, background: shaded(theme.gradient), color: theme.textColor, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' } : cellStyle}>
+                    <button key={`${w}${p}`} type="button" onClick={() => startEdit(w, p)} aria-label={`${w}曜 ${p}限`} style={theme ? { ...cellStyle, background: shaded(theme.gradient), color: theme.textColor, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' } : name ? cellStyle : emptyCellStyle}>
                       {name ? (<><span style={{ fontWeight: 600, lineHeight: 1.25 }}>{name}</span>{room && <span style={{ fontSize: '0.857em', opacity: 0.85 }}>{room}</span>}</>) : <span style={plusStyle} aria-hidden="true">+</span>}
                     </button>
                   );
