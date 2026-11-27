@@ -30,6 +30,8 @@ function precacheManifest() {
 export default defineConfig({
   base: '/BenriApp/',
   plugins: [react(), precacheManifest()],
+  // Worker は ES モジュールで作る(文字認識を画面とは別のスレッドで動かすため)
+  worker: { format: 'es' },
   build: {
     // 20KB以下の画像(下のアイコンなど)は別ファイルにせず、JSの中に埋め込む。
     // iPhoneのホーム画面から起動した直後に、画像の読み込みが失敗するのを防ぐ
