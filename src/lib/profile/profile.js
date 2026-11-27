@@ -25,6 +25,10 @@ export function courseLettersFor(id) {
   return grade ? (OPTIONS.courseLettersByGrade[String(grade)] || []) : [];
 }
 
+// 学年の選択教科の群(例: { 社会: [...], 理科: [...] })。選択教科が無い学年は空
+export const electiveGroupsOf = (grade) => (grade ? (OPTIONS.electiveSubjectsByGrade[String(grade)] || {}) : {});
+export const electiveSubjectsOf = (grade) => Object.values(electiveGroupsOf(grade)).flat();
+
 const EMPTY = { courseLetter: '', electiveSubjects: [] };
 const profileKey = (id) => 'profile:' + id;
 

@@ -1,6 +1,6 @@
 // 授業表(曜日×時限→授業名)の鍵・保存・OCR結果の変換。試作では端末にだけ保存する(GAS・スプレッドシートは次の段階)。
 import { storage } from '../data/storage';
-import { gradeOf } from '../profile/profile';
+import { gradeOf, electiveSubjectsOf } from '../profile/profile';
 import subjects from '../../data/timetableSubjects.json';
 import settingsOptions from '../../data/settingsOptions.json';
 
@@ -31,10 +31,14 @@ export function saveTimetable(key, table) {
   storage.set(storageKey(key), JSON.stringify(table));
 }
 
-// 読み取りで照合する教科名(学年の教科 + 選択教科)
+// 読み取りで照合する教科名(学年の教科 + その学年の選択教科。重ならないように)
 export function subjectsFor(key) {
-  return [...(subjects[key.split('-')[0]] || []), ...settingsOptions.electiveSubjects];
+  const grade = key.split('-')[0];
+  return [...new Set([...(subjects[grade] || []), ...electiveSubjectsOf(grade)])];
 }
+
+// 全学年の選択教科(表の枠に選択教科の印を付けるため)
+const ALL_ELECTIVES = Object.keys(settingsOptions.electiveSubjectsByGrade).flatMap((g) => electiveSubjectsOf(g));
 
 export function clearTimetable(key) {
   storage.remove(storageKey(key));
@@ -53,7 +57,7 @@ function cellOf(cell) {
   const tokens = text.split(/\s+/).filter(Boolean);
   const name = cell.match ? cell.match.candidate : text.replace(/^\d年/, '').split(/\s+/)[0] || '';
   const room = tokens.find((x) => ROOM.test(x) && x !== name) || '';
-  return { name, room, elective: settingsOptions.electiveSubjects.includes(name) };
+  return { name, room, elective: ALL_ELECTIVES.includes(name) };
 }
 
 // 保存の形(新: { name, room } / 旧: 文字だけ)を { name, room } にそろえる
