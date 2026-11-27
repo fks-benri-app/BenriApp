@@ -6,6 +6,7 @@ import settingsOptions from '../../data/settingsOptions.json';
 
 export const WEEKDAYS = ['月', '火', '水', '木', '金'];
 export const PERIODS = [1, 2, 3, 4, 5, 6, 7];
+const DAY_LABELS = [...WEEKDAYS, '土']; // 読み取りで受ける曜日の見出し
 
 // 共有の鍵: 1年は「学年-組」(例 1-2)、2・3年は「学年-講座の記号」(例 2-A)。対象外は null
 export function timetableKeyOf(studentId, courseLetter) {
@@ -67,7 +68,7 @@ export function tableFromOcr(grid) {
   grid.rows.forEach((row) => {
     row.cells.forEach((cell, c) => {
       const day = grid.dayLabels[c];
-      if (WEEKDAYS.includes(day) && cell.raw) table[day][row.period] = cellOf(cell);
+      if (DAY_LABELS.includes(day) && cell.raw) (table[day] ||= {})[row.period] = cellOf(cell);
     });
   });
   return table;
