@@ -1,7 +1,7 @@
 // 名前のカードを押したときの設定(アイコン画像・講座・選択教科)。ダイアログは共通の見た目。
 import React, { useEffect, useRef, useState } from 'react';
 import ModalDialog, { DialogButton } from '../../components/ModalDialog';
-import { OPTIONS, canChooseCourse, clearAvatar, courseLettersFor, cropToAvatar, saveAvatar, saveProfile } from '../../lib/profile/profile';
+import { canChooseCourse, clearAvatar, courseLettersFor, cropToAvatar, electiveGroupsOf, gradeOf, saveAvatar, saveProfile } from '../../lib/profile/profile';
 import AvatarCropper from './AvatarCropper';
 import Checkbox from '../../components/Checkbox';
 import FilterSelect from '../class/FilterSelect';
@@ -152,21 +152,24 @@ export default function ProfileDialog({ studentId, profile, avatar, onAvatarChan
           </section>
         )}
 
-        <section>
-          <div style={{ fontSize: '0.857em', color: 'var(--text-muted)', marginBottom: '0.5em' }}>選択教科</div>
-          {OPTIONS.electiveSubjects.length === 0 ? (
-            <div style={{ fontSize: '0.929em', color: 'var(--text-muted)' }}>教科の一覧は準備中です。</div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6em' }}>
-              {OPTIONS.electiveSubjects.map((name) => (
-                <label key={name} style={{ display: 'flex', alignItems: 'center', gap: '0.6em', color: 'var(--text-strong)', cursor: 'pointer' }}>
-                  <Checkbox checked={draftSubjects.includes(name)} onCheckedChange={() => toggleSubject(name)} aria-label={name} />
-                  {name}
-                </label>
-              ))}
-            </div>
-          )}
-        </section>
+        {Object.keys(electiveGroupsOf(gradeOf(studentId))).length > 0 && (
+          <section>
+            <div style={{ fontSize: '0.857em', color: 'var(--text-muted)', marginBottom: '0.5em' }}>選択教科</div>
+            {Object.entries(electiveGroupsOf(gradeOf(studentId))).map(([group, names]) => (
+              <div key={group} style={{ marginBottom: '0.8em' }}>
+                <div style={{ fontSize: '0.786em', color: 'var(--text-muted)', marginBottom: '0.4em' }}>{group}</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6em' }}>
+                  {names.map((name) => (
+                    <label key={name} style={{ display: 'flex', alignItems: 'center', gap: '0.6em', color: 'var(--text-strong)', cursor: 'pointer' }}>
+                      <Checkbox checked={draftSubjects.includes(name)} onCheckedChange={() => toggleSubject(name)} aria-label={name} />
+                      {name}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </section>
+        )}
 
         {note && <div style={{ fontSize: '0.857em', color: 'var(--warn-fg)' }}>{note}</div>}
       </div>
