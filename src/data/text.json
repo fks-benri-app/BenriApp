@@ -2,7 +2,10 @@
   "calendar": {
     "title": "カレンダー",
     "todayTitle": "の予定",
-    "todayEmpty": "今日の授業はありません",
+    "dayEmpty": "この日の授業はありません",
+    "prevWeek": "前の週",
+    "nextWeek": "次の週",
+    "thisWeek": "今週に戻る",
     "reset": "作り直す",
     "unavailable": "学年と講座(1年は組)がわかると、授業表を作れます。",
     "upload": "画像をアップロード",

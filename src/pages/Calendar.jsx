@@ -77,6 +77,24 @@ const labelStyle = {
   justifyContent: 'center',
 };
 
+const dateStyle = {
+  font: 'inherit',
+  justifySelf: 'center',
+  width: '2.286em',
+  height: '2.286em',
+  padding: 0,
+  borderRadius: '50%',
+  border: 'none',
+  background: 'none',
+  color: 'var(--text-strong)',
+  fontWeight: 500,
+  cursor: 'pointer',
+};
+
+const monthStyle = { font: 'inherit', fontSize: '1.143em', fontWeight: 700, color: 'var(--text-strong)', background: 'none', border: 'none', padding: 0, cursor: 'pointer' };
+
+const navButtonStyle = { font: 'inherit', fontSize: '1.143em', width: '2em', height: '2em', padding: 0, lineHeight: 1, borderRadius: '50%', border: '1px var(--line) solid', background: 'var(--surface)', color: 'var(--text-strong)', cursor: 'pointer' };
+
 const buttonStyle = {
   padding: '0.857em 1.143em',
   borderRadius: '999px',
@@ -103,6 +121,8 @@ export default function Calendar() {
   const [status, setStatus] = useState('');
   const [error, setError] = useState('');
   const [editing, setEditing] = useState(null); // { day, period, value }
+  const [weekOffset, setWeekOffset] = useState(0); // 今週からの週の数(前は負)
+  const [selIdx, setSelIdx] = useState(todayIdx >= 0 && todayIdx < COLUMNS.length ? todayIdx : 0); // 一覧に出す日(月=0 … 土=5)
   const uploadRef = useRef(null);
   const cameraRef = useRef(null);
 
@@ -191,10 +211,14 @@ export default function Calendar() {
     );
   }
 
-  // 今日の授業(月〜金のときだけ。土日や授業が無い日は空)
+  // 表示している週(日曜は、次の週を見せる)。選んだ日の授業を、下の一覧に出す
   const now = new Date();
-  const todayCol = todayIdx >= 0 && todayIdx < WEEKDAYS.length ? WEEKDAYS[todayIdx] : null;
-  const todays = todayCol ? PERIODS.map((p) => ({ p, ...cellValue(table?.[todayCol]?.[p]) })).filter((x) => x.name) : [];
+  const toMonday = now.getDay() === 0 ? 1 : 1 - now.getDay();
+  const dateOf = (i) => new Date(now.getFullYear(), now.getMonth(), now.getDate() + toMonday + weekOffset * 7 + i);
+  const isToday = (d) => d.toDateString() === now.toDateString();
+  const selDate = dateOf(selIdx);
+  const selDay = COLUMNS[selIdx];
+  const dayClasses = PERIODS.map((p) => ({ p, ...cellValue(table?.[selDay]?.[p]) })).filter((x) => x.name);
 
   return (
     <div style={rootStyle}>
@@ -211,25 +235,48 @@ export default function Calendar() {
           boxSizing: 'border-box',
           display: 'flex',
           flexDirection: 'column',
-          gap: '1.429em',
+          gap: '1.143em',
         }}
       >
-        {/* 表の面(白い角丸)。右下の丸いボタンは「作り直す」 */}
-        <div style={{ position: 'relative', flexShrink: 0, background: 'var(--surface-2, var(--surface))', borderRadius: '1.714em', outline: '1px var(--line) solid', outlineOffset: '-1px', padding: '1.429em' }}>
+        {/* 月の表示と、週の切り替え */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+          <button type="button" aria-label={t('calendar.thisWeek')} onClick={() => { setWeekOffset(0); setSelIdx(todayIdx >= 0 && todayIdx < COLUMNS.length ? todayIdx : 0); }} style={monthStyle}>
+            {`${selDate.getFullYear()}年${selDate.getMonth() + 1}月`}
+          </button>
+          <div style={{ display: 'flex', gap: '0.857em' }}>
+            <button type="button" aria-label={t('calendar.prevWeek')} onClick={() => setWeekOffset(weekOffset - 1)} style={navButtonStyle}>‹</button>
+            <button type="button" aria-label={t('calendar.nextWeek')} onClick={() => setWeekOffset(weekOffset + 1)} style={navButtonStyle}>›</button>
+          </div>
+        </div>
+
+        {/* 週の表(曜日・日付・1〜7限)。日付を押すと、その日の授業が下の一覧に出る */}
+        <div style={{ flexShrink: 0, background: 'var(--surface-2, var(--surface))', borderRadius: '1.714em', outline: '1px var(--line) solid', outlineOffset: '-1px', padding: '1.429em' }}>
           <div
             style={{
               display: 'grid',
               gridTemplateColumns: '2.4em repeat(6, minmax(0, 1fr))',
-              gridTemplateRows: 'auto repeat(7, 3.2em)',
+              gridTemplateRows: 'auto auto repeat(7, 3.2em)',
               gap: '0.429em',
             }}
           >
             <div />
-            {COLUMNS.map((w, i) => (
-              <div key={w} style={{ ...labelStyle, fontSize: '0.929em', color: w === '土' ? 'var(--text-strong)' : 'var(--text-muted)' }}>
-                <span style={i === todayIdx ? { width: '2.286em', height: '2.286em', borderRadius: '50%', background: shaded(THEMES.orangeRed.gradient), color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 } : undefined}>{w}</span>
-              </div>
+            {COLUMNS.map((w) => (
+              <div key={w} style={{ ...labelStyle, fontSize: '0.929em', color: w === '土' ? 'var(--text-strong)' : 'var(--text-muted)' }}>{w}</div>
             ))}
+
+            <div />
+            {COLUMNS.map((w, i) => {
+              const d = dateOf(i);
+              const today = isToday(d);
+              const style = today
+                ? { ...dateStyle, background: shaded(THEMES.orangeRed.gradient), color: '#fff', fontWeight: 700 }
+                : i === selIdx ? { ...dateStyle, boxShadow: 'inset 0 0 0 1.5px var(--text-strong)' } : dateStyle;
+              return (
+                <button key={w} type="button" aria-label={`${d.getMonth() + 1}月${d.getDate()}日（${w}）`} aria-pressed={i === selIdx} onClick={() => setSelIdx(i)} style={style}>
+                  {d.getDate()}
+                </button>
+              );
+            })}
 
             {PERIODS.map((p) => (
               <React.Fragment key={p}>
@@ -262,36 +309,29 @@ export default function Calendar() {
               </React.Fragment>
             ))}
           </div>
-
-          <button
-            type="button"
-            aria-label={t('calendar.reset')}
-            onClick={() => { clearTimetable(key); setTable(null); }}
-            style={{ position: 'absolute', right: '1.143em', bottom: '1.143em', width: '3.714em', height: '3.714em', borderRadius: '50%', border: 'none', background: shaded(THEMES.orangeRed.gradient), color: '#fff', fontSize: '1.429em', boxShadow: '0 8px 16px rgba(255, 77, 77, 0.15)', cursor: 'pointer' }}
-          >
-            ↺
-          </button>
         </div>
 
-        {/* 今日の予定(表から読んだ今日の授業) */}
+        {/* 選んだ日の予定(表から読んだ授業) */}
         <section style={{ display: 'flex', flexDirection: 'column', gap: '0.857em' }}>
           <div style={{ color: 'var(--text-muted)', fontWeight: 700, fontSize: '1.143em' }}>
-            {`${now.getMonth() + 1}月${now.getDate()}日（${WEEKDAY_NAMES[now.getDay()]}）${t('calendar.todayTitle')}`}
+            {`${selDate.getMonth() + 1}月${selDate.getDate()}日（${WEEKDAY_NAMES[selDate.getDay()]}）${t('calendar.todayTitle')}`}
           </div>
-          {todays.length === 0 && <p style={{ color: 'var(--text-faint)', fontSize: '0.857em', margin: 0 }}>{t('calendar.todayEmpty')}</p>}
-          {todays.map((x) => {
+          {dayClasses.length === 0 && <p style={{ color: 'var(--text-faint)', fontSize: '0.857em', margin: 0 }}>{t('calendar.dayEmpty')}</p>}
+          {dayClasses.map((x) => {
             const theme = courseThemeOrNull(x.name);
             return (
-              <div key={x.p} style={{ display: 'flex', alignItems: 'center', gap: '0.857em', padding: '0.857em', borderRadius: '1.429em', background: 'var(--surface-2, var(--surface))', outline: '1px var(--line) solid', outlineOffset: '-1px' }}>
+              <div key={x.p} style={{ display: 'flex', alignItems: 'center', gap: '0.857em', padding: '1.143em', borderRadius: '1.429em', background: 'var(--surface-2, var(--surface))', outline: '1px var(--line) solid', outlineOffset: '-1px' }}>
                 <div style={{ width: 4, height: '2.857em', borderRadius: 2, background: (theme || THEMES.gray).gradient, flexShrink: 0 }} />
                 <div style={{ minWidth: 0 }}>
                   <div style={{ color: 'var(--text-strong)', fontWeight: 700, fontSize: '1.07em' }}>{x.name}</div>
-                  <div style={{ color: 'var(--text-muted)', fontSize: '0.857em' }}>{`${settingsOptions.periodTimes[x.p - 1]}${x.room ? ` / ${x.room}` : ''}`}</div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: '0.857em' }}>{`${x.p}限 ${settingsOptions.periodTimes[x.p - 1]}${x.room ? ` / ${x.room}` : ''}`}</div>
                 </div>
               </div>
             );
           })}
         </section>
+
+        <button type="button" onClick={() => { clearTimetable(key); setTable(null); }} style={{ ...buttonStyle, alignSelf: 'center', flexShrink: 0 }}>{t('calendar.reset')}</button>
       </main>
 
       <BottomNav active="calendar" onSelect={onSelectTab} />
